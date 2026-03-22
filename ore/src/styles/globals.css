@@ -57,6 +57,12 @@
     font-weight: 700;
     line-height: 28px;
   }
+  /* Title/bold/16 */
+  .text-title-b-16 {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 24px;
+  }
 
   /* Title/medium/32 */
   .text-title-m-32 {
@@ -65,7 +71,7 @@
     line-height: 40px;
   }
   /* Title/medium/16 */
-  .text-title-m-32 {
+  .text-title-m-16 {
     font-size: 16px;
     font-weight: 500;
     line-height: 24px;
