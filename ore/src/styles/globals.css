@@ -1,0 +1,171 @@
+@import "tailwindcss";
+@import "pretendard/dist/web/static/pretendard.css";
+
+@theme {
+  /* ───────── COLOR ───────── */
+  /* 메인 색상 */
+  --color-primary-01: #298882;
+  --color-primary-02: #307d3d;
+
+  /* 보조 색상 */
+  --color-secondary-01: #cdecea;
+  --color-secondary-02: #c8ecce;
+  --color-secondary-03: #7abab6;
+
+  /* 추가 색상 */
+  --color-neutral-01: #ebf7f7;
+  --color-neutral-02: #e9f8eb;
+  --color-neutral-03: #f0f6f1;
+  --color-neutral-04: #f5f9f8;
+
+  /* 포인트 색상 */
+  --color-point-01: #ff4646;
+  --color-point-02: #d2d53a;
+  --color-point-03: #307d3d;
+
+  /* 회색 계열 */
+  --color-gray-01: #817979;
+  --color-gray-02: #d0d0d0;
+
+  /* ───────── Font ───────── */
+  --font-sans: "Pretendard", sans-serif;
+}
+
+@layer base {
+  body {
+    font-family: var(--font-sans);
+  }
+}
+
+@layer components {
+  /* Title */
+  /* Title/bold/32 */
+  .text-title-b-32 {
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 40px;
+  }
+  /* Title/bold/24 */
+  .text-title-main {
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 32px;
+  }
+  /* Title/bold/20 */
+  .text-title-b-20 {
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 28px;
+  }
+
+  /* Title/medium/32 */
+  .text-title-m-32 {
+    font-size: 32px;
+    font-weight: 500;
+    line-height: 40px;
+  }
+  /* Title/medium/16 */
+  .text-title-m-32 {
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 24px;
+  }
+
+  /* Button */
+  /* button/bold/14 */
+  .text-button-main {
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 20px;
+  }
+  /* Button/bold/20 */
+  .text-button-b-20 {
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 28px;
+  }
+
+  /* Body */
+  /* Body/bold/24 */
+  .text-body-b-24 {
+    font-size: 24px;
+    font-weight: 700;
+    line-height: 32px;
+  }
+  /* Body/bold/16 */
+  .text-body-b-16 {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 24px;
+  }
+
+  /* Body/semibold/20 */
+  .text-body-sb-20 {
+    font-size: 20px;
+    font-weight: 600;
+    line-height: 28px;
+  }
+  /* Body/semibold/16 */
+  .text-body-sb-16 {
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 24px;
+  }
+  /* Body/semibold/12 */
+  .text-body-sb-12 {
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 16px;
+  }
+
+  /* Body/medium/16 */
+  .text-body-m-16 {
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 24px;
+  }
+  /* Body/medium/10 */
+  .text-body-m-10 {
+    font-size: 10px;
+    font-weight: 500;
+    line-height: 14px;
+  }
+
+  /* Body/regular/16 */
+  .text-body-r-16 {
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 24px;
+  }
+  /* Body/regular/15 */
+  .text-body-r-15 {
+    font-size: 15px;
+    font-weight: 400;
+    line-height: 22px;
+  }
+  /* Body/regular/12 */
+  .text-body-r-12 {
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 16px;
+  }
+  /* Body/regular/5 */
+  .text-body-r-5 {
+    font-size: 5px;
+    font-weight: 400;
+    line-height: 4px;
+  }
+
+  /* Body/light/12 */
+  .text-body-l-12 {
+    font-size: 12px;
+    font-weight: 300;
+    line-height: 16px;
+  }
+  /* Body/light/10 */
+  .text-body-l-10 {
+    font-size: 10px;
+    font-weight: 300;
+    line-height: 14px;
+  }
+}
