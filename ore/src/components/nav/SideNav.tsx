@@ -40,19 +40,18 @@ export default function SideNav() {
   ];
 
   return (
-    <div
-      className="
-        flex w-[140px] flex-col items-start gap-[20px]
+    <div className="flex h-full w-[140px] pt-[30px] pb-[80px] flex-col justify-between">
+      {/* 로고 + 메뉴 */}
+      <div
+        className="
+        flex w-[140px] flex-col gap-[30px]
       "
-    >
-      {/* 로고 */}
-      <div className="w-full">
-        <div className="flex h-[45px] items-center justify-center rounded-[10px] bg-gray-02">
+      >
+        {/* 로고 */}
+        <div className="flex h-[80px] items-center justify-center rounded-[10px] bg-gray-02">
           로고
         </div>
-      </div>
 
-      <div className="flex h-full w-full flex-col items-start">
         {/* 메뉴 */}
         <div className="flex w-full flex-col gap-[20px]">
           {menuList.map((menu) => (
@@ -66,18 +65,18 @@ export default function SideNav() {
             />
           ))}
         </div>
+      </div>
 
-        {/* 로그아웃 */}
-        <div className="mt-auto w-full">
-          <NavButton
-            defaultIcon={"/icons/nav/logout.svg"}
-            label="Log Out"
-            variant="logout"
-            onClick={() => {
-              console.log("logout");
-            }}
-          />
-        </div>
+      {/* 로그아웃 */}
+      <div className="w-full">
+        <NavButton
+          defaultIcon={"/icons/nav/logout.svg"}
+          label="Log Out"
+          variant="logout"
+          onClick={() => {
+            console.log("logout");
+          }}
+        />
       </div>
     </div>
   );

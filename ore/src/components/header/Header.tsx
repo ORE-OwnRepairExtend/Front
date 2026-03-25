@@ -32,7 +32,7 @@ export default function Header({
     <header
       className="
         flex w-full flex-col items-start gap-[10px]
-        px-[30px] pt-[20px] pb-[10px]
+        pb-[10px]
       "
     >
       <div className="flex w-full items-end justify-between">
