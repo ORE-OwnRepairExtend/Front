@@ -11,6 +11,7 @@ type ProductNameCardProps = {
   description: string;
   variant?: "default" | "withIndicator";
   status?: ProductStatus;
+  width?: number;
   onClick?: () => void;
 };
 
@@ -30,18 +31,22 @@ export default function ProductNameCard({
       type="button"
       onClick={onClick}
       className={`
-        flex rounded-[10px] bg-neutral-04 px-[10px] py-[5px]
+        flex rounded-[10px] bg-neutral-04 px-[10px] py-[5px] cursor-pointer
         ${
           isIndicator
-            ? "w-[180px] items-center justify-between"
-            : "w-[100px] flex-col items-start justify-center"
+            ? "w-[120px] items-center justify-between gap-[20px]"
+            : "w-[100px] flex-col items-start justify-center "
         }
       `}
     >
       {/* 제품설명 */}
-      <div className="flex flex-col gap-[2px] items-start">
-        <p className="text-body-sb-12 text-primary-01">{name}</p>
-        <p className="text-body-r-5 text-gray-01">{description}</p>
+      <div className="flex flex-col gap-[2px] items-start min-w-0">
+        <p className="w-full text-body-sb-12 text-primary-01 text-start truncate">
+          {name}
+        </p>
+        <p className="w-full text-body-r-8 text-gray-01 text-start truncate">
+          {description}
+        </p>
       </div>
 
       {/* 보증상태아이콘 */}

@@ -1,12 +1,40 @@
 import type { ReactNode } from "react";
 import SideNav from "../components/nav/SideNav";
 import ProfileCard from "../components/profile/ProfileCard";
+import FavoriteCard from "../components/profile/FavoriteCard";
 
 type MainLayoutProps = {
   children: ReactNode;
 };
 
 export default function MainLayout({ children }: MainLayoutProps) {
+  const favoriteItems = [
+    {
+      id: 1,
+      name: "카메라",
+      description: "example",
+      status: "danger" as const,
+    },
+    {
+      id: 2,
+      name: "카메라",
+      description: "example",
+      status: "imminent" as const,
+    },
+    {
+      id: 3,
+      name: "카메라",
+      description: "example",
+      status: "valid" as const,
+    },
+    {
+      id: 4,
+      name: "카메라",
+      description: "example",
+      status: "expired" as const,
+    },
+  ];
+
   return (
     <div className="h-screen flex items-center justify-center bg-neutral-03 px-[50px] overflow-hidden">
       {/* 바깥 반투명 박스 */}
@@ -27,8 +55,13 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
           {/* 우측 콘텐츠 */}
           <aside className="shrink-0 self-stretch">
-            <div className="h-full pr-[15px]">
+            <div className="h-full flex flex-col justify-center gap-[50px]">
               <ProfileCard name="오래" />
+
+              <FavoriteCard
+                items={favoriteItems}
+                onItemClick={(item) => console.log(item)}
+              />
             </div>
           </aside>
         </div>
