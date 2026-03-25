@@ -1,5 +1,6 @@
 type NavButtonProps = {
-  icon: React.ReactNode;
+  defaultIcon: string;
+  activeIcon?: string;
   label: string;
   active?: boolean;
   onClick?: () => void;
@@ -7,7 +8,8 @@ type NavButtonProps = {
 };
 
 export default function NavButton({
-  icon,
+  defaultIcon,
+  activeIcon,
   label,
   active = false,
   onClick,
@@ -27,6 +29,13 @@ export default function NavButton({
         ? "text-white"
         : "text-gray-01";
 
+  const iconToRender =
+    variant === "logout"
+      ? defaultIcon
+      : active && activeIcon
+        ? activeIcon
+        : defaultIcon;
+
   return (
     <button
       type="button"
@@ -39,7 +48,11 @@ export default function NavButton({
       `}
     >
       {/* 아이콘 */}
-      <span className={textStyle}>{icon}</span>
+      <img
+        src={iconToRender}
+        alt={label}
+        className="h-[24px] w-[24px] shrink-0"
+      />
 
       {/* 타이틀명 */}
       <span className={`text-button-main  ${textStyle}`}>{label}</span>
