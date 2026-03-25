@@ -2,11 +2,9 @@ import googleLogo from "../../assets/google.svg";
 
 export default function LoginPage() {
   return (
-    <div className="w-full h-screen flex items-center justify-center bg-neutral-03">
-      
-      {/* 중앙 박스 */}
-      <div className="relative w-[90%] max-w-[1700px] h-[80%] max-h-[860px] rounded-[50px] bg-white/30 flex flex-col items-center justify-center gap-10 backdrop-blur-sm">
-        
+    <div className="h-screen flex items-center justify-center bg-neutral-03 px-[50px] overflow-hidden">
+      {/* 바깥 반투명 박스 */}
+      <div className="w-full max-w-[1400px] h-[90vh] rounded-[30px] bg-white/30 p-[25px] relative flex flex-col items-center justify-center gap-10">
         {/* 로고 */}
         <div className="w-[60%] max-w-[465px] h-[280px] bg-gray-02 rounded-xl flex items-center justify-center text-gray-01 text-body-r-16">
           로고
@@ -26,7 +24,6 @@ export default function LoginPage() {
             더 오래, 더 제대로
           </span>
         </div>
-
       </div>
     </div>
   );
