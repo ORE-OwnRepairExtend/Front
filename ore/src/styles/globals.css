@@ -1,12 +1,21 @@
 @import "tailwindcss";
 @import "pretendard/dist/web/static/pretendard.css";
 
+/* 스크롤바 숨기기 */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 @theme {
   /* ───────── COLOR ───────── */
   /* 메인 색상 */
   --color-primary-01: #298882;
   --color-primary-02: #307d3d;
-
+  
   /* 보조 색상 */
   --color-secondary-01: #cdecea;
   --color-secondary-02: #c8ecce;
