@@ -1,5 +1,9 @@
 import type { ReactNode } from "react";
 import SideNav from "../components/nav/SideNav";
+import ProfileCard from "../components/profile/ProfileCard";
+import FavoriteCard from "../components/profile/FavoriteCard";
+import { mockUserProfile } from "../mocks/ueser";
+import { mockFavoriteItems } from "../mocks/favorite";
 
 type MainLayoutProps = {
   children: ReactNode;
@@ -26,7 +30,17 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
           {/* 우측 콘텐츠 */}
           <aside className="shrink-0 self-stretch">
-            <div className="h-full">rightside</div>
+            <div className="h-full flex flex-col justify-center gap-[50px]">
+              <ProfileCard
+                name={mockUserProfile.name}
+                imageUrl={mockUserProfile.profileImage}
+              />
+
+              <FavoriteCard
+                items={mockFavoriteItems}
+                onItemClick={(item) => console.log(item)}
+              />
+            </div>
           </aside>
         </div>
       </div>
