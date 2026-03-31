@@ -17,13 +17,14 @@ export default function CategoryButton({
       onClick={onClick}
       className={`
         flex items-center justify-center gap-[10px]
-        rounded-[20px]
+        rounded-[25px]
         transition-all duration-200
         px-[20px] py-[5px]
+        w-[150px] h-[50px]
         
         ${
           isSelected
-            ? "text-title-b-16 text-primary-01 bg-secondary-01 border-[2px] border-primary-01"
+            ? "text-title-b-16 text-primary-01 bg-secondary-01 border-[3px] border-primary-01"
             : "text-title-m-16 text-gray-01 bg-white"
         }
       `}
