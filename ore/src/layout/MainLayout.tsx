@@ -3,7 +3,7 @@ import SideNav from "../components/nav/SideNav";
 import ProfileCard from "../components/profile/ProfileCard";
 import FavoriteCard from "../components/profile/FavoriteCard";
 import { mockUserProfile } from "../mocks/ueser";
-import { mockFavoriteItems } from "../mocks/favorite";
+import { mockFavoriteItems } from "../mocks/products";
 
 type MainLayoutProps = {
   children: ReactNode;

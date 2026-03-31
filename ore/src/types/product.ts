@@ -4,6 +4,7 @@ export type ProductSummary = {
   productId: string;
   productName: string;
   nickname: string;
+  isFavorite: boolean;
   purchaseDate: string;
   createdAt: string;
 };

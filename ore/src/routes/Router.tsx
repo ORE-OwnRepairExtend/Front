@@ -13,8 +13,11 @@ import ChatbotPage from "../pages/Home/ChatbotPage";
 import ProductListPage from "../pages/Product/ProductListPage";
 import ProductDetailPage from "../pages/Product/ProductDetailPage";
 import ProductCreatePage from "../pages/Product/ProductCreatePage";
-import RepairHistoryPage from "../pages/Product/RepairHistoryPage";
-import RepairCreatePage from "../pages/Product/RepairCreatePage";
+
+// Repair
+import RepairListPage from "../pages/Repair/RepairListPage";
+import RepairHistoryPage from "../pages/Repair/RepairHistoryPage";
+import RepairCreatePage from "../pages/Repair/RepairCreatePage";
 
 export default function Router() {
   return (
@@ -31,6 +34,7 @@ export default function Router() {
       <Route path="/products/:productId" element={<ProductDetailPage />} />
 
       {/* Repair */}
+      <Route path="/repairs" element={<RepairListPage />} />
       <Route
         path="/products/:productId/repairs"
         element={<RepairHistoryPage />}
