@@ -2,8 +2,11 @@ import AddButton from "../../components/common/AddButton";
 import ProductCard from "../../components/common/ProductCard";
 import Header from "../../components/header/Header";
 import MainLayout from "../../layout/MainLayout";
+import { mockProductListResponse } from "../../mocks/products";
 
 export default function RepairHistoryPage() {
+  const repairItems = mockProductListResponse.filter((item) => item.isRepair);
+
   return (
     <MainLayout>
       <div className="flex h-full flex-col">
@@ -13,36 +16,13 @@ export default function RepairHistoryPage() {
               no-scrollbar"
         >
           <div className="h-[480px] flex flex-col gap-[20px] flex-1 overflow-y-auto no-scrollbar">
-            <ProductCard
-              imageSrc="test"
-              name="카메라"
-              description="소니카메라"
-            />
-            <ProductCard
-              imageSrc="test"
-              name="카메라"
-              description="소니카메라"
-            />
-            <ProductCard
-              imageSrc="test"
-              name="카메라"
-              description="소니카메라"
-            />
-            <ProductCard
-              imageSrc="test"
-              name="카메라"
-              description="소니카메라"
-            />
-            <ProductCard
-              imageSrc="test"
-              name="카메라"
-              description="소니카메라"
-            />
-            <ProductCard
-              imageSrc="test"
-              name="카메라"
-              description="소니카메라"
-            />
+            {repairItems.map((item) => (
+              <ProductCard
+                imageSrc="test"
+                name={item.productName}
+                description={item.nickname}
+              />
+            ))}
           </div>
           <AddButton title="수리 이력 등록하기" />
         </div>

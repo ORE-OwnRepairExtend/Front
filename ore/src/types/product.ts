@@ -5,13 +5,7 @@ export type ProductSummary = {
   productName: string;
   nickname: string;
   isFavorite: boolean;
+  isRepair: boolean;
   purchaseDate: string;
   createdAt: string;
-};
-
-export type FavoriteItem = {
-  id: string;
-  name: string;
-  description: string;
-  status: ProductStatus;
 };
