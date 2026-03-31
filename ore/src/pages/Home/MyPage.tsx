@@ -21,7 +21,7 @@ export default function MyPage() {
               items={[
                 { label: "계정 정보", onClick: () => {} },
                 { label: "이용 약관", onClick: () => {} },
-                { label: "로그 아웃", onClick: () => {} },
+                { label: "로그아웃", onClick: () => {} },
               ]}
             />
           </div>
