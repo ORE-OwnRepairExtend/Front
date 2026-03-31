@@ -14,14 +14,14 @@ export default function SearchBar({
   return (
     <div
       className="
-        flex w-[364px] h-[60px]
+        flex w-[300px] h-[45px]
         px-[20px] pt-[13px] pb-[12px]
         items-end gap-[10px]
         rounded-[20px] bg-white
       "
     >
       {/* 아이콘 */}
-      <img src="/icons/search.svg" alt="검색" width={30} height={30} />
+      <img src="/icons/search.svg" alt="검색" width={20} height={20} />
 
       {/* 입력창 */}
       <input
@@ -31,11 +31,9 @@ export default function SearchBar({
         placeholder={placeholder}
         className="
           flex-1 bg-transparent outline-none
-          text-[20px] font-light
           text-black
+          text-body-l-12
           placeholder:text-primary-02
-          placeholder:font-light
-          placeholder:text-[20px]
         "
         onKeyDown={(e) => {
           if (e.key === "Enter") {
