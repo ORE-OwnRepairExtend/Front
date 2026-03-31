@@ -4,6 +4,7 @@ import Header from "../../components/header/Header";
 import CategoryButton from "../../components/category/CategoryButton";
 import AddButton from "../../components/common/AddButton";
 import ProductCard from "../../components/common/ProductCard";
+import ProductRegisterModal from "../../components/common/ProductRegisterModal";
 
 import cameraImg from "../../assets/camera.png";
 import starIcon from "../../assets/star.svg";
@@ -12,6 +13,7 @@ import phoneIcon from "../../assets/phone.svg";
 export default function ProductListPage() {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // 드래그 스크롤
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -118,11 +120,23 @@ export default function ProductListPage() {
         {/* 버튼 */}
         <div className="flex justify-end pr-[30px]">
           <div className="w-[174px]">
-            <AddButton title="제품 등록" onClick={() => console.log("제품 등록")} />
+            <AddButton title="제품 등록" onClick={() => setIsModalOpen(true)} />
           </div>
         </div>
 
       </div>
+        <ProductRegisterModal
+          open={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onUploadClick={() => {
+            console.log("이미지 업로드");
+            setIsModalOpen(false);
+          }}
+          onManualClick={() => {
+            console.log("수동 입력");
+            setIsModalOpen(false);
+          }}
+        />
     </SecondLayout>
   );
 }
