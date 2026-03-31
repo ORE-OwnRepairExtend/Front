@@ -43,7 +43,7 @@ export default function ProfileBox({
             type="button"
             onClick={onEditProfile}
             className="
-            flex h-[20px] w-full items-center justify-center
+            flex h-[25px] w-[100px] items-center justify-center
             rounded-[7px] border-[2px] border-white
             text-body-m-10 text-white
             cursor-pointer

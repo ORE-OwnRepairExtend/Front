@@ -1,17 +1,11 @@
+import type { ProductSummary } from "../../types/product";
 import ProductNameCard from "../common/ProductNameCard";
 
-type ProductStatus = "expired" | "danger" | "imminent" | "valid";
-
-type FavoriteItem = {
-  id: number | string;
-  name: string;
-  description: string;
-  status: ProductStatus;
-};
+// type ProductStatus = "expired" | "danger" | "imminent" | "valid";
 
 type FavoriteCardProps = {
-  items: FavoriteItem[];
-  onItemClick?: (item: FavoriteItem) => void;
+  items: ProductSummary[];
+  onItemClick?: (item: ProductSummary) => void;
 };
 
 export default function FavoriteCard({
@@ -30,13 +24,14 @@ export default function FavoriteCard({
           overflow-y-auto no-scrollbar
         "
       >
+        {/* todo : status 계산 반영 */}
         {items.map((item) => (
           <ProductNameCard
-            key={item.id}
-            name={item.name}
-            description={item.description}
+            key={item.productId}
+            name={item.productName}
+            description={item.nickname}
             variant="withIndicator"
-            status={item.status}
+            status="danger"
             onClick={() => onItemClick?.(item)}
           />
         ))}

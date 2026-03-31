@@ -23,7 +23,7 @@ export default function SideNav() {
       label: "Repair",
       defaultIcon: "/icons/nav/repair_gray.svg",
       activeIcon: "/icons/nav/repair_white.svg",
-      path: "/repair",
+      path: "/repairs",
     },
     {
       label: "AI Chat",
