@@ -9,3 +9,15 @@ export type ProductSummary = {
   purchaseDate: string;
   createdAt: string;
 };
+
+export type WarrantyInfo = {
+  productId: string;
+  purchaseDate: string;
+  warrantyMonths: number;
+  warrantyEndDate: string;
+  remainingDays: number;
+};
+
+export type ProductWithStatus = ProductSummary & {
+  status: ProductStatus;
+};
