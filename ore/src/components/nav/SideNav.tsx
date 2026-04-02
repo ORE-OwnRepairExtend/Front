@@ -5,7 +5,6 @@ export default function SideNav() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // todo : path 수정 필요
   const menuList = [
     {
       label: "DashBoard",
@@ -54,16 +53,22 @@ export default function SideNav() {
 
         {/* 메뉴 */}
         <div className="flex w-full flex-col gap-[20px]">
-          {menuList.map((menu) => (
-            <NavButton
-              key={menu.path}
-              defaultIcon={menu.defaultIcon}
-              activeIcon={menu.activeIcon}
-              label={menu.label}
-              active={location.pathname === menu.path}
-              onClick={() => navigate(menu.path)}
-            />
-          ))}
+          {menuList.map((menu) => {
+            const isActive =
+              menu.path === "/repairs"
+                ? location.pathname.includes("/repairs")
+                : location.pathname === menu.path;
+            return (
+              <NavButton
+                key={menu.path}
+                defaultIcon={menu.defaultIcon}
+                activeIcon={menu.activeIcon}
+                label={menu.label}
+                active={isActive}
+                onClick={() => navigate(menu.path)}
+              />
+            );
+          })}
         </div>
       </div>
 
