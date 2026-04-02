@@ -5,7 +5,9 @@ import MainLayout from "../../layout/MainLayout";
 import { mockProductListResponse } from "../../mocks/products";
 
 export default function RepairHistoryPage() {
-  const repairItems = mockProductListResponse.filter((item) => item.isRepair);
+  const repairItems = mockProductListResponse.filter(
+    (item) => item.hasRepairHistory,
+  );
 
   return (
     <MainLayout>
@@ -18,7 +20,7 @@ export default function RepairHistoryPage() {
           <div className="h-[480px] flex flex-col gap-[20px] flex-1 overflow-y-auto no-scrollbar">
             {repairItems.map((item) => (
               <ProductCard
-                imageSrc="test"
+                imageSrc={item.imageUrl}
                 name={item.productName}
                 description={item.nickname}
               />

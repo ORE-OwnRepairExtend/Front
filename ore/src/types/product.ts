@@ -4,8 +4,9 @@ export type ProductSummary = {
   productId: string;
   productName: string;
   nickname: string;
+  imageUrl: string;
   isFavorite: boolean;
-  isRepair: boolean;
+  hasRepairHistory: boolean;
   purchaseDate: string;
   createdAt: string;
 };
