@@ -1,11 +1,9 @@
-import type { ProductSummary } from "../../types/product";
+import type { ProductWithStatus } from "../../types/product";
 import ProductNameCard from "../common/ProductNameCard";
 
-// type ProductStatus = "expired" | "danger" | "imminent" | "valid";
-
 type FavoriteCardProps = {
-  items: ProductSummary[];
-  onItemClick?: (item: ProductSummary) => void;
+  items: ProductWithStatus[];
+  onItemClick?: (item: ProductWithStatus) => void;
 };
 
 export default function FavoriteCard({
@@ -31,7 +29,7 @@ export default function FavoriteCard({
             name={item.productName}
             description={item.nickname}
             variant="withIndicator"
-            status="danger"
+            status={item.status}
             onClick={() => onItemClick?.(item)}
           />
         ))}

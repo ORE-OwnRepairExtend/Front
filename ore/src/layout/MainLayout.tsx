@@ -4,15 +4,19 @@ import ProfileCard from "../components/profile/ProfileCard";
 import FavoriteCard from "../components/profile/FavoriteCard";
 import { mockUserProfile } from "../mocks/ueser";
 import { mockProductListResponse } from "../mocks/products";
+import { mockWarrantyListResponse } from "../mocks/warranty";
+import { mergeProductsWithWarranty } from "../utils/productMapper";
 
 type MainLayoutProps = {
   children: ReactNode;
 };
 
 export default function MainLayout({ children }: MainLayoutProps) {
-  const favoriteItems = mockProductListResponse.filter(
-    (item) => item.isFavorite,
+  const productsWithStatus = mergeProductsWithWarranty(
+    mockProductListResponse,
+    mockWarrantyListResponse,
   );
+  const favoriteItems = productsWithStatus.filter((item) => item.isFavorite);
 
   return (
     <div className="h-screen flex items-center justify-center bg-neutral-03 px-[50px] overflow-hidden">

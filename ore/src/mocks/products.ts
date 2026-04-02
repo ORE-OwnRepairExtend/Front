@@ -2,7 +2,7 @@ import type { ProductSummary } from "../types/product";
 
 export const mockProductListResponse: ProductSummary[] = [
   {
-    productId: "111e8400-e29b-41d4-a716-446655440001",
+    productId: "1",
     productName: "LG 에어컨",
     nickname: "우리집 에어컨",
     isFavorite: true,
@@ -11,7 +11,7 @@ export const mockProductListResponse: ProductSummary[] = [
     createdAt: "2026-03-24T12:00:00+09:00",
   },
   {
-    productId: "111e8400-e29b-41d4-a716-446655440002",
+    productId: "2",
     productName: "삼성 냉장고",
     nickname: "주방 냉장고",
     isFavorite: true,
@@ -20,7 +20,7 @@ export const mockProductListResponse: ProductSummary[] = [
     createdAt: "2026-03-24T12:00:00+09:00",
   },
   {
-    productId: "111e8400-e29b-41d4-a716-446655440003",
+    productId: "3",
     productName: "다이슨 청소기",
     nickname: "거실 청소기",
     isFavorite: true,
@@ -29,7 +29,7 @@ export const mockProductListResponse: ProductSummary[] = [
     createdAt: "2026-03-24T12:00:00+09:00",
   },
   {
-    productId: "111e8400-e29b-41d4-a716-446655440004",
+    productId: "4",
     productName: "캐논 카메라",
     nickname: "여행용 카메라",
     isFavorite: true,
