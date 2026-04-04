@@ -62,7 +62,6 @@ export default function ProductListPage() {
             searchValue={search}
             onSearchChange={setSearch}
             onSearchSubmit={() => console.log("검색:", search)}
-            hasUnreadNotification
           />
 
         {/* 카테고리 필터 */}
