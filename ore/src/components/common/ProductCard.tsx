@@ -31,11 +31,7 @@ export default function ProductCard({
           overflow-hidden
         "
       >
-        <img
-          src={imageSrc}
-          alt={name}
-          className="h-full w-full object-contain"
-        />
+        <img src={imageSrc} alt={name} className="h-full w-full object-full" />
       </div>
 
       {/* 제품설명 */}
