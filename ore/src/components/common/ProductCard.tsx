@@ -2,14 +2,17 @@ type ProductCardProps = {
   imageSrc: string;
   name: string;
   description: string;
+  actionType?: "arrow" | "close";
   onClick?: () => void;
+  onActionClick?: () => void;
 };
-
 export default function ProductCard({
   imageSrc,
   name,
   description,
+  actionType = "arrow",
   onClick,
+  onActionClick,
 }: ProductCardProps) {
   return (
     <button
@@ -41,8 +44,20 @@ export default function ProductCard({
       </div>
 
       {/* > 버튼 */}
-      <div className="shrink-0">
-        <img src="/icons/forword.svg" alt="더보기" width={24} height={24} />
+      <div
+        className="shrink-0"
+        onClick={(e) => {
+          if (actionType === "close") {
+            e.stopPropagation();
+            onActionClick?.();
+          }
+        }}
+      >
+        {actionType === "arrow" ? (
+          <img src="/icons/forword.svg" alt="더보기" width={24} height={24} />
+        ) : (
+          <img src="/icons/close.svg" alt="삭제" width={24} height={24} />
+        )}
       </div>
     </button>
   );
