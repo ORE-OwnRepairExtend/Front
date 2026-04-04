@@ -43,9 +43,9 @@ export default function ProductCard({
         <p className="truncate text-body-r-12 text-gray-01">{description}</p>
       </div>
 
-      {/* > 버튼 */}
+      {/* 버튼 */}
       <div
-        className="shrink-0"
+        className="shrink-0 px-[10px] py-[50px] -mx-[10px] -my-[50px]"
         onClick={(e) => {
           if (actionType === "close") {
             e.stopPropagation();
@@ -56,7 +56,7 @@ export default function ProductCard({
         {actionType === "arrow" ? (
           <img src="/icons/forword.svg" alt="더보기" width={24} height={24} />
         ) : (
-          <img src="/icons/close.svg" alt="삭제" width={24} height={24} />
+          <img src="/icons/close.svg" alt="닫기" width={24} height={24} />
         )}
       </div>
     </button>

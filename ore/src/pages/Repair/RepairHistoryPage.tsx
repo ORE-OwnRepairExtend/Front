@@ -34,6 +34,7 @@ export default function RepairHistoryPage() {
             name={product.nickname}
             description={product.productName}
             actionType="close"
+            onClick={() => navigate(`/products/${product.productId}`)}
             onActionClick={() => navigate(-1)}
           />
 
@@ -46,7 +47,7 @@ export default function RepairHistoryPage() {
                   repairDate={item.repairDate.replaceAll("-", ".")}
                   price={formatPrice(item.repairCost)}
                   onClick={() => {
-                    console.log(item.repairId);
+                    navigate(`/products/${productId}/repairs/${item.repairId}`);
                   }}
                 />
               ))}

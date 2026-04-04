@@ -18,6 +18,7 @@ import ProductCreatePage from "../pages/Product/ProductCreatePage";
 import RepairListPage from "../pages/Repair/RepairListPage";
 import RepairHistoryPage from "../pages/Repair/RepairHistoryPage";
 import RepairCreatePage from "../pages/Repair/RepairCreatePage";
+import RepairDetailPage from "../pages/Repair/RepairDetailPage";
 
 export default function Router() {
   return (
@@ -38,6 +39,10 @@ export default function Router() {
       <Route
         path="/products/:productId/repairs"
         element={<RepairHistoryPage />}
+      />
+      <Route
+        path="/products/:productId/repairs/:repairID"
+        element={<RepairDetailPage />}
       />
       <Route
         path="/products/:productId/repairs/new"

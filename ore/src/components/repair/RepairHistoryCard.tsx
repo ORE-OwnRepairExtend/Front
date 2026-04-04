@@ -24,7 +24,6 @@ export default function RepairHistoryCard({
       "
     >
       <span className="text-body-sb-12">
-        {" "}
         {repairName} - {repairDate}
       </span>
 
