@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import SearchBar from "./SearchBar";
 import NotificationButton from "./NotificationButton";
+import { useNotificationStore } from "../../store/notificationStore";
 
 type HeaderProps = {
   title: string;
@@ -13,7 +14,6 @@ type HeaderProps = {
   onSearchSubmit?: () => void;
 
   showNotification?: boolean;
-  hasUnreadNotification?: boolean;
 };
 
 export default function Header({
@@ -25,9 +25,14 @@ export default function Header({
   onSearchChange,
   onSearchSubmit,
   showNotification = true,
-  hasUnreadNotification = false,
 }: HeaderProps) {
   const navigate = useNavigate();
+
+  // Zustand 연결
+  const { notifications } = useNotificationStore();
+
+  // 안 읽은 알림 여부 계산
+  const hasUnread = notifications.some((n) => !n.isRead);
 
   return (
     <header
@@ -61,7 +66,7 @@ export default function Header({
 
           {showNotification && (
             <NotificationButton
-              hasUnread={hasUnreadNotification}
+              hasUnread={hasUnread}
               onClick={() => navigate("/notifications")}
             />
           )}
