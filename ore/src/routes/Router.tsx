@@ -41,7 +41,7 @@ export default function Router() {
         element={<RepairHistoryPage />}
       />
       <Route
-        path="/products/:productId/repairs/:repairID"
+        path="/products/:productId/repairs/:repairId"
         element={<RepairDetailPage />}
       />
       <Route

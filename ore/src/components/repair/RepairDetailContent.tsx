@@ -24,7 +24,7 @@ export default function RepairDetailContent({
         </div>
 
         {/* 수리일자 및 내용 */}
-        <div className="flex flex-col gap-[10px]">
+        <div className="flex flex-col gap-[10px] mt-[20px]">
           <span className="text-body-sb-20 text-primary-01">
             수리일자 - {repairDate}
           </span>
@@ -37,7 +37,7 @@ export default function RepairDetailContent({
         {/* 수리 가격 */}
         <div className="flex flex-col gap-[10px] px-[10px]">
           <span className="text-body-sb-16 text-primary-01">수리 가격</span>
-          <span className="text-body-m-16">{price.toLocaleString()}원</span>
+          <span className="text-body-m-16">{price}</span>
         </div>
 
         {/* 구분선 */}
