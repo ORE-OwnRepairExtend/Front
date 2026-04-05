@@ -7,10 +7,13 @@ import CommonButton from "../../components/common/CommonButton";
 import { mockProductListResponse } from "../../mocks/products";
 import { mockRepairDetailResponse } from "../../mocks/repairs";
 import { formatPrice } from "../../utils/formatPrice";
+import { useState } from "react";
+import Modal from "../../components/common/Modal";
 
 export default function RepairDetailPage() {
   const navigate = useNavigate();
   const { productId, repairId } = useParams();
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const product = mockProductListResponse.find(
     (item) => item.productId === productId,
@@ -19,6 +22,18 @@ export default function RepairDetailPage() {
   const repairDetail = mockRepairDetailResponse.find(
     (item) => item.repairId === repairId,
   );
+
+  // 삭제 함수
+  const handleDelete = () => {
+    console.log("삭제할 repairId:", repairId);
+
+    // todo: api 연동 후 변경
+    // await deleteRepair(productId, repairId);
+
+    // 삭제 후 이전 페이지로 이동
+    // todo: 삭제 후 페이지 이동 생각
+    navigate(-1);
+  };
 
   // todo: 예외처리 디자인 생각
   if (!product) {
@@ -63,12 +78,26 @@ export default function RepairDetailPage() {
               {/* 하단 버튼 */}
               <div className="flex justify-end gap-[10px] px-[10px] py-[15px]">
                 <CommonButton variant="secondary">수정</CommonButton>
-                <CommonButton>삭제</CommonButton>
+                <CommonButton onClick={() => setIsModalOpen(true)}>
+                  삭제
+                </CommonButton>
               </div>
             </div>
           </div>
         </div>
       </div>
+      <Modal
+        open={isModalOpen}
+        title="해당 수리 이력을 삭제하시겠습니까?"
+        onClose={() => setIsModalOpen(false)}
+        onCancel={() => setIsModalOpen(false)}
+        onConfirm={() => {
+          handleDelete();
+          setIsModalOpen(false);
+        }}
+        cancelText="취소"
+        confirmText="삭제"
+      />
     </SecondLayout>
   );
 }
