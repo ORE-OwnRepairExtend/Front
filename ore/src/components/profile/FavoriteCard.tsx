@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import type { ProductWithStatus } from "../../types/product";
 import ProductNameCard from "../common/ProductNameCard";
 
@@ -10,6 +11,7 @@ export default function FavoriteCard({
   items,
   onItemClick,
 }: FavoriteCardProps) {
+  const navigate = useNavigate();
   return (
     <section className="inline-flex flex-col items-start gap-[15px]">
       {/* 제목 */}
@@ -26,11 +28,14 @@ export default function FavoriteCard({
         {items.map((item) => (
           <ProductNameCard
             key={item.productId}
-            name={item.productName}
-            description={item.nickname}
+            name={item.nickname}
+            description={item.productName}
             variant="withIndicator"
             status={item.status}
-            onClick={() => onItemClick?.(item)}
+            onClick={() => {
+              onItemClick?.(item);
+              navigate(`/products/${item.productId}`);
+            }}
           />
         ))}
       </div>
