@@ -31,7 +31,7 @@ export default function Modal({
         className="
           relative
           inline-flex h-[300px] w-[600px]
-          flex-col items-center justify-center gap-[50px]
+          flex-col items-center justify-center
           rounded-[20px] bg-secondary-01
         "
       >
@@ -47,27 +47,26 @@ export default function Modal({
           <img src="/icons/close.svg" alt="닫기" width={30} height={30} />
         </button>
 
-        {/* 제목 */}
-        <p
-          className="
-            text-center
-           text-black
-           text-title-main
+        <div className="flex flex-col items-center justify-center gap-[50px] pt-[20px]">
+          {/* 제목 */}
+          <p
+            className="
+            text-title-m-32
           "
-        >
-          {title}
-        </p>
+          >
+            {title}
+          </p>
 
-        {/* 버튼 영역 */}
-        <div
-          className="
+          {/* 버튼 영역 */}
+          <div
+            className="
             flex w-[450px] items-center justify-between px-[30px]
           "
-        >
-          <button
-            type="button"
-            onClick={onCancel}
-            className="
+          >
+            <button
+              type="button"
+              onClick={onCancel}
+              className="
               flex items-center justify-center gap-[10px]
               rounded-[20px] bg-secondary-03
               px-[70px] py-[20px]
@@ -75,23 +74,24 @@ export default function Modal({
               cursor-pointer
 
             "
-          >
-            {cancelText}
-          </button>
+            >
+              {cancelText}
+            </button>
 
-          <button
-            type="button"
-            onClick={onConfirm}
-            className="
+            <button
+              type="button"
+              onClick={onConfirm}
+              className="
               flex items-center justify-center gap-[10px]
               rounded-[20px] bg-primary-01
               px-[70px] py-[20px]
               text-button-b-20 text-white
               cursor-pointer
             "
-          >
-            {confirmText}
-          </button>
+            >
+              {confirmText}
+            </button>
+          </div>
         </div>
       </div>
     </div>
