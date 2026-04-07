@@ -42,7 +42,7 @@ export default function CommonInputBox({
   ...restProps
 }: CommonInputBoxProps) {
   const variantStyle = clsx({
-    "border rounded-[15px] border-[2px] border-white px-[20px] py-[5px] text-body-b-16 text-white focus:outline-none focus:ring-0":
+    "h-[36px] border rounded-[15px] border-[2px] border-white px-[20px] text-body-b-16 text-white focus:outline-none focus:ring-0":
       variant === "profile",
     "border rounded-[10px] border-[3px] border-primary-02 px-[20px] py-[7px] text-body-sb-20 text-primary-02 focus:outline-none focus:ring-0":
       variant === "title",
