@@ -162,22 +162,22 @@ export default function RepairDetailPage() {
       <div className="flex h-full min-h-0 flex-col">
         <Header title="Repair" />
 
-        <div className="flex flex-1 min-h-0 flex-col mt-[24px]">
-          <div className="px-[10px]">
-            <ProductCard
-              imageSrc={product.imageUrl}
-              name={product.nickname}
-              description={product.productName}
-              actionType="close"
-              onClick={() => navigate(`/products/${product.productId}`)}
-              onActionClick={() => navigate(-1)}
-            />
-          </div>
-
-          {/* 구분선 */}
-          <div className="w-full h-[2px] bg-gray-02 mt-[21px]" />
-
+        <div className="flex flex-1 min-h-0 flex-col mt-[14px]">
           <div className="flex flex-col gap-[10px] my-[10px] flex-1 overflow-y-auto no-scrollbar">
+            <div className="px-[10px]">
+              <ProductCard
+                imageSrc={product.imageUrl}
+                name={product.nickname}
+                description={product.productName}
+                actionType="close"
+                onClick={() => navigate(`/products/${product.productId}`)}
+                onActionClick={() => navigate(-1)}
+              />
+            </div>
+
+            {/* 구분선 */}
+            <div className="w-full h-[2px] bg-gray-02 mt-[21px]" />
+
             <div className="min-h-0 px-[10px]">
               <RepairDetailContent
                 isEditMode={isEditMode}
