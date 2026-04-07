@@ -30,7 +30,7 @@ export default function Modal({
       <div
         className="
           relative
-          inline-flex h-[300px] w-[600px]
+          inline-flex h-[250px] w-[500px]
           flex-col items-center justify-center
           rounded-[20px] bg-secondary-01
         "
@@ -47,11 +47,11 @@ export default function Modal({
           <img src="/icons/close.svg" alt="닫기" width={30} height={30} />
         </button>
 
-        <div className="flex flex-col items-center justify-center gap-[50px] pt-[20px]">
+        <div className="flex flex-col items-center justify-center gap-[35px] pt-[20px]">
           {/* 제목 */}
           <p
             className="
-            text-title-m-32
+            text-title-sb-24
           "
           >
             {title}
@@ -60,7 +60,7 @@ export default function Modal({
           {/* 버튼 영역 */}
           <div
             className="
-            flex w-[450px] items-center justify-between px-[30px]
+            flex w-[300px] items-center justify-between
           "
           >
             <button
@@ -68,8 +68,8 @@ export default function Modal({
               onClick={onCancel}
               className="
               flex items-center justify-center gap-[10px]
-              rounded-[20px] bg-secondary-03
-              px-[70px] py-[20px]
+              rounded-[15px] bg-secondary-03
+              px-[50px] py-[10px]
               text-button-b-20 text-white
               cursor-pointer
 
@@ -83,8 +83,8 @@ export default function Modal({
               onClick={onConfirm}
               className="
               flex items-center justify-center gap-[10px]
-              rounded-[20px] bg-primary-01
-              px-[70px] py-[20px]
+              rounded-[15px] bg-primary-01
+              px-[50px] py-[10px]
               text-button-b-20 text-white
               cursor-pointer
             "
