@@ -17,6 +17,7 @@ export default function MyPage() {
               email={mockUserProfile.email}
               imageUrl={mockUserProfile.profileImage}
             />
+
             <MenuList
               items={[
                 { label: "계정 정보", onClick: () => {} },
