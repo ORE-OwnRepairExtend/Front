@@ -84,7 +84,7 @@ export const mockRepairDetailResponse: RepairDetail[] = [
       "렌즈 변경 렌즈 변경 렌즈 변경 렌즈 변경 렌즈 변경 렌즈 변경 렌즈 변경 렌즈 변경 렌즈 변경 렌즈 변경렌즈 변경 렌즈 변경 렌즈 변경 렌즈 변경 렌즈 변경 렌즈 변경 렌즈 변경 렌즈 변경 렌즈 변경 렌즈 변경렌즈 변경 렌즈 변경 렌즈 변경 렌즈 변경 렌즈 변경 렌즈 변경 렌즈 변경 렌즈 변경 렌즈 변경 렌즈 변경렌즈 변경 렌즈 변경 렌즈 변경 렌즈 변경 렌즈 변경 렌즈 변경 렌즈 변경 렌즈 변경 렌즈 변경 렌즈 변경렌즈 변경 렌즈 변경 렌즈 변경 렌즈 변경 렌즈 변경 렌즈 변경 렌즈 변경 렌즈 변경 렌즈 변경 렌즈 변경",
     repairCost: 64000,
     repairShop: "삼성 강남서비스센터",
-    receiptImageUrl: "/photos/receipt-example.png",
+    receiptImageUrl: "/photos/receipt.png",
     createdAt: "2026-03-24T12:00:00+09:00",
   },
   {
@@ -95,7 +95,7 @@ export const mockRepairDetailResponse: RepairDetail[] = [
       "ㅇㅁㅎ노함자ㅏㅓㄹㅁㄷ짉ㅁ재댜럳ㅇ나ㅓ리나ㅓㄷ랴ㅐㄷㄱㄷ재ㅑㅔㅑㅐㅐ에",
     repairCost: 30000,
     repairShop: "삼성 송파서비스센터",
-    receiptImageUrl: "/photos/receipt-example.png",
+    receiptImageUrl: "/photos/receipt.png",
     createdAt: "2026-03-24T14:00:00+09:00",
   },
 ];
