@@ -49,7 +49,7 @@ export default function RepairDetailPage() {
       <div className="flex h-full min-h-0 flex-col">
         <Header title="Repair" />
 
-        <div className="flex flex-1 min-h-0 flex-col mt-[21px]">
+        <div className="flex flex-1 min-h-0 flex-col mt-[24px]">
           <div className="px-[10px]">
             <ProductCard
               imageSrc={product.imageUrl}
