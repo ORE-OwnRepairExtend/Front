@@ -184,7 +184,7 @@ export default function MainPage() {
 
                     <div className="flex items-center gap-[6px]">
                       <span
-                        className={`w-[8px] h-[8px] rounded-full ${statusColor}`}
+                        className={`w-[12px] h-[12px] rounded-full ${statusColor}`}
                       />
                       <span className="text-body-m-10 text-gray-01">
                         {statusText}
