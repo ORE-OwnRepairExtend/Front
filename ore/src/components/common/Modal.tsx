@@ -30,8 +30,8 @@ export default function Modal({
       <div
         className="
           relative
-          inline-flex h-[300px] w-[600px]
-          flex-col items-center justify-center gap-[50px]
+          inline-flex h-[250px] w-[500px]
+          flex-col items-center justify-center
           rounded-[20px] bg-secondary-01
         "
       >
@@ -47,51 +47,51 @@ export default function Modal({
           <img src="/icons/close.svg" alt="닫기" width={30} height={30} />
         </button>
 
-        {/* 제목 */}
-        <p
-          className="
-            text-center
-           text-black
-           text-title-main
-          "
-        >
-          {title}
-        </p>
-
-        {/* 버튼 영역 */}
-        <div
-          className="
-            flex w-[450px] items-center justify-between px-[30px]
-          "
-        >
-          <button
-            type="button"
-            onClick={onCancel}
+        <div className="flex flex-col items-center justify-center gap-[35px] pt-[20px]">
+          {/* 제목 */}
+          <p
             className="
+            text-title-sb-24
+          "
+          >
+            {title}
+          </p>
+
+          {/* 버튼 영역 */}
+          <div
+            className="
+            flex w-[300px] items-center justify-between
+          "
+          >
+            <button
+              type="button"
+              onClick={onCancel}
+              className="
               flex items-center justify-center gap-[10px]
-              rounded-[20px] bg-secondary-03
-              px-[70px] py-[20px]
+              rounded-[15px] bg-secondary-03
+              px-[50px] py-[10px]
               text-button-b-20 text-white
               cursor-pointer
 
             "
-          >
-            {cancelText}
-          </button>
+            >
+              {cancelText}
+            </button>
 
-          <button
-            type="button"
-            onClick={onConfirm}
-            className="
+            <button
+              type="button"
+              onClick={onConfirm}
+              className="
               flex items-center justify-center gap-[10px]
-              rounded-[20px] bg-primary-01
-              px-[70px] py-[20px]
+              rounded-[15px] bg-primary-01
+              px-[50px] py-[10px]
               text-button-b-20 text-white
               cursor-pointer
             "
-          >
-            {confirmText}
-          </button>
+            >
+              {confirmText}
+            </button>
+          </div>
         </div>
       </div>
     </div>

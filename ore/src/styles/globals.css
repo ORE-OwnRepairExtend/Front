@@ -15,7 +15,7 @@
   /* 메인 색상 */
   --color-primary-01: #298882;
   --color-primary-02: #307d3d;
-  
+
   /* 보조 색상 */
   --color-secondary-01: #cdecea;
   --color-secondary-02: #c8ecce;
@@ -71,6 +71,13 @@
     font-size: 16px;
     font-weight: 700;
     line-height: 24px;
+  }
+
+  /* Title/semibold/24 */
+  .text-title-sb-24 {
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 32px;
   }
 
   /* Title/medium/32 */
