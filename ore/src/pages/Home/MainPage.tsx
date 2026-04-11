@@ -175,12 +175,22 @@ export default function MainPage() {
                     ? "보증임박"
                     : "보증정상";
 
+                const [title, brand] = item.name.split(" - ");
+
                 return (
                   <div
                     key={idx}
                     className="flex justify-between items-center border-b-2 border-gray-02 pb-[5px]"
                   >
-                    <span className="text-body-r-12">{item.name}</span>
+                    <span>
+                      <span className="text-black text-title-m-16">{title}</span>
+                      {brand && (
+                        <>
+                          <span className="text-gray-01 text-body-r-12"> - </span>
+                          <span className="text-gray-01 text-body-r-12">{brand}</span>
+                        </>
+                      )}
+                    </span>
 
                     <div className="flex items-center gap-[6px]">
                       <span
