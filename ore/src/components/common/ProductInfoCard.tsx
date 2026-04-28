@@ -10,7 +10,7 @@ export default function ProductInfoCard({
   desc,
 }: ProductInfoCardProps) {
   return (
-    <div className="w-[135px] h-[135px]">
+    <div className="w-[135px] h-[135px] mb-[3px]">
       
       {/* 카드 */}
       <div className="relative w-full h-full rounded-[20px] overflow-hidden shadow-sm">
