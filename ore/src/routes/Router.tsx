@@ -51,6 +51,7 @@ export default function Router() {
 
       {/* Home */}
       <Route path="/mypage" element={<MyPage />} />
+      <Route path="/mypage/edit" element={<MyPage />} />
       <Route path="/notifications" element={<NotificationPage />} />
       <Route path="/chatbot" element={<ChatbotPage />} />
     </Routes>

@@ -9,9 +9,8 @@ type ProfileCardProps = {
 export default function ProfileCard({ name, imageUrl }: ProfileCardProps) {
   const navigate = useNavigate();
 
-  // todo : 경로 수정 필요
   const EditClick = () => {
-    navigate("/edit");
+    navigate("/mypage/edit");
   };
 
   return (
