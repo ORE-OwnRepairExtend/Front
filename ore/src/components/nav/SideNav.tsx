@@ -55,9 +55,10 @@ export default function SideNav() {
         <div className="flex w-full flex-col gap-[20px]">
           {menuList.map((menu) => {
             const isActive =
-              menu.path === "/repairs"
-                ? location.pathname.includes("/repairs")
+              menu.path === "/repairs" || menu.path === "/mypage"
+                ? location.pathname.includes(menu.path)
                 : location.pathname === menu.path;
+
             return (
               <NavButton
                 key={menu.path}
