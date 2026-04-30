@@ -4,9 +4,13 @@ import MenuList from "../../components/my/MenuList";
 import ProfileBox from "../../components/profile/ProfileBox";
 import SecondLayout from "../../layout/SecondLayout";
 import { mockUserProfile } from "../../mocks/ueser";
+import { useLocation, useNavigate } from "react-router-dom";
 
 export default function MyPage() {
-  const [isEditMode, setIsEditMode] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const isEditMode = location.pathname === "/mypage/edit";
 
   const [name, setName] = useState(mockUserProfile.name);
   const [imageUrl, setImageUrl] = useState(mockUserProfile.profileImage);
@@ -19,19 +23,19 @@ export default function MyPage() {
   const handleEditStart = () => {
     setEditName(name);
     setEditImageUrl(imageUrl);
-    setIsEditMode(true);
+    navigate("/mypage/edit");
   };
 
   const handleEditCancel = () => {
     setEditName(name);
     setEditImageUrl(imageUrl);
-    setIsEditMode(false);
+    navigate("/mypage");
   };
 
   const handleEditSave = () => {
     setName(editName);
     setImageUrl(editImageUrl);
-    setIsEditMode(false);
+    navigate("/mypage");
   };
 
   const handleImageChange = (file: File) => {
