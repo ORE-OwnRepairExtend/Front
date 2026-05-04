@@ -32,8 +32,9 @@ export default function SearchBar({
         className="
           flex-1 bg-transparent outline-none
           text-black
-          text-body-l-12
+          text-body-r-15
           placeholder:text-primary-02
+          placeholder:text-[12px]
         "
         onKeyDown={(e) => {
           if (e.key === "Enter") {

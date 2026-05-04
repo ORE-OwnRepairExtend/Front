@@ -29,8 +29,10 @@ export default function RepairListPage() {
               />
             ))}
           </div>
-
-          <AddButton title="수리 이력 등록하기" />
+          <AddButton
+            title="수리 이력 등록하기"
+            onClick={() => navigate("/repairs/new")}
+          />
         </div>
       </div>
     </MainLayout>
