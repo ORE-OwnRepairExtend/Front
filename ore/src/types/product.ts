@@ -9,6 +9,8 @@ export type ProductSummary = {
   hasRepairHistory: boolean;
   purchaseDate: string;
   createdAt: string;
+
+  category: "mobile" | "kitchen"; //api 맞게 수정 필요
 };
 
 export type WarrantyInfo = {

@@ -20,15 +20,31 @@ export default function ProductSelectModal({
   onSelect,
 }: ProductSelectModalProps) {
   const [search, setSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
+  const handleCategoryClick = (category: string) => {
+    setSelectedCategory((prev) => (prev === category ? null : category));
+  };
   if (!open) return null;
 
-  const filteredProducts = products.filter((product) =>
-    `${product.nickname} ${product.productName}`
-      .toLowerCase()
-      .includes(search.toLowerCase()),
-  );
+  const filteredProducts = products
+    // 카테고리 필터
+    .filter((product) => {
+      if (!selectedCategory) return true;
+
+      if (selectedCategory === "favorite") {
+        return product.isFavorite;
+      }
+
+      // todo: api 카테고리랑 다시 맞추기
+      return product.category === selectedCategory;
+    })
+    // 검색 필터
+    .filter((product) =>
+      `${product.nickname} ${product.productName}`
+        .toLowerCase()
+        .includes(search.toLowerCase()),
+    );
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-01/80">
@@ -77,21 +93,23 @@ export default function ProductSelectModal({
             <div className="flex w-max gap-[10px]">
               <CategoryButton
                 label="즐겨찾기"
-                icon={<img src={starIcon} className="w-[20px] h-[20px]" />}
+                icon={<img src={starIcon} className="h-[20px] w-[20px]" />}
                 isSelected={selectedCategory === "favorite"}
-                onClick={() => setSelectedCategory("favorite")}
+                onClick={() => handleCategoryClick("favorite")}
               />
+
               <CategoryButton
                 label="모바일 기기"
-                icon={<img src={phoneIcon} className="w-[20px] h-[20px]" />}
+                icon={<img src={phoneIcon} className="h-[20px] w-[20px]" />}
                 isSelected={selectedCategory === "mobile"}
-                onClick={() => setSelectedCategory("mobile")}
+                onClick={() => handleCategoryClick("mobile")}
               />
+
               <CategoryButton
                 label="주방 가전"
-                icon={<img src={phoneIcon} className="w-[20px] h-[20px]" />}
+                icon={<img src={phoneIcon} className="h-[20px] w-[20px]" />}
                 isSelected={selectedCategory === "kitchen"}
-                onClick={() => setSelectedCategory("kitchen")}
+                onClick={() => handleCategoryClick("kitchen")}
               />
             </div>
           </div>
