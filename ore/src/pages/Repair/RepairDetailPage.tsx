@@ -16,7 +16,7 @@ type RepairEditForm = {
   content: string;
   price: string;
   shopName: string;
-  receiptImageUrl: string;
+  receiptImageUrl?: string;
 };
 
 type RepairDetailState = {
@@ -64,7 +64,7 @@ export default function RepairDetailPage() {
     content: "",
     price: "",
     shopName: "",
-    receiptImageUrl: "",
+    receiptImageUrl: undefined,
   });
 
   const getInitialForm = (
@@ -85,7 +85,15 @@ export default function RepairDetailPage() {
     }));
   };
 
-  const handleReceiptImageChange = (file: File) => {
+  const handleReceiptImageChange = (file: File | null) => {
+    if (!file) {
+      setEditForm((prev) => ({
+        ...prev,
+        receiptImageUrl: undefined,
+      }));
+      return;
+    }
+
     const previewUrl = URL.createObjectURL(file);
 
     setEditForm((prev) => ({

@@ -24,7 +24,7 @@ export default function RepairCreatePage() {
     content: "",
     price: "",
     shopName: "",
-    receiptImage: undefined as File | undefined,
+    receiptImage: null as File | null,
   });
 
   return (
