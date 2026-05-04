@@ -1,5 +1,8 @@
+type ModalType = "alert" | "confirm";
+
 type ModalProps = {
   open: boolean;
+  type?: ModalType;
   title: string;
   onClose?: () => void;
   onCancel?: () => void;
@@ -10,6 +13,7 @@ type ModalProps = {
 
 export default function Modal({
   open,
+  type = "confirm",
   title,
   onClose,
   onCancel,
@@ -18,6 +22,8 @@ export default function Modal({
   confirmText = "삭제",
 }: ModalProps) {
   if (!open) return null;
+
+  const isAlert = type === "alert";
 
   return (
     <div
@@ -59,37 +65,37 @@ export default function Modal({
 
           {/* 버튼 영역 */}
           <div
-            className="
-            flex w-[300px] items-center justify-between
-          "
+            className={`
+              flex items-center
+              ${isAlert ? "justify-center" : "w-[300px] justify-between"}
+            `}
           >
-            <button
-              type="button"
-              onClick={onCancel}
-              className="
-              flex items-center justify-center gap-[10px]
-              rounded-[15px] bg-secondary-03
-              px-[50px] py-[10px]
-              text-button-b-20 text-white
-              cursor-pointer
-
-            "
-            >
-              {cancelText}
-            </button>
+            {!isAlert && (
+              <button
+                type="button"
+                onClick={onCancel}
+                className="
+                  flex cursor-pointer items-center justify-center gap-[10px]
+                  rounded-[15px] bg-secondary-03
+                  px-[50px] py-[10px]
+                  text-button-b-20 text-white
+                "
+              >
+                {cancelText}
+              </button>
+            )}
 
             <button
               type="button"
               onClick={onConfirm}
               className="
-              flex items-center justify-center gap-[10px]
-              rounded-[15px] bg-primary-01
-              px-[50px] py-[10px]
-              text-button-b-20 text-white
-              cursor-pointer
-            "
+                flex cursor-pointer items-center justify-center gap-[10px]
+                rounded-[15px] bg-primary-01
+                px-[50px] py-[10px]
+                text-button-b-20 text-white
+              "
             >
-              {confirmText}
+              {isAlert ? "확인" : confirmText}
             </button>
           </div>
         </div>
