@@ -1,5 +1,7 @@
 import { useState } from "react";
 import ProductInputBox from "../../components/product/ProductInputBox";
+import ProductImageButton from "../../components/product/ProductImageButton";
+import ProductCreateContent from "../../components/product/ProductCreateContent";
 
 export default function ProductCreatePage() {
   const [productName, setProductName] = useState("");
@@ -49,6 +51,8 @@ export default function ProductCreatePage() {
         placeholder="메모를 입력해주세요"
         className="w-full"
       />
+      <ProductImageButton />
+      <ProductCreateContent />
     </div>
   );
 }

@@ -51,7 +51,7 @@ export default function ProductInputBox({
 
   const wrapperStyle = clsx(
     "flex items-center bg-neutral-01 px-[15px]  py-[10px] gap-[10px]",
-    isTextarea ? "min-h-[65px] w-full" : "h-[28px]",
+    isTextarea ? "min-h-[40px] w-full" : "h-full",
     className,
   );
 
