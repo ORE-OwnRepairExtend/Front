@@ -10,14 +10,18 @@ import RepairDetailContent from "../../components/repair/RepairDetailContent";
 import Modal from "../../components/common/Modal";
 
 export default function RepairCreatePage() {
-  const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
-
   const products = mockProductListResponse;
   const [selectedProduct, setSelectedProduct] = useState<ProductSummary | null>(
     null,
   );
 
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+  const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
+
+  const [alertModal, setAlertModal] = useState({
+    open: false,
+    message: "",
+  });
 
   const [form, setForm] = useState({
     title: "",
@@ -30,28 +34,24 @@ export default function RepairCreatePage() {
 
   const handleSubmit = () => {
     if (!selectedProduct) {
-      alert("제품을 선택해주세요.");
+      setAlertModal({
+        open: true,
+        message: "제품을 선택해주세요.",
+      });
       return;
     }
 
     if (!form.title || !form.repairDate || !form.content) {
-      alert("필수 입력값을 모두 입력해주세요.");
+      setAlertModal({
+        open: true,
+        message: "수리 이력을 입력해주세요.",
+      });
       return;
     }
 
-    const payload = {
-      productId: selectedProduct.productId,
-      title: form.title,
-      repairDate: form.repairDate,
-      content: form.content,
-      price: form.price,
-      shopName: form.shopName,
-      receiptImage: form.receiptImage,
-    };
+    setIsSubmitModalOpen(true);
 
-    console.log("등록 payload:", payload);
-
-    // todo:api연결
+    // todo: API 연동 후 성공 시 이동 처리
   };
 
   return (
@@ -141,6 +141,7 @@ export default function RepairCreatePage() {
         </div>
       </div>
 
+      {/* 등록확인모달 */}
       <Modal
         open={isSubmitModalOpen}
         title="수리 이력을 등록하시겠습니까?"
@@ -152,6 +153,15 @@ export default function RepairCreatePage() {
         }}
         cancelText="취소"
         confirmText="등록"
+      />
+
+      {/* alert 모달 */}
+      <Modal
+        open={alertModal.open}
+        type="alert"
+        title={alertModal.message}
+        onClose={() => setAlertModal({ open: false, message: "" })}
+        onConfirm={() => setAlertModal({ open: false, message: "" })}
       />
     </SecondLayout>
   );
