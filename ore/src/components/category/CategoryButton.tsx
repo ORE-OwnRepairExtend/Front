@@ -20,7 +20,8 @@ export default function CategoryButton({
         rounded-[25px]
         transition-all duration-200
         px-[20px] py-[5px]
-        w-[150px] h-[50px]
+        w-max h-[50px]
+        cursor-pointer
         
         ${
           isSelected

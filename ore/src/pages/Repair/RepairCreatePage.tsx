@@ -5,9 +5,12 @@ import { useState } from "react";
 import type { ProductSummary } from "../../types/product";
 import CommonButton from "../../components/common/CommonButton";
 import ProductCard from "../../components/common/ProductCard";
+import ProductSelectModal from "../../components/repair/ProductSelectModal";
+import { mockProductListResponse } from "../../mocks/products";
 
 export default function RepairCreatePage() {
   // const { productId } = useParams();
+  const products = mockProductListResponse;
   const [selectedProduct, setSelectedProduct] = useState<ProductSummary | null>(
     null,
   );
@@ -43,12 +46,22 @@ export default function RepairCreatePage() {
                 imageSrc={selectedProduct.imageUrl}
                 name={selectedProduct.nickname}
                 description={selectedProduct.productName}
+                showAction={false}
                 onClick={() => setIsProductModalOpen(true)}
               />
             )}
           </section>
 
           {/* 제품 선택 모달 */}
+          <ProductSelectModal
+            open={isProductModalOpen}
+            products={products}
+            onClose={() => setIsProductModalOpen(false)}
+            onSelect={(product) => {
+              setSelectedProduct(product);
+              setIsProductModalOpen(false);
+            }}
+          />
         </div>
       </div>
     </SecondLayout>

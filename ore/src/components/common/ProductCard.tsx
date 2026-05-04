@@ -3,6 +3,8 @@ type ProductCardProps = {
   name: string;
   description: string;
   actionType?: "arrow" | "close";
+  showAction?: boolean;
+  className?: string;
   onClick?: () => void;
   onActionClick?: () => void;
 };
@@ -11,6 +13,8 @@ export default function ProductCard({
   name,
   description,
   actionType = "arrow",
+  showAction = true,
+  className,
   onClick,
   onActionClick,
 }: ProductCardProps) {
@@ -18,13 +22,14 @@ export default function ProductCard({
     <button
       type="button"
       onClick={onClick}
-      className="
+      className={`
         flex w-full items-center gap-[30px]
         rounded-[20px] bg-neutral-01
         px-[30px] py-[20px]
         text-left
         cursor-pointer
-      "
+        ${className ?? ""}
+      `}
     >
       {/* 제품이미지 */}
       <div
@@ -44,21 +49,23 @@ export default function ProductCard({
       </div>
 
       {/* 버튼 */}
-      <div
-        className="shrink-0 px-[10px] py-[50px] -mx-[10px] -my-[50px]"
-        onClick={(e) => {
-          if (actionType === "close") {
-            e.stopPropagation();
-            onActionClick?.();
-          }
-        }}
-      >
-        {actionType === "arrow" ? (
-          <img src="/icons/forword.svg" alt="더보기" width={24} height={24} />
-        ) : (
-          <img src="/icons/close.svg" alt="닫기" width={24} height={24} />
-        )}
-      </div>
+      {showAction && (
+        <div
+          className="shrink-0 px-[10px] py-[50px] -mx-[10px] -my-[50px]"
+          onClick={(e) => {
+            if (actionType === "close") {
+              e.stopPropagation();
+              onActionClick?.();
+            }
+          }}
+        >
+          {actionType === "arrow" ? (
+            <img src="/icons/forword.svg" alt="더보기" width={24} height={24} />
+          ) : (
+            <img src="/icons/close.svg" alt="닫기" width={24} height={24} />
+          )}
+        </div>
+      )}
     </button>
   );
 }
