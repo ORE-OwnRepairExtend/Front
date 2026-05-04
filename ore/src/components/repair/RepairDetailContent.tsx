@@ -1,3 +1,4 @@
+import AddFileButton from "../common/AddFileButton";
 import CommonInputBox from "../common/CommonInputBox";
 
 type RepairDetailContentProps = {
@@ -134,63 +135,7 @@ export default function RepairDetailContent({
           <span className="text-body-sb-16 text-primary-01">영수증</span>
           <div className="relative">
             {receiptImageUrl ? (
-              <div className="w-fit overflow-hidden rounded-[8px]">
-                <img
-                  src={receiptImageUrl}
-                  alt="영수증 이미지 미리보기"
-                  className="h-auto max-w-[220px] object-contain"
-                />
-              </div>
-            ) : (
-              <span className="text-body-m-16 text-gray-01">
-                등록된 영수증 이미지가 없습니다.
-              </span>
-            )}
-
-            {/* 이미지 변경 버튼 */}
-            {isEditMode && (
-              <label
-                className="
-        absolute inset-0
-        flex items-center justify-center
-        cursor-pointer
-        rounded-[10px]
-        hover:bg-black/40
-      "
-              >
-                <span className="px-[16px] py-[6px] rounded-[10px] bg-primary-01 text-body-m-10 text-white">
-                  이미지 변경
-                </span>
-
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleFileChange}
-                />
-              </label>
-            )}
-          </div>
-
-          {/* {isEditMode ? (
-            <div className="flex flex-col gap-[12px]">
-              <label
-                className="
-                  flex w-fit cursor-pointer items-center justify-center
-                  rounded-[12px] bg-primary-01 px-[18px] py-[10px]
-                  text-body-m-16 text-white
-                "
-              >
-                이미지 업로드
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-              </label>
-
-              {receiptImageUrl ? (
+              <>
                 <div className="w-fit overflow-hidden rounded-[8px]">
                   <img
                     src={receiptImageUrl}
@@ -198,25 +143,41 @@ export default function RepairDetailContent({
                     className="h-auto max-w-[220px] object-contain"
                   />
                 </div>
-              ) : (
-                <span className="text-body-m-16 text-gray-01">
-                  등록된 영수증 이미지가 없습니다.
-                </span>
-              )}
-            </div>
-          ) : receiptImageUrl ? (
-            <div className="w-fit overflow-hidden rounded-[8px]">
-              <img
-                src={receiptImageUrl}
-                alt="영수증 이미지"
-                className="h-auto max-w-[220px] object-contain"
+
+                {isEditMode && (
+                  <label
+                    className="
+        absolute inset-0
+        flex items-center justify-center
+        cursor-pointer
+        rounded-[10px]
+        hover:bg-black/40
+      "
+                  >
+                    <span className="px-[16px] py-[6px] rounded-[10px] bg-primary-01 text-body-m-10 text-white">
+                      이미지 변경
+                    </span>
+
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleFileChange}
+                    />
+                  </label>
+                )}
+              </>
+            ) : isEditMode ? (
+              <AddFileButton
+                title="이미지 업로드"
+                onFileSelect={(file) => onReceiptImageChange?.(file)}
               />
-            </div>
-          ) : (
-            <span className="text-body-m-16 text-gray-01">
-              등록된 영수증 이미지가 없습니다.
-            </span>
-          )} */}
+            ) : (
+              <span className="text-body-m-16 text-gray-01">
+                등록된 영수증 이미지가 없습니다.
+              </span>
+            )}
+          </div>
         </div>
 
         <div className="h-[2px] w-full bg-gray-02" />

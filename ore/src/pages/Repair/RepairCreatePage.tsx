@@ -7,6 +7,7 @@ import CommonButton from "../../components/common/CommonButton";
 import ProductCard from "../../components/common/ProductCard";
 import ProductSelectModal from "../../components/repair/ProductSelectModal";
 import { mockProductListResponse } from "../../mocks/products";
+import RepairDetailContent from "../../components/repair/RepairDetailContent";
 
 export default function RepairCreatePage() {
   // const { productId } = useParams();
@@ -16,6 +17,15 @@ export default function RepairCreatePage() {
   );
 
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+
+  const [form, setForm] = useState({
+    title: "",
+    repairDate: "",
+    content: "",
+    price: "",
+    shopName: "",
+    receiptImage: undefined as File | undefined,
+  });
 
   return (
     <SecondLayout>
@@ -61,6 +71,31 @@ export default function RepairCreatePage() {
               setSelectedProduct(product);
               setIsProductModalOpen(false);
             }}
+          />
+
+          {/* 수리 이력 입력폼 */}
+          <RepairDetailContent
+            isEditMode={true}
+            title={form.title}
+            repairDate={form.repairDate}
+            content={form.content}
+            price={form.price}
+            shopName={form.shopName}
+            receiptImageUrl={
+              form.receiptImage
+                ? URL.createObjectURL(form.receiptImage)
+                : undefined
+            }
+            onTitleChange={(v) => setForm((p) => ({ ...p, title: v }))}
+            onRepairDateChange={(v) =>
+              setForm((p) => ({ ...p, repairDate: v }))
+            }
+            onContentChange={(v) => setForm((p) => ({ ...p, content: v }))}
+            onPriceChange={(v) => setForm((p) => ({ ...p, price: v }))}
+            onShopNameChange={(v) => setForm((p) => ({ ...p, shopName: v }))}
+            onReceiptImageChange={(file) =>
+              setForm((p) => ({ ...p, receiptImage: file }))
+            }
           />
         </div>
       </div>
