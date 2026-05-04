@@ -53,7 +53,10 @@ export default function RepairHistoryPage() {
               ))}
             </div>
 
-            <AddButton title="수리 이력 등록하기" />
+            <AddButton
+              title="수리 이력 등록하기"
+              onClick={() => navigate(`/products/${productId}/repairs/new`)}
+            />
           </div>
         </div>
       </div>

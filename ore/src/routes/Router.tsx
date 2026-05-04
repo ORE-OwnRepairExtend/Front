@@ -48,6 +48,7 @@ export default function Router() {
         path="/products/:productId/repairs/new"
         element={<RepairCreatePage />}
       />
+      <Route path="/repairs/new" element={<RepairCreatePage />} />
 
       {/* Home */}
       <Route path="/mypage" element={<MyPage />} />
