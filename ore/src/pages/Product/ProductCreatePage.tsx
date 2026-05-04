@@ -1,58 +1,21 @@
-import { useState } from "react";
-import ProductInputBox from "../../components/product/ProductInputBox";
-import ProductImageButton from "../../components/product/ProductImageButton";
+import { useNavigate } from "react-router-dom";
+import ProductCreateHeader from "../../components/product/ProductCreateHeader";
 import ProductCreateContent from "../../components/product/ProductCreateContent";
 
 export default function ProductCreatePage() {
-  const [productName, setProductName] = useState("");
-  const [purchaseDate, setPurchaseDate] = useState("");
-  const [warrantyPeriod, setWarrantyPeriod] = useState("");
-  const [replacementCycle, setReplacementCycle] = useState("");
-  const [memo, setMemo] = useState("");
+  const navigate = useNavigate();
 
   return (
-    <div className="p-4">
-      <h1 className="text-xl font-bold">제품 등록</h1>
-      <ProductInputBox
-        value=""
-        onChange={(e) => setProductName(e.target.value)}
-        placeholder="제품명을 입력해주세요"
-        className="w-[250px]"
-      />
-      <ProductInputBox
-        variant="date"
-        value={purchaseDate}
-        onChange={(e) => setPurchaseDate(e.target.value)}
-        className="w-[120px]"
-      />
-      <ProductInputBox
-        value={warrantyPeriod}
-        onChange={(e) => setWarrantyPeriod(e.target.value)}
-        suffix="개월"
-        className="w-[100px] "
-      />
-      <ProductInputBox
-        value={warrantyPeriod}
-        onChange={(e) => setWarrantyPeriod(e.target.value)}
-        prefix="부품명"
-        className="w-[100px] "
-      />
-      <ProductInputBox
-        value={replacementCycle}
-        onChange={(e) => setReplacementCycle(e.target.value)}
-        prefix="교체주기"
-        suffix="개월"
-        className="w-[200px]"
-      />
-      <ProductInputBox
-        multiline
-        value={memo}
-        onChange={(e) => setMemo(e.target.value)}
-        placeholder="메모를 입력해주세요"
-        className="w-full"
-      />
-      <ProductImageButton />
-      <ProductCreateContent />
-    </div>
+    <main className="flex h-screen items-center justify-center bg-neutral-03">
+      <section className="flex h-[calc(100vh-100px)] w-[1200px] flex-col overflow-hidden rounded-[50px] bg-white p-[30px]">
+        <ProductCreateHeader onClose={() => navigate(-1)} />
+
+        <div className="flex min-h-0 flex-1 rounded-b-[50px] bg-neutral-04 p-[30px]">
+          <div className="min-h-0 flex-1 overflow-y-auto no-scrollbar">
+            <ProductCreateContent />
+          </div>
+        </div>
+      </section>
+    </main>
   );
 }

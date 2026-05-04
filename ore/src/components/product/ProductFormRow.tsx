@@ -14,7 +14,7 @@ export default function ProductFormRow({
   contentClassName = "",
 }: ProductFormRowProps) {
   return (
-    <div className={`flex ${className}`}>
+    <div className={`flex bg-white ${className}`}>
       <div className="flex min-h-[60px] w-[150px] shrink-0 items-start gap-[10px] px-[15px] py-[10px] text-body-m-16 text-gray-01">
         <span>{label}</span>
         {required && (

@@ -6,6 +6,7 @@ import CommonButton from "../common/CommonButton";
 import PartInputRow from "./PartInputRow";
 import ProductCheckbox from "./ProductCheckbox";
 import ProductFormRow from "./ProductFormRow";
+import Modal from "../common/Modal";
 
 type PartItem = {
   id: number;
@@ -35,6 +36,15 @@ export default function ProductCreateContent() {
   const [productImage, setProductImage] = useState<File | null>(null);
 
   const [parts, setParts] = useState<PartItem[]>([]);
+
+  const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
+  const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
+
+  const isRequiredFilled =
+    productName.trim() !== "" &&
+    selectedCategory !== "" &&
+    purchaseDate !== "" &&
+    (noWarranty || warrantyPeriod.trim() !== "");
 
   const handlePartChange = (
     id: number,
@@ -70,8 +80,8 @@ export default function ProductCreateContent() {
 
   return (
     <section className="w-full">
-      <div className="flex flex-col gap-[3px]">
-        <div className="flex w-full px-[15px] py-[10px] text-body-sb-20 text-gray-01">
+      <div className="flex flex-col gap-[3px] ">
+        <div className="flex w-full px-[15px] py-[10px] text-body-sb-20 text-gray-01 bg-white">
           제품 정보
         </div>
 
@@ -191,12 +201,42 @@ export default function ProductCreateContent() {
       <div className="flex px-[15px] py-[10px]">
         <CommonButton
           variant="secondary"
-          onClick={handleSubmit}
+          onClick={() => {
+            if (!isRequiredFilled) {
+              setIsAlertModalOpen(true);
+              return;
+            }
+
+            setIsSubmitModalOpen(true);
+          }}
           className="w-full"
         >
           등록
         </CommonButton>
       </div>
+
+      <Modal
+        open={isAlertModalOpen}
+        type="alert"
+        title="필수 항목을 모두 입력해주세요."
+        onClose={() => setIsAlertModalOpen(false)}
+        onConfirm={() => setIsAlertModalOpen(false)}
+        confirmText="확인"
+      />
+
+      <Modal
+        open={isSubmitModalOpen}
+        type="confirm"
+        title="제품을 등록하시겠습니까?"
+        onClose={() => setIsSubmitModalOpen(false)}
+        onCancel={() => setIsSubmitModalOpen(false)}
+        onConfirm={() => {
+          handleSubmit();
+          setIsSubmitModalOpen(false);
+        }}
+        cancelText="취소"
+        confirmText="등록"
+      />
     </section>
   );
 }
