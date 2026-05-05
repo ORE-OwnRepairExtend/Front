@@ -2,6 +2,7 @@ import { useState } from "react";
 import AddFileButton from "../common/AddFileButton";
 import CommonInputBox from "../common/CommonInputBox";
 import Modal from "../common/Modal";
+import DeleteButton from "../common/DeleteButton";
 
 type RepairDetailContentProps = {
   isEditMode?: boolean;
@@ -174,24 +175,10 @@ export default function RepairDetailContent({
 
                 {/* 이미지 삭제 버튼 */}
                 {isEditMode && (
-                  <button
-                    type="button"
+                  <DeleteButton
+                    className="absolute right-2 top-2"
                     onClick={() => setIsReceiptDeleteModalOpen(true)}
-                    className="
-                    absolute top-2 right-2
-                    flex items-center justify-center
-                    w-[24px] h-[24px]
-                    rounded-full bg-primary-01
-                    cursor-pointer
-                    "
-                  >
-                    <img
-                      src="/icons/close_white.svg"
-                      alt="닫기"
-                      width={20}
-                      height={20}
-                    />
-                  </button>
+                  />
                 )}
               </div>
             ) : isEditMode ? (

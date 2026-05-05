@@ -16,7 +16,7 @@ export default function ProductListPage() {
   const [selected, setSelected] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
 
   // 드래그 스크롤
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -45,27 +45,72 @@ export default function ProductListPage() {
 
   const categories = [
     { label: "All" },
-    { label: "즐겨찾기", icon: <img src={starIcon} className="w-[20px] h-[20px]" /> },
-    { label: "모바일 기기", icon: <img src={phoneIcon} className="w-[20px] h-[20px]" /> },
-    { label: "주방 가전", icon: <img src={phoneIcon} className="w-[20px] h-[20px]" /> },
-    { label: "생활 가전", icon: <img src={phoneIcon} className="w-[20px] h-[20px]" /> },
-    { label: "모바일 기기", icon: <img src={phoneIcon} className="w-[20px] h-[20px]" /> },
-    { label: "모바일 기기", icon: <img src={phoneIcon} className="w-[20px] h-[20px]" /> },
-    { label: "모바일 기기", icon: <img src={phoneIcon} className="w-[20px] h-[20px]" /> }
+    {
+      label: "즐겨찾기",
+      icon: <img src={starIcon} className="w-[20px] h-[20px]" />,
+    },
+    {
+      label: "모바일 기기",
+      icon: <img src={phoneIcon} className="w-[20px] h-[20px]" />,
+    },
+    {
+      label: "주방 가전",
+      icon: <img src={phoneIcon} className="w-[20px] h-[20px]" />,
+    },
+    {
+      label: "생활 가전",
+      icon: <img src={phoneIcon} className="w-[20px] h-[20px]" />,
+    },
+    {
+      label: "모바일 기기",
+      icon: <img src={phoneIcon} className="w-[20px] h-[20px]" />,
+    },
+    {
+      label: "모바일 기기",
+      icon: <img src={phoneIcon} className="w-[20px] h-[20px]" />,
+    },
+    {
+      label: "모바일 기기",
+      icon: <img src={phoneIcon} className="w-[20px] h-[20px]" />,
+    },
   ];
 
   const products = [
-    { id: 1, imageSrc: cameraImg, name: "카메라", description: "SONY 미러리스 카메라" },
-    { id: 2, imageSrc: cameraImg, name: "카메라", description: "SONY 미러리스 카메라" },
-    { id: 3, imageSrc: cameraImg, name: "카메라", description: "SONY 미러리스 카메라" },
-    { id: 4, imageSrc: cameraImg, name: "카메라", description: "SONY 미러리스 카메라" },
-    { id: 5, imageSrc: cameraImg, name: "카메라", description: "SONY 미러리스 카메라" },
+    {
+      id: 1,
+      imageSrc: cameraImg,
+      name: "카메라",
+      description: "SONY 미러리스 카메라",
+    },
+    {
+      id: 2,
+      imageSrc: cameraImg,
+      name: "카메라",
+      description: "SONY 미러리스 카메라",
+    },
+    {
+      id: 3,
+      imageSrc: cameraImg,
+      name: "카메라",
+      description: "SONY 미러리스 카메라",
+    },
+    {
+      id: 4,
+      imageSrc: cameraImg,
+      name: "카메라",
+      description: "SONY 미러리스 카메라",
+    },
+    {
+      id: 5,
+      imageSrc: cameraImg,
+      name: "카메라",
+      description: "SONY 미러리스 카메라",
+    },
   ];
 
   return (
     <SecondLayout>
       <div className="flex h-full flex-col gap-[20px]">
-
         {/* Header */}
         <Header
           title="Product"
@@ -139,7 +184,6 @@ export default function ProductListPage() {
             <AddButton title="제품 등록" onClick={() => setIsModalOpen(true)} />
           </div>
         </div>
-
       </div>
 
       {/* 모달 */}
@@ -151,7 +195,7 @@ export default function ProductListPage() {
           setIsModalOpen(false);
         }}
         onManualClick={() => {
-          console.log("수동 입력");
+          navigate("/products/new");
           setIsModalOpen(false);
         }}
       />
