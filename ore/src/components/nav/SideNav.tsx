@@ -1,9 +1,24 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import NavButton from "./NavButton";
+import { api } from "../../api/api";
 
 export default function SideNav() {
   const location = useLocation();
   const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await api.post("/auth/logout");
+
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("user");
+
+      navigate("/login", { replace: true });
+    } catch (error) {
+      console.error("로그아웃 실패:", error);
+      alert("로그아웃에 실패했습니다. 다시 시도해주세요.");
+    }
+  };
 
   const menuList = [
     {
@@ -76,12 +91,10 @@ export default function SideNav() {
       {/* 로그아웃 */}
       <div className="w-full">
         <NavButton
-          defaultIcon={"/icons/nav/logout.svg"}
+          defaultIcon="/icons/nav/logout.svg"
           label="Log Out"
           variant="logout"
-          onClick={() => {
-            console.log("logout");
-          }}
+          onClick={handleLogout}
         />
       </div>
     </div>
