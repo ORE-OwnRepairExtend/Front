@@ -1,10 +1,12 @@
 import { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+
 import Header from "../../components/header/Header";
 import MenuList from "../../components/my/MenuList";
 import ProfileBox from "../../components/profile/ProfileBox";
 import SecondLayout from "../../layout/SecondLayout";
 import { mockUserProfile } from "../../mocks/ueser";
-import { useLocation, useNavigate } from "react-router-dom";
+import { api } from "../../api/api";
 
 export default function MyPage() {
   const location = useLocation();
@@ -43,6 +45,20 @@ export default function MyPage() {
     setEditImageUrl(previewUrl);
   };
 
+  const handleLogout = async () => {
+    try {
+      await api.post("/auth/logout");
+
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("user");
+
+      navigate("/login", { replace: true });
+    } catch (error) {
+      console.error("로그아웃 실패:", error);
+      alert("로그아웃에 실패했습니다. 다시 시도해주세요.");
+    }
+  };
+
   return (
     <SecondLayout>
       <div className="flex h-full flex-col">
@@ -67,7 +83,7 @@ export default function MyPage() {
               items={[
                 { label: "계정 정보", onClick: () => {} },
                 { label: "이용 약관", onClick: () => {} },
-                { label: "로그아웃", onClick: () => {} },
+                { label: "로그아웃", onClick: handleLogout },
               ]}
             />
           </div>
