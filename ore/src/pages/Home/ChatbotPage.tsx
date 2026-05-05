@@ -1,7 +1,21 @@
+import Header from "../../components/header/Header";
+import MainLayout from "../../layout/MainLayout";
+import ChatbotBox from "../../components/chatbot/ChatbotBox";
+
 export default function ChatbotPage() {
   return (
-    <div className="p-4">
-      <h1 className="text-xl font-bold">AI 챗봇</h1>
-    </div>
+    <MainLayout>
+      <div className="flex h-full min-h-0 flex-col">
+        <Header
+          title="Own Repair Extend"
+          subtitle="더 오래, 더 제대로"
+          isMain
+        />
+
+        <div className="mt-[10px] flex-1 min-h-0">
+          <ChatbotBox />
+        </div>
+      </div>
+    </MainLayout>
   );
 }
