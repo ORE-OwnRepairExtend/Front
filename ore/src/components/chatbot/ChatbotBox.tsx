@@ -70,24 +70,24 @@ export default function ChatbotBox() {
         px-[45px] py-[25px]
       "
     >
-      {/* 날짜 구분선 */}
-      <div className="mb-[20px] flex items-center justify-center">
-        <div className="h-0 flex-1 border-t-2 border-dashed border-primary-01" />
-        <span
-          className="
-            mx-[8px] rounded-[100px]
-            bg-primary-01 px-[12px] py-[6px]
-            text-body-sb-12 text-white
-          "
-        >
-          Sat 03/14
-        </span>
-        <div className="h-0 flex-1 border-t-2 border-dashed border-primary-01" />
-      </div>
-
       {/* 채팅 메시지 영역 */}
       <div className="flex-1 min-h-0 overflow-y-auto pr-[5px] no-scrollbar">
         <div className="flex flex-col gap-[18px]">
+          {/* 날짜 구분선 */}
+          <div className="mb-[2px] flex items-center justify-center">
+            <div className="h-0 flex-1 border-t-2 border-dashed border-primary-01" />
+            <span
+              className="
+                mx-[8px] rounded-[100px]
+                bg-primary-01 px-[12px] py-[6px]
+                text-body-sb-12 text-white
+              "
+            >
+              Sat 03/14
+            </span>
+            <div className="h-0 flex-1 border-t-2 border-dashed border-primary-01" />
+          </div>
+
           {chatMessages.map((message) => (
             <div
               key={message.id}
