@@ -54,11 +54,11 @@ export default function SideNav() {
   ];
 
   return (
-    <div className="flex h-full w-[140px] pt-[30px] pb-[80px] flex-col justify-between">
+    <div className="flex h-full w-[140px] pt-[30px] pb-[50px] flex-col justify-between">
       {/* 로고 + 메뉴 */}
       <div
         className="
-        flex w-[140px] flex-col gap-[30px]
+        flex w-[140px] flex-col gap-[20px]
       "
       >
         {/* 로고 */}
@@ -67,10 +67,12 @@ export default function SideNav() {
         </div>
 
         {/* 메뉴 */}
-        <div className="flex w-full flex-col gap-[20px]">
+        <div className="flex w-full flex-col gap-[10px]">
           {menuList.map((menu) => {
             const isActive =
-              menu.path === "/repairs" || menu.path === "/mypage"
+              menu.path === "/repairs" ||
+              menu.path === "/mypage" ||
+              menu.path === "/products"
                 ? location.pathname.includes(menu.path)
                 : location.pathname === menu.path;
 

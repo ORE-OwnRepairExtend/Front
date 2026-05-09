@@ -10,10 +10,13 @@ type HeaderProps = {
 
   showSearch?: boolean;
   searchValue?: string;
+
   onSearchChange?: (value: string) => void;
   onSearchSubmit?: () => void;
 
   showNotification?: boolean;
+
+  showCloseButton?: boolean;
 };
 
 export default function Header({
@@ -25,6 +28,7 @@ export default function Header({
   onSearchChange,
   onSearchSubmit,
   showNotification = true,
+  showCloseButton = false,
 }: HeaderProps) {
   const navigate = useNavigate();
 
@@ -41,7 +45,7 @@ export default function Header({
         pb-[10px]
       "
     >
-      <div className="flex w-full items-end justify-between">
+      <div className="flex w-full min-h-[45px] items-end justify-between">
         {/* 왼쪽 영역 */}
         {isMain ? (
           <div className="flex flex-col items-start gap-[3px]">
@@ -64,11 +68,25 @@ export default function Header({
             />
           )}
 
-          {showNotification && (
-            <NotificationButton
-              hasUnread={hasUnread}
-              onClick={() => navigate("/notifications")}
-            />
+          {showCloseButton ? (
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="cursor-pointer"
+            >
+              <img
+                src="/icons/close.svg"
+                alt="닫기"
+                className="h-[30px] w-[30px]"
+              />
+            </button>
+          ) : (
+            showNotification && (
+              <NotificationButton
+                hasUnread={hasUnread}
+                onClick={() => navigate("/notifications")}
+              />
+            )
           )}
         </div>
       </div>
