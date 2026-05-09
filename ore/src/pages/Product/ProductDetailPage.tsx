@@ -61,8 +61,8 @@ export default function ProductDetailPage() {
 
   return (
     <SecondLayout>
-      <div className="flex h-full min-h-0 flex-col">
-        <Header title="제품 상세" />
+      <div className="flex h-full flex-col">
+        <Header title="Product" showNotification={false} showCloseButton />
 
         <div className="mt-[14px] flex min-h-0 flex-1 flex-col">
           <div className="my-[10px] flex flex-1 flex-col items-center gap-[10px] overflow-y-auto no-scrollbar">

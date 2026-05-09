@@ -72,7 +72,7 @@ export default function SideNav() {
             const isActive =
               menu.path === "/repairs" ||
               menu.path === "/mypage" ||
-              menu.path === "/product"
+              menu.path === "/products"
                 ? location.pathname.includes(menu.path)
                 : location.pathname === menu.path;
 
