@@ -47,8 +47,8 @@ export default function ProductMaintenanceInfo({
   );
 
   return (
-    <section className="flex w-full flex-col items-start gap-[20px]">
-      <div className="flex w-full flex-col items-start gap-[10px] px-[10px]">
+    <section className="flex w-full flex-col items-start gap-[20px] px-[10px]">
+      <div className="flex w-full flex-col items-start gap-[10px] ">
         {/* 제목 + 수정하기 */}
         <div className="flex w-full items-center justify-between">
           <h3 className="text-body-sb-20 text-primary-01">관리 이력</h3>

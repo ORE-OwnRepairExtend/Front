@@ -9,6 +9,7 @@ import { useState } from "react";
 import ProductManual from "../../components/product/ProductManual";
 import ProductWarrantyInfo from "../../components/product/ProductWarrantyInfo";
 import ProductMaintenanceInfo from "../../components/product/ProductMaintenanceInfo";
+import ProductRepairInfo from "../../components/product/ProductRepairInfo";
 
 //테스트코드
 
@@ -74,6 +75,23 @@ export default function ProductDetailPage() {
             label: "필터",
             replacementCycleMonths: 3,
             replacementHistories: [],
+          },
+        ]}
+      />
+      <ProductRepairInfo
+        productId="1"
+        repairHistories={[
+          {
+            repairId: "1",
+            repairName: "렌즈 수리",
+            repairDate: "2026.03.12",
+            price: "64,000원",
+          },
+          {
+            repairId: "2",
+            repairName: "배터리 교체",
+            repairDate: "2026.02.01",
+            price: "32,000원",
           },
         ]}
       />
