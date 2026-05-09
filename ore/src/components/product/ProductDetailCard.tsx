@@ -49,7 +49,7 @@ export default function ProductDetailCard({
       type="button"
       onClick={onClick}
       className={`
-        flex h-[190px] w-[920px] items-center gap-[30px]
+        flex h-[190px] w-full items-center gap-[30px]
         rounded-[20px] bg-neutral-01
         px-[30px] py-[20px]
         text-left cursor-pointer

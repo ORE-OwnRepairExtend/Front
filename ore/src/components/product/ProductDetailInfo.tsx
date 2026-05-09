@@ -12,7 +12,7 @@ type MaintenanceCategory = {
   replacementHistories: MaintenanceHistoryItem[];
 };
 
-type RepairHistoryItem = {
+type RepairInfoItem = {
   repairId: string;
   repairName: string;
   repairDate: string;
@@ -30,7 +30,7 @@ type ProductDetailInfoProps = {
 
   maintenanceCategories: MaintenanceCategory[];
 
-  repairHistories: RepairHistoryItem[];
+  repairinfos: RepairInfoItem[];
 
   officialUrl?: string;
   customerServiceUrl?: string;
@@ -43,7 +43,7 @@ export default function ProductDetailInfo({
   purchaseDate,
   warrantyMonths,
   maintenanceCategories,
-  repairHistories,
+  repairinfos,
   officialUrl,
   customerServiceUrl,
 }: ProductDetailInfoProps) {
@@ -58,7 +58,7 @@ export default function ProductDetailInfo({
       <div className="h-[2px] w-full bg-gray-02" />
 
       {/* 정보 영역 */}
-      <div className="flex w-full flex-col items-center gap-[20px] px-[10px] py-[15px]">
+      <div className="flex w-full flex-col items-center gap-[20px] px-[10px] pt-[15px]">
         <ProductManual
           content={manualContent}
           onPdfClick={
@@ -84,7 +84,7 @@ export default function ProductDetailInfo({
 
         <ProductRepairInfo
           productId={productId}
-          repairHistories={repairHistories}
+          repairHistories={repairinfos}
         />
 
         <div className="h-[2px] w-full bg-gray-02/50" />
