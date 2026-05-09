@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { ProductSummary } from "../../types/product";
 import ProductCard from "../common/ProductCard";
 import SearchBar from "../header/SearchBar";
@@ -22,9 +22,42 @@ export default function ProductSelectModal({
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
+  const categoryScrollRef = useRef<HTMLDivElement | null>(null);
+  const isDraggingRef = useRef(false);
+  const dragStartXRef = useRef(0);
+  const scrollStartXRef = useRef(0);
+
   const handleCategoryClick = (category: string) => {
     setSelectedCategory((prev) => (prev === category ? null : category));
   };
+
+  const handleMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!categoryScrollRef.current) return;
+
+    isDraggingRef.current = true;
+    dragStartXRef.current = event.pageX - categoryScrollRef.current.offsetLeft;
+    scrollStartXRef.current = categoryScrollRef.current.scrollLeft;
+  };
+
+  const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDraggingRef.current || !categoryScrollRef.current) return;
+
+    event.preventDefault();
+
+    const currentX = event.pageX - categoryScrollRef.current.offsetLeft;
+    const moveX = currentX - dragStartXRef.current;
+
+    categoryScrollRef.current.scrollLeft = scrollStartXRef.current - moveX;
+  };
+
+  const handleMouseUp = () => {
+    isDraggingRef.current = false;
+  };
+
+  const handleMouseLeave = () => {
+    isDraggingRef.current = false;
+  };
+
   if (!open) return null;
 
   const filteredProducts = products
@@ -89,7 +122,14 @@ export default function ProductSelectModal({
           <div className="h-[2px] w-full bg-secondary-03" />
 
           {/* 카테고리 */}
-          <div className="flex w-full overflow-x-auto no-scrollbar">
+          <div
+            ref={categoryScrollRef}
+            className="flex w-full cursor-grab overflow-x-auto no-scrollbar active:cursor-grabbing"
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseLeave}
+          >
             <div className="flex w-max gap-[10px]">
               <CategoryButton
                 label="즐겨찾기"
