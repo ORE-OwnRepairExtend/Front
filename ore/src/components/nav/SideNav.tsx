@@ -53,14 +53,28 @@ export default function SideNav() {
     },
   ];
 
+  const getIsActive = (path: string) => {
+    const pathname = location.pathname;
+
+    if (path === "/") {
+      return pathname === "/";
+    }
+
+    if (path === "/products") {
+      return pathname.startsWith("/products") && !pathname.includes("/repairs");
+    }
+
+    if (path === "/repairs") {
+      return pathname.startsWith("/repairs") || pathname.includes("/repairs");
+    }
+
+    return pathname.startsWith(path);
+  };
+
   return (
-    <div className="flex h-full w-[140px] pt-[30px] pb-[50px] flex-col justify-between">
+    <div className="flex h-full w-[140px] flex-col justify-between pt-[30px] pb-[50px]">
       {/* 로고 + 메뉴 */}
-      <div
-        className="
-        flex w-[140px] flex-col gap-[20px]
-      "
-      >
+      <div className="flex w-[140px] flex-col gap-[20px]">
         {/* 로고 */}
         <div className="flex h-[80px] items-center justify-center rounded-[10px] bg-gray-02">
           로고
@@ -69,12 +83,7 @@ export default function SideNav() {
         {/* 메뉴 */}
         <div className="flex w-full flex-col gap-[10px]">
           {menuList.map((menu) => {
-            const isActive =
-              menu.path === "/repairs" ||
-              menu.path === "/mypage" ||
-              menu.path === "/products"
-                ? location.pathname.includes(menu.path)
-                : location.pathname === menu.path;
+            const isActive = getIsActive(menu.path);
 
             return (
               <NavButton
