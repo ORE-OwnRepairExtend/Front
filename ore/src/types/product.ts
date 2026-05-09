@@ -24,3 +24,9 @@ export type WarrantyInfo = {
 export type ProductWithStatus = ProductSummary & {
   status: ProductStatus;
 };
+
+export type WarrantyTimelineItem = {
+  status: ProductStatus;
+  label: string;
+  date: string;
+};

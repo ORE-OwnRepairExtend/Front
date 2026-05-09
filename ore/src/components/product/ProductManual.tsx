@@ -13,7 +13,7 @@ export default function ProductManual({
     <section className="flex w-full flex-col gap-[10px]">
       {/* 제목 + 버튼 */}
       <div className="flex items-center justify-between">
-        <h3 className="text-title-sb-20 text-primary-01">매뉴얼</h3>
+        <h3 className="text-body-sb-20 text-primary-01">매뉴얼</h3>
 
         <CommonButton
           variant="secondary"

@@ -7,6 +7,7 @@ import SecondLayout from "../../layout/SecondLayout";
 import Header from "../../components/header/Header";
 import { useState } from "react";
 import ProductManual from "../../components/product/ProductManual";
+import ProductWarrantyInfo from "../../components/product/ProductWarrantyInfo";
 
 //테스트코드
 
@@ -52,6 +53,7 @@ export default function ProductDetailPage() {
           console.log("PDF 원문 보기");
         }}
       />
+      <ProductWarrantyInfo purchaseDate="2025-12-17" warrantyMonths={5} />
     </SecondLayout>
   );
 }
