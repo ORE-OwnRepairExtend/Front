@@ -6,10 +6,7 @@ import { mockWarrantyListResponse } from "../../mocks/warranty";
 import SecondLayout from "../../layout/SecondLayout";
 import Header from "../../components/header/Header";
 import { useState } from "react";
-import ProductManual from "../../components/product/ProductManual";
-import ProductWarrantyInfo from "../../components/product/ProductWarrantyInfo";
-import ProductMaintenanceInfo from "../../components/product/ProductMaintenanceInfo";
-import ProductRepairInfo from "../../components/product/ProductRepairInfo";
+import ProductDetailInfo from "../../components/product/ProductDetailInfo";
 
 //테스트코드
 
@@ -47,18 +44,13 @@ export default function ProductDetailPage() {
           setIsFavorite((prev) => !prev);
         }}
       />
-      <ProductManual
-        content={
-          "효과적인 학습 방법과 공부 전략으로는 능동적 학습, 자기 주도 학습, 그룹 스터디의 장점 등이 있습니다. 능동적 학습은 단순히 정보를 수동적으로 받아들이는 것이 아니라, 질문하고 토론하며 적극적으로 참여하는 학습 방식을 의미합니다. 자기 주도 학습은 자신의 학습 목표를 설정하고 계획을 세워 스스로 학습을 진행하는 방법입니다. 그룹 스터디는 동료들과의 협력을 통해 다양한 관점을 배우고 동기부여를 받을 수 있는 장점이 있습니다. 이러한 전략들을 활용하면 학습 효율성을 크게 높일 수 있습니다."
-        }
-        onPdfClick={() => {
-          console.log("PDF 원문 보기");
-        }}
-      />
-      <ProductWarrantyInfo purchaseDate="2025-12-17" warrantyMonths={5} />
-      <ProductMaintenanceInfo
+      <ProductDetailInfo
+        productId="1"
+        manualContent={"manualText"}
+        manualPdfUrl="https://example.com/manual.pdf"
         purchaseDate="2025-12-17"
-        categories={[
+        warrantyMonths={3}
+        maintenanceCategories={[
           {
             id: "battery",
             label: "배터리",
@@ -77,9 +69,6 @@ export default function ProductDetailPage() {
             replacementHistories: [],
           },
         ]}
-      />
-      <ProductRepairInfo
-        productId="1"
         repairHistories={[
           {
             repairId: "1",
@@ -87,13 +76,9 @@ export default function ProductDetailPage() {
             repairDate: "2026.03.12",
             price: "64,000원",
           },
-          {
-            repairId: "2",
-            repairName: "배터리 교체",
-            repairDate: "2026.02.01",
-            price: "32,000원",
-          },
         ]}
+        officialUrl="https://example.com"
+        customerServiceUrl="https://example.com/customer"
       />
     </SecondLayout>
   );
