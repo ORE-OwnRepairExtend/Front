@@ -8,6 +8,7 @@ import Header from "../../components/header/Header";
 import { useState } from "react";
 import ProductManual from "../../components/product/ProductManual";
 import ProductWarrantyInfo from "../../components/product/ProductWarrantyInfo";
+import ProductMaintenanceInfo from "../../components/product/ProductMaintenanceInfo";
 
 //테스트코드
 
@@ -54,6 +55,28 @@ export default function ProductDetailPage() {
         }}
       />
       <ProductWarrantyInfo purchaseDate="2025-12-17" warrantyMonths={5} />
+      <ProductMaintenanceInfo
+        purchaseDate="2025-12-17"
+        categories={[
+          {
+            id: "battery",
+            label: "배터리",
+            replacementCycleMonths: 6,
+            replacementHistories: [
+              {
+                id: "1",
+                replacedDate: "2026-06-03",
+              },
+            ],
+          },
+          {
+            id: "filter",
+            label: "필터",
+            replacementCycleMonths: 3,
+            replacementHistories: [],
+          },
+        ]}
+      />
     </SecondLayout>
   );
 }
