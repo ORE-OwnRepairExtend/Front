@@ -206,7 +206,7 @@ export default function MainPage() {
 
             {/* statistics */}
             <div className="flex-1 bg-white rounded-[30px] p-[20px] flex flex-col h-full">
-              <h2 className="text-title-main text-primary-01">statistics</h2>
+              <h2 className="text-title-main text-primary-01">Statistics</h2>
 
               <div className="flex-1 overflow-y-auto no-scrollbar">
                 <div className="h-[400px] flex items-center justify-center text-gray-02">
