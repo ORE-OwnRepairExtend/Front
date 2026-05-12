@@ -154,7 +154,12 @@ export default function RepairCreatePage() {
                   setForm((p) => ({ ...p, repairDate: v }))
                 }
                 onContentChange={(v) => setForm((p) => ({ ...p, content: v }))}
-                onPriceChange={(v) => setForm((p) => ({ ...p, price: v }))}
+                onPriceChange={(v) =>
+                  setForm((p) => ({
+                    ...p,
+                    price: v.replace(/[^0-9]/g, ""),
+                  }))
+                }
                 onShopNameChange={(v) =>
                   setForm((p) => ({ ...p, shopName: v }))
                 }

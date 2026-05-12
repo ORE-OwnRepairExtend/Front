@@ -107,7 +107,7 @@ export default function MainPage() {
                   onMouseDown={(e) => e.stopPropagation()}
                   onClick={() => {
                     if (isDragging) return;
-                    console.log("제품 추가 클릭");
+                    navigate("/products/new");
                   }}
                   className="
                     flex-shrink-0
