@@ -68,7 +68,7 @@ export default function RepairCreatePage() {
     const payload = {
       date: form.repairDate,
       content: form.content,
-      cost: Number(form.price),
+      cost: Number(form.price.replace(/,/g, "")),
       imageUrl: form.receiptImage ? URL.createObjectURL(form.receiptImage) : "",
     };
 
@@ -154,12 +154,15 @@ export default function RepairCreatePage() {
                   setForm((p) => ({ ...p, repairDate: v }))
                 }
                 onContentChange={(v) => setForm((p) => ({ ...p, content: v }))}
-                onPriceChange={(v) =>
+                onPriceChange={(v) => {
+                  const onlyNumber = v.replace(/[^0-9]/g, "");
+                  const priceWithComma = onlyNumber.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
                   setForm((p) => ({
                     ...p,
-                    price: v.replace(/[^0-9]/g, ""),
-                  }))
-                }
+                    price: priceWithComma,
+                  }));
+                }}
                 onShopNameChange={(v) =>
                   setForm((p) => ({ ...p, shopName: v }))
                 }
