@@ -6,10 +6,9 @@ import CategoryButton from "../../components/category/CategoryButton";
 import AddButton from "../../components/common/AddButton";
 import ProductCard from "../../components/common/ProductCard";
 import ProductRegisterModal from "../../components/common/ProductRegisterModal";
+import { productCategories as categories } from "../../constants/productCategories";
 
 import cameraImg from "../../assets/camera.png";
-import starIcon from "../../assets/star.svg";
-import phoneIcon from "../../assets/phone.svg";
 
 export default function ProductListPage() {
   const [search, setSearch] = useState("");
@@ -42,38 +41,6 @@ export default function ProductListPage() {
       scrollRef.current.scrollLeft = scrollLeft - walk;
     }
   };
-
-  const categories = [
-    { label: "All" },
-    {
-      label: "즐겨찾기",
-      icon: <img src={starIcon} className="w-[20px] h-[20px]" />,
-    },
-    {
-      label: "모바일 기기",
-      icon: <img src={phoneIcon} className="w-[20px] h-[20px]" />,
-    },
-    {
-      label: "주방 가전",
-      icon: <img src={phoneIcon} className="w-[20px] h-[20px]" />,
-    },
-    {
-      label: "생활 가전",
-      icon: <img src={phoneIcon} className="w-[20px] h-[20px]" />,
-    },
-    {
-      label: "모바일 기기",
-      icon: <img src={phoneIcon} className="w-[20px] h-[20px]" />,
-    },
-    {
-      label: "모바일 기기",
-      icon: <img src={phoneIcon} className="w-[20px] h-[20px]" />,
-    },
-    {
-      label: "모바일 기기",
-      icon: <img src={phoneIcon} className="w-[20px] h-[20px]" />,
-    },
-  ];
 
   const products = [
     {

@@ -7,23 +7,13 @@ import PartInputRow from "./PartInputRow";
 import ProductCheckbox from "./ProductCheckbox";
 import ProductFormRow from "./ProductFormRow";
 import Modal from "../common/Modal";
+import { productCategories } from "../../constants/productCategories";
 
 type PartItem = {
   id: number;
   name: string;
   cycle: string;
 };
-
-const categories = [
-  "모바일 기기",
-  "주방 가전",
-  "전자 제품",
-  "전자 제품",
-  "전자 제품",
-  "전자 제품",
-  "전자 제품",
-  "전자 제품",
-];
 
 export default function ProductCreateContent() {
   const [nickname, setNickname] = useState("");
@@ -39,6 +29,8 @@ export default function ProductCreateContent() {
 
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
   const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
+
+  const categories = productCategories.slice(2);
 
   const isRequiredFilled =
     productName.trim() !== "" &&
@@ -109,12 +101,13 @@ export default function ProductCreateContent() {
           {/* 카테고리 */}
           <ProductFormRow label="카테고리" required>
             <div className="flex flex-wrap gap-[8px]">
-              {categories.map((category, index) => (
+              {categories.map((category) => (
                 <ProductCreateCategory
-                  key={`${category}-${index}`}
-                  label={category}
-                  selected={selectedCategory === category}
-                  onClick={() => setSelectedCategory(category)}
+                  key={category.label}
+                  label={category.label}
+                  icon={category.icon}
+                  selected={selectedCategory === category.label}
+                  onClick={() => setSelectedCategory(category.label)}
                 />
               ))}
             </div>

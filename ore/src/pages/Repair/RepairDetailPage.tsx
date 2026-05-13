@@ -73,7 +73,7 @@ export default function RepairDetailPage() {
     title: detail?.repairTitle ?? "",
     repairDate: detail?.repairDate ?? "",
     content: detail?.repairContent ?? "",
-    price: detail ? String(detail.repairCost) : "",
+    price: detail ? detail.repairCost.toLocaleString() : "",
     shopName: detail?.repairShop ?? "",
     receiptImageUrl: detail?.receiptImageUrl ?? "",
   });
@@ -82,6 +82,16 @@ export default function RepairDetailPage() {
     setEditForm((prev) => ({
       ...prev,
       [field]: value,
+    }));
+  };
+
+  const handlePriceChange = (value: string) => {
+    const onlyNumber = value.replace(/[^0-9]/g, "");
+    const priceWithComma = onlyNumber.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+
+    setEditForm((prev) => ({
+      ...prev,
+      price: priceWithComma,
     }));
   };
 
@@ -119,7 +129,7 @@ export default function RepairDetailPage() {
       repairTitle: editForm.title,
       repairDate: editForm.repairDate,
       repairContent: editForm.content,
-      repairCost: Number(editForm.price),
+      repairCost: Number(editForm.price.replace(/,/g, "")),
       repairShop: editForm.shopName,
       receiptImageUrl: editForm.receiptImageUrl || undefined,
     };
@@ -214,7 +224,7 @@ export default function RepairDetailPage() {
                 onTitleChange={handleChange("title")}
                 onRepairDateChange={handleChange("repairDate")}
                 onContentChange={handleChange("content")}
-                onPriceChange={handleChange("price")}
+                onPriceChange={handlePriceChange}
                 onShopNameChange={handleChange("shopName")}
                 onReceiptImageChange={handleReceiptImageChange}
               />
