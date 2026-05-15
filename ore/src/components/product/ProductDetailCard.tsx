@@ -18,6 +18,7 @@ const statusText: Record<ProductStatus, string> = {
   danger: "위험",
   imminent: "임박",
   valid: "유효",
+  empty: "미등록",
 };
 
 const statusColor: Record<ProductStatus, string> = {
@@ -25,6 +26,7 @@ const statusColor: Record<ProductStatus, string> = {
   danger: "bg-point-01",
   imminent: "bg-point-02",
   valid: "bg-point-03",
+  empty: "bg-gray-02",
 };
 
 const categoryText: Record<string, string> = {

@@ -1,4 +1,9 @@
-export type ProductStatus = "expired" | "danger" | "imminent" | "valid";
+export type ProductStatus =
+  | "expired"
+  | "danger"
+  | "imminent"
+  | "valid"
+  | "empty";
 
 export type ProductSummary = {
   productId: string;

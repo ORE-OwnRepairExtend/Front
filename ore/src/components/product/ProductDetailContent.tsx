@@ -80,6 +80,7 @@ export default function ProductDetailContent({
         manualContent={manualContent}
         manualPdfUrl={manualPdfUrl}
         purchaseDate={purchaseDate}
+        status={status}
         warrantyMonths={warrantyMonths}
         maintenanceCategories={maintenanceCategories}
         repairinfos={repairHistories}
