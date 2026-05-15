@@ -19,7 +19,7 @@ export default function ProductSelectModal({
   onSelect,
 }: ProductSelectModalProps) {
   const [search, setSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState("All");
 
   const categoryScrollRef = useRef<HTMLDivElement | null>(null);
   const isDraggingRef = useRef(false);
@@ -27,7 +27,7 @@ export default function ProductSelectModal({
   const scrollStartXRef = useRef(0);
 
   const handleCategoryClick = (category: string) => {
-    setSelectedCategory((prev) => (prev === category ? null : category));
+    setSelectedCategory(category);
   };
 
   const handleMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
