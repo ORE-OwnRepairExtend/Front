@@ -15,7 +15,13 @@ export type ProductSummary = {
   purchaseDate: string;
   createdAt: string;
 
-  category: "mobile" | "kitchen"; //api 맞게 수정 필요
+  category:
+    | "모바일 기기"
+    | "PC 기기"
+    | "주방 가전"
+    | "생활 가전"
+    | "영상·음향"
+    | "기타";
 };
 
 export type WarrantyInfo = {
