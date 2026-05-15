@@ -15,7 +15,7 @@ export default function ProductFormRow({
 }: ProductFormRowProps) {
   return (
     <div className={`flex bg-white ${className}`}>
-      <div className="flex min-h-[60px] w-[150px] shrink-0 items-start gap-[10px] px-[15px] py-[10px] text-body-m-16 text-gray-01">
+      <div className="flex min-h-[40px] w-[150px] shrink-0 items-start gap-[10px] px-[15px] py-[10px] text-body-m-16 text-gray-01">
         <span>{label}</span>
         {required && (
           <span className="mt-[5px] h-[10px] w-[10px] shrink-0 rounded-full bg-point-01" />
@@ -23,7 +23,7 @@ export default function ProductFormRow({
       </div>
 
       <div
-        className={`flex min-h-[60px] flex-1 items-start py-[10px] pl-[10px] pr-[30px] ${contentClassName}`}
+        className={`flex min-h-[40px] flex-1 items-start py-[10px] pl-[10px] pr-[30px] ${contentClassName}`}
       >
         {children}
       </div>
