@@ -24,11 +24,12 @@ export default function Router() {
   return (
     <Routes>
       {/* Auth */}
+      <Route path="/" element={<LoginPage />} />
       <Route path="/login" element={<LoginPage />} />
 
       {/* Main */}
-      <Route path="/" element={<MainPage />} />
-
+      <Route path="/main" element={<MainPage />} />
+      
       {/* Product */}
       <Route path="/products" element={<ProductListPage />} />
       <Route path="/products/new" element={<ProductCreatePage />} />
