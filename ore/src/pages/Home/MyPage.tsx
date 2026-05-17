@@ -1,12 +1,19 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import Header from "../../components/header/Header";
 import MenuList from "../../components/my/MenuList";
 import ProfileBox from "../../components/profile/ProfileBox";
 import SecondLayout from "../../layout/SecondLayout";
-import { mockUserProfile } from "../../mocks/ueser";
 import { api } from "../../api/api";
+
+type UserProfileResponse = {
+  userId: string;
+  email: string;
+  name: string;
+  profileImage: string;
+  createdAt: string;
+};
 
 export default function MyPage() {
   const location = useLocation();
@@ -14,13 +21,43 @@ export default function MyPage() {
 
   const isEditMode = location.pathname === "/mypage/edit";
 
-  const [name, setName] = useState(mockUserProfile.name);
-  const [imageUrl, setImageUrl] = useState(mockUserProfile.profileImage);
+  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
 
-  const [editName, setEditName] = useState(mockUserProfile.name);
-  const [editImageUrl, setEditImageUrl] = useState(
-    mockUserProfile.profileImage,
-  );
+  const [editName, setEditName] = useState("");
+  const [editImageUrl, setEditImageUrl] = useState("");
+
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchUserProfile = async () => {
+    try {
+      const response = await api.get<UserProfileResponse>("/users/me");
+
+      const user = response.data;
+
+      setEmail(user.email);
+      setName(user.name);
+      setImageUrl(user.profileImage);
+
+      setEditName(user.name);
+      setEditImageUrl(user.profileImage);
+    } catch (error) {
+      console.error("사용자 정보 조회 실패:", error);
+      alert("사용자 정보를 불러오지 못했습니다. 다시 로그인해주세요.");
+
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("user");
+
+      navigate("/login", { replace: true });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUserProfile();
+  }, []);
 
   const handleEditStart = () => {
     setEditName(name);
@@ -59,6 +96,22 @@ export default function MyPage() {
     }
   };
 
+  if (isLoading) {
+    return (
+      <SecondLayout>
+        <div className="flex h-full flex-col">
+          <Header title="My" />
+
+          <div className="flex flex-1 items-center justify-center">
+            <p className="text-body-m-14 text-gray-01">
+              사용자 정보를 불러오는 중입니다.
+            </p>
+          </div>
+        </div>
+      </SecondLayout>
+    );
+  }
+
   return (
     <SecondLayout>
       <div className="flex h-full flex-col">
@@ -68,7 +121,7 @@ export default function MyPage() {
           <div className="flex flex-col gap-[43px]">
             <ProfileBox
               name={name}
-              email={mockUserProfile.email}
+              email={email}
               imageUrl={isEditMode ? editImageUrl : imageUrl}
               isEditMode={isEditMode}
               editName={editName}
