@@ -3,8 +3,7 @@ import type { ProductSummary } from "../../types/product";
 import ProductCard from "../common/ProductCard";
 import SearchBar from "../header/SearchBar";
 import CategoryButton from "../category/CategoryButton";
-import starIcon from "../../assets/star.svg";
-import phoneIcon from "../../assets/phone.svg";
+import { productCategories } from "../../constants/productCategories";
 
 type ProductSelectModalProps = {
   open: boolean;
@@ -20,7 +19,7 @@ export default function ProductSelectModal({
   onSelect,
 }: ProductSelectModalProps) {
   const [search, setSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState("All");
 
   const categoryScrollRef = useRef<HTMLDivElement | null>(null);
   const isDraggingRef = useRef(false);
@@ -28,7 +27,7 @@ export default function ProductSelectModal({
   const scrollStartXRef = useRef(0);
 
   const handleCategoryClick = (category: string) => {
-    setSelectedCategory((prev) => (prev === category ? null : category));
+    setSelectedCategory(category);
   };
 
   const handleMouseDown = (event: React.MouseEvent<HTMLDivElement>) => {
@@ -63,13 +62,16 @@ export default function ProductSelectModal({
   const filteredProducts = products
     // 카테고리 필터
     .filter((product) => {
-      if (!selectedCategory) return true;
+      if (!selectedCategory || selectedCategory === "All") {
+        return true;
+      }
 
-      if (selectedCategory === "favorite") {
+      // 즐겨찾기
+      if (selectedCategory === "즐겨찾기") {
         return product.isFavorite;
       }
 
-      // todo: api 카테고리랑 다시 맞추기
+      // 일반 카테고리
       return product.category === selectedCategory;
     })
     // 검색 필터
@@ -131,26 +133,15 @@ export default function ProductSelectModal({
             onMouseLeave={handleMouseLeave}
           >
             <div className="flex w-max gap-[10px]">
-              <CategoryButton
-                label="즐겨찾기"
-                icon={<img src={starIcon} className="h-[20px] w-[20px]" />}
-                isSelected={selectedCategory === "favorite"}
-                onClick={() => handleCategoryClick("favorite")}
-              />
-
-              <CategoryButton
-                label="모바일 기기"
-                icon={<img src={phoneIcon} className="h-[20px] w-[20px]" />}
-                isSelected={selectedCategory === "mobile"}
-                onClick={() => handleCategoryClick("mobile")}
-              />
-
-              <CategoryButton
-                label="주방 가전"
-                icon={<img src={phoneIcon} className="h-[20px] w-[20px]" />}
-                isSelected={selectedCategory === "kitchen"}
-                onClick={() => handleCategoryClick("kitchen")}
-              />
+              {productCategories.map((category) => (
+                <CategoryButton
+                  key={category.label}
+                  label={category.label}
+                  icon={category.icon}
+                  isSelected={selectedCategory === category.label}
+                  onClick={() => handleCategoryClick(category.label)}
+                />
+              ))}
             </div>
           </div>
 

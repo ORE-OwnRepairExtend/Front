@@ -105,7 +105,6 @@ export default function ProductCreateContent() {
                 <ProductCreateCategory
                   key={category.label}
                   label={category.label}
-                  icon={category.icon}
                   selected={selectedCategory === category.label}
                   onClick={() => setSelectedCategory(category.label)}
                 />

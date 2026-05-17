@@ -18,7 +18,7 @@ export function mergeProductsWithWarranty(
       ...product,
       status: warrantyInfo
         ? getProductStatus(warrantyInfo.remainingDays)
-        : "valid", // 보증 정보 없을 때 기본값 : valid
+        : "empty", // 보증 정보 없을 때 : empty
       warrantyInfo,
     };
   });

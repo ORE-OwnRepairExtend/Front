@@ -1,20 +1,16 @@
-import type { ReactNode } from "react";
-
 type ProductCreateCategoryProps = {
   label: string;
-  icon?: ReactNode;
   selected?: boolean;
   onClick?: () => void;
 };
 
 export default function ProductCreateCategory({
   label,
-  icon,
   selected = false,
   onClick,
 }: ProductCreateCategoryProps) {
   const baseStyle =
-    "flex items-center gap-[5px] rounded-[20px] border px-[10px] py-[5px] text-body-m-10";
+    "flex items-center gap-[5px] rounded-[20px] border px-[10px] py-[5px] text-body-m-12";
 
   const activeStyle = "border-primary-01 bg-secondary-01 text-primary-01";
 
@@ -26,7 +22,6 @@ export default function ProductCreateCategory({
       onClick={onClick}
       className={`${baseStyle} ${selected ? activeStyle : defaultStyle}`}
     >
-      {icon}
       <span>{label}</span>
     </button>
   );

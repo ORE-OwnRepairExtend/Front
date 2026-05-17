@@ -4,6 +4,7 @@ import ProductWarrantyInfo from "./ProductWarrantyInfo";
 import ProductMaintenanceInfo from "./ProductMaintenanceInfo";
 import type { MaintenanceHistoryItem } from "../../utils/maintenanceDate";
 import ProductRepairInfo from "./ProductRepairInfo";
+import type { ProductStatus } from "../../types/product";
 
 type MaintenanceCategory = {
   id: string;
@@ -26,7 +27,8 @@ type ProductDetailInfoProps = {
   manualPdfUrl?: string;
 
   purchaseDate: string;
-  warrantyMonths: number;
+  warrantyMonths?: number | null;
+  status: ProductStatus;
 
   maintenanceCategories: MaintenanceCategory[];
 
@@ -42,6 +44,7 @@ export default function ProductDetailInfo({
   manualPdfUrl,
   purchaseDate,
   warrantyMonths,
+  status,
   maintenanceCategories,
   repairinfos,
   officialUrl,
@@ -71,6 +74,7 @@ export default function ProductDetailInfo({
         <ProductWarrantyInfo
           purchaseDate={purchaseDate}
           warrantyMonths={warrantyMonths}
+          status={status}
         />
 
         <div className="h-[2px] w-full bg-gray-02/50" />
