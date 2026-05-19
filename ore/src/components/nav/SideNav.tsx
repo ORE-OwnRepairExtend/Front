@@ -25,7 +25,7 @@ export default function SideNav() {
       label: "DashBoard",
       defaultIcon: "/icons/nav/dashbord_gray.svg",
       activeIcon: "/icons/nav/dashbord_white.svg",
-      path: "/",
+      path: "/main",
     },
     {
       label: "Product",

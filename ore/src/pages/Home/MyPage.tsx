@@ -27,6 +27,7 @@ export default function MyPage() {
 
   const [editName, setEditName] = useState("");
   const [editImageUrl, setEditImageUrl] = useState("");
+  const [editImageFile, setEditImageFile] = useState<File | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
 
@@ -68,18 +69,47 @@ export default function MyPage() {
   const handleEditCancel = () => {
     setEditName(name);
     setEditImageUrl(imageUrl);
+    setEditImageFile(null);
+
     navigate("/mypage");
   };
 
-  const handleEditSave = () => {
-    setName(editName);
-    setImageUrl(editImageUrl);
-    navigate("/mypage");
+  const handleEditSave = async () => {
+    try {
+      const formData = new FormData();
+
+      formData.append("name", editName);
+
+      if (editImageFile) {
+        formData.append("profileImage", editImageFile);
+      }
+
+      const response = await api.patch<UserProfileResponse>(
+        "/users/me",
+        formData,
+      );
+
+      const user = response.data;
+
+      setName(user.name);
+      setImageUrl(user.profileImage);
+
+      setEditName(user.name);
+      setEditImageUrl(user.profileImage);
+      setEditImageFile(null);
+
+      navigate("/mypage");
+    } catch (error) {
+      console.error("프로필 수정 실패:", error);
+      alert("프로필 수정에 실패했습니다. 다시 시도해주세요.");
+    }
   };
 
   const handleImageChange = (file: File) => {
     const previewUrl = URL.createObjectURL(file);
+
     setEditImageUrl(previewUrl);
+    setEditImageFile(file);
   };
 
   const handleLogout = async () => {
