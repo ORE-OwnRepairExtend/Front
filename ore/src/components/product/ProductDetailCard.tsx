@@ -1,5 +1,8 @@
 import type { ProductStatus } from "../../types/product";
 
+import starFillIcon from "../../assets/icons/star_fill.svg";
+import starEmptyIcon from "../../assets/icons/star_empty.svg";
+
 type ProductDetailCardProps = {
   imageSrc: string;
   nickname: string;
@@ -97,9 +100,7 @@ export default function ProductDetailCard({
             className="h-[30px] w-[30px] shrink-0 cursor-pointer"
           >
             <img
-              src={
-                isFavorite ? "/icons/star_fill.svg" : "/icons/star_empty.svg"
-              }
+              src={isFavorite ? starFillIcon : starEmptyIcon}
               alt="즐겨찾기"
               className="h-full w-full"
             />
