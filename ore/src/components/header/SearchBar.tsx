@@ -1,3 +1,5 @@
+import searchIcon from "../../assets/icons/search.svg";
+
 type SearchBarProps = {
   placeholder?: string;
   value?: string;
@@ -21,7 +23,7 @@ export default function SearchBar({
       "
     >
       {/* 아이콘 */}
-      <img src="/icons/search.svg" alt="검색" width={20} height={20} />
+      <img src={searchIcon} alt="검색" width={20} height={20} />
 
       {/* 입력창 */}
       <input

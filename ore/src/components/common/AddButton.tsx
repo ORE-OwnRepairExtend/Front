@@ -1,3 +1,5 @@
+import plusIcon from "../../assets/icons/plus.svg";
+
 type AddButtonProps = {
   title: string;
   onClick?: () => void;
@@ -18,7 +20,7 @@ export default function AddButton({ title, onClick }: AddButtonProps) {
       "
     >
       <span>
-        <img src="/icons/plus.svg" alt="추가하기" width={24} height={24} />
+        <img src={plusIcon} alt="추가하기" width={24} height={24} />
       </span>
       <span>{title}</span>
     </button>

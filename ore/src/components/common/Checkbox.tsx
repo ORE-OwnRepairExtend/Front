@@ -1,3 +1,5 @@
+import checkIcon from "../../assets/icons/check.svg";
+
 type CheckboxProps = {
   checked: boolean;
   onChange?: () => void;
@@ -18,7 +20,7 @@ export default function Checkbox({ checked, onChange }: CheckboxProps) {
         ${checked ? "bg-primary-01" : "bg-gray-02"}
       `}
     >
-      <img src="/icons/check.svg" alt="체크" width={20} height={15} />
+      <img src={checkIcon} alt="체크" width={20} height={15} />
     </button>
   );
 }

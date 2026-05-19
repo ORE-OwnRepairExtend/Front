@@ -1,3 +1,5 @@
+import closeIcon from "../../assets/icons/close.svg";
+
 type ModalType = "alert" | "confirm";
 
 type ModalProps = {
@@ -50,7 +52,7 @@ export default function Modal({
             cursor-pointer
           "
         >
-          <img src="/icons/close.svg" alt="닫기" width={30} height={30} />
+          <img src={closeIcon} alt="닫기" width={30} height={30} />
         </button>
 
         <div className="flex flex-col items-center justify-center gap-[35px] pt-[20px]">

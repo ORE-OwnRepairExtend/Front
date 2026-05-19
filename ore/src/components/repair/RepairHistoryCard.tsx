@@ -1,3 +1,5 @@
+import forwardBlackIcon from "../../assets/icons/forword_black.svg";
+
 type RepairHistoryCardProps = {
   repairName: string;
   repairDate: string;
@@ -29,12 +31,7 @@ export default function RepairHistoryCard({
 
       <div className="flex items-center justify-end gap-[20px]">
         <span className="text-body-r-12">{price}</span>
-        <img
-          src="/icons/forword_black.svg"
-          alt="더보기"
-          width={16}
-          height={16}
-        />
+        <img src={forwardBlackIcon} alt="더보기" width={16} height={16} />
       </div>
     </button>
   );

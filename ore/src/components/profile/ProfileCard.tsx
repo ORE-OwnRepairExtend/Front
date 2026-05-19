@@ -1,6 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import ProfileImage from "./ProfileImage";
 
+import editIcon from "../../assets/icons/edit.svg";
+
 type ProfileCardProps = {
   name: string;
   imageUrl?: string;
@@ -30,7 +32,7 @@ export default function ProfileCard({ name, imageUrl }: ProfileCardProps) {
             cursor-pointer
           "
         >
-          <img src="/icons/edit.svg" alt="수정" className="h-[20px] w-[25px]" />
+          <img src={editIcon} alt="수정" className="h-[20px] w-[25px]" />
         </button>
       </div>
 
