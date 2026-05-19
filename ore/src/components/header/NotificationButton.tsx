@@ -1,3 +1,5 @@
+import notificationIcon from "../../assets/icons/notification.svg";
+
 type NotificationButtonProps = {
   hasUnread?: boolean;
   onClick?: () => void;
@@ -22,7 +24,7 @@ export default function NotificationButton({
     >
       {/* 아이콘 */}
       <div>
-        <img src="/icons/notification.svg" alt="알림" width={30} height={30} />
+        <img src={notificationIcon} alt="알림" width={30} height={30} />
       </div>
 
       {/* 빨간점 */}

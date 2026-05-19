@@ -1,3 +1,5 @@
+import closeIcon from "../../assets/icons/close.svg";
+
 type ProductRegisterModalProps = {
   open: boolean;
   onClose?: () => void;
@@ -38,7 +40,7 @@ export default function ProductRegisterModal({
             cursor-pointer
           "
         >
-          <img src="/icons/close.svg" alt="닫기" width={30} height={30} />
+          <img src={closeIcon} alt="닫기" width={30} height={30} />
         </button>
 
         {/* 제목 */}

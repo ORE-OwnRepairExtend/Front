@@ -1,3 +1,6 @@
+import forwardIcon from "../../assets/icons/forword.svg";
+import closeIcon from "../../assets/icons/close.svg";
+
 type ProductCardProps = {
   imageSrc: string;
   name: string;
@@ -60,9 +63,9 @@ export default function ProductCard({
           }}
         >
           {actionType === "arrow" ? (
-            <img src="/icons/forword.svg" alt="더보기" width={24} height={24} />
+            <img src={forwardIcon} alt="더보기" width={24} height={24} />
           ) : (
-            <img src="/icons/close.svg" alt="닫기" width={24} height={24} />
+            <img src={closeIcon} alt="닫기" width={24} height={24} />
           )}
         </div>
       )}

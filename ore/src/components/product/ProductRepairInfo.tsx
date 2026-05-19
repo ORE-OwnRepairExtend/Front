@@ -1,6 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import RepairHistoryCard from "../repair/RepairHistoryCard";
 
+import forwardBlackIcon from "../../assets/icons/forword_black.svg";
+
 type RepairInfoItem = {
   repairId: string;
   repairName: string;
@@ -31,7 +33,7 @@ export default function ProductRepairInfo({
           className="flex items-center gap-[15px] text-body-m-16 cursor-pointer"
         >
           더보기
-          <img src="/icons/forword_black.svg" alt="더보기" height={24} />
+          <img src={forwardBlackIcon} alt="더보기" height={24} />
         </button>
       </div>
 

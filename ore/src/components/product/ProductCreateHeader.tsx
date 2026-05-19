@@ -1,3 +1,5 @@
+import closeWhiteIcon from "../../assets/icons/close_white.svg";
+
 type ProductCreateHeaderProps = {
   title?: string;
   onClose?: () => void;
@@ -19,11 +21,7 @@ export default function ProductCreateHeader({
         <h1 className="text-title-main text-white">{title}</h1>
 
         <button type="button" onClick={onClose} className="cursor-pointer">
-          <img
-            src="/icons/close_white.svg"
-            alt="닫기"
-            className="h-[30px] w-[30px]"
-          />
+          <img src={closeWhiteIcon} alt="닫기" className="h-[30px] w-[30px]" />
         </button>
       </div>
 

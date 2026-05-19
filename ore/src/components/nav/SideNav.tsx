@@ -2,6 +2,18 @@ import { useLocation, useNavigate } from "react-router-dom";
 import NavButton from "./NavButton";
 import { api } from "../../api/api";
 
+import dashboardGrayIcon from "../../assets/icons/nav/dashbord_gray.svg";
+import dashboardWhiteIcon from "../../assets/icons/nav/dashbord_white.svg";
+import productGrayIcon from "../../assets/icons/nav/product_gray.svg";
+import productWhiteIcon from "../../assets/icons/nav/product_white.svg";
+import repairGrayIcon from "../../assets/icons/nav/repair_gray.svg";
+import repairWhiteIcon from "../../assets/icons/nav/repair_white.svg";
+import aiGrayIcon from "../../assets/icons/nav/ai_gray.svg";
+import aiWhiteIcon from "../../assets/icons/nav/ai_white.svg";
+import myGrayIcon from "../../assets/icons/nav/my_gray.svg";
+import myWhiteIcon from "../../assets/icons/nav/my_white.svg";
+import logoutIcon from "../../assets/icons/nav/logout.svg";
+
 export default function SideNav() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -23,32 +35,32 @@ export default function SideNav() {
   const menuList = [
     {
       label: "DashBoard",
-      defaultIcon: "/icons/nav/dashbord_gray.svg",
-      activeIcon: "/icons/nav/dashbord_white.svg",
+      defaultIcon: dashboardGrayIcon,
+      activeIcon: dashboardWhiteIcon,
       path: "/main",
     },
     {
       label: "Product",
-      defaultIcon: "/icons/nav/product_gray.svg",
-      activeIcon: "/icons/nav/product_white.svg",
+      defaultIcon: productGrayIcon,
+      activeIcon: productWhiteIcon,
       path: "/products",
     },
     {
       label: "Repair",
-      defaultIcon: "/icons/nav/repair_gray.svg",
-      activeIcon: "/icons/nav/repair_white.svg",
+      defaultIcon: repairGrayIcon,
+      activeIcon: repairWhiteIcon,
       path: "/repairs",
     },
     {
       label: "AI Chat",
-      defaultIcon: "/icons/nav/ai_gray.svg",
-      activeIcon: "/icons/nav/ai_white.svg",
+      defaultIcon: aiGrayIcon,
+      activeIcon: aiWhiteIcon,
       path: "/chatbot",
     },
     {
       label: "My",
-      defaultIcon: "/icons/nav/my_gray.svg",
-      activeIcon: "/icons/nav/my_white.svg",
+      defaultIcon: myGrayIcon,
+      activeIcon: myWhiteIcon,
       path: "/mypage",
     },
   ];
@@ -102,7 +114,7 @@ export default function SideNav() {
       {/* 로그아웃 */}
       <div className="w-full">
         <NavButton
-          defaultIcon="/icons/nav/logout.svg"
+          defaultIcon={logoutIcon}
           label="Log Out"
           variant="logout"
           onClick={handleLogout}

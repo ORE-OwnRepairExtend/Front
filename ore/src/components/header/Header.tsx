@@ -3,6 +3,8 @@ import SearchBar from "./SearchBar";
 import NotificationButton from "./NotificationButton";
 import { useNotificationStore } from "../../store/notificationStore";
 
+import closeIcon from "../../assets/icons/close.svg";
+
 type HeaderProps = {
   title: string;
   subtitle?: string;
@@ -74,11 +76,7 @@ export default function Header({
               onClick={() => navigate(-1)}
               className="cursor-pointer"
             >
-              <img
-                src="/icons/close.svg"
-                alt="닫기"
-                className="h-[30px] w-[30px]"
-              />
+              <img src={closeIcon} alt="닫기" className="h-[30px] w-[30px]" />
             </button>
           ) : (
             showNotification && (

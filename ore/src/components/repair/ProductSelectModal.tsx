@@ -5,6 +5,8 @@ import SearchBar from "../header/SearchBar";
 import CategoryButton from "../category/CategoryButton";
 import { productCategories } from "../../constants/productCategories";
 
+import closeWhiteIcon from "../../assets/icons/close_white.svg";
+
 type ProductSelectModalProps = {
   open: boolean;
   products: ProductSummary[];
@@ -95,12 +97,7 @@ export default function ProductSelectModal({
           <h2 className="text-title-main text-white">제품 선택</h2>
 
           <button type="button" onClick={onClose}>
-            <img
-              src="/icons/close_white.svg"
-              alt="닫기"
-              width={30}
-              height={30}
-            />
+            <img src={closeWhiteIcon} alt="닫기" width={30} height={30} />
           </button>
         </div>
 

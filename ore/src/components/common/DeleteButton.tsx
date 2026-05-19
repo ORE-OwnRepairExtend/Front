@@ -1,3 +1,5 @@
+import closeCircleIcon from "../../assets/icons/close_circle.svg";
+
 type DeleteButtonProps = {
   onClick?: () => void;
   className?: string;
@@ -19,7 +21,7 @@ export default function DeleteButton({
         ${className}
       `}
     >
-      <img src="/icons/close_circle.svg" alt="" width={30} height={30} />
+      <img src={closeCircleIcon} alt="" width={30} height={30} />
     </button>
   );
 }

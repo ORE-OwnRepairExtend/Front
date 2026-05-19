@@ -1,3 +1,5 @@
+import plusIcon from "../../assets/icons/plus.svg";
+
 type AddFileButtonProps = {
   title: string;
   accept?: string;
@@ -24,7 +26,7 @@ export default function AddFileButton({
         text-white
       "
     >
-      <img src="/icons/plus.svg" alt="추가하기" width={24} height={24} />
+      <img src={plusIcon} alt="추가하기" width={24} height={24} />
       <span>{title}</span>
 
       <input

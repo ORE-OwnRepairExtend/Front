@@ -1,3 +1,5 @@
+import forwardBlackIcon from "../../assets/icons/forword_black.svg";
+
 import { useState } from "react";
 import type {
   MaintenanceHistoryItem,
@@ -59,7 +61,7 @@ export default function ProductMaintenanceInfo({
             className="flex items-center gap-[15px] text-body-m-16 cursor-pointer"
           >
             수정하기
-            <img src="/icons/forword_black.svg" alt="수정하기" height={24} />
+            <img src={forwardBlackIcon} alt="수정하기" height={24} />
           </button>
         </div>
 

@@ -1,6 +1,8 @@
 import { type ChangeEvent, useRef, useState } from "react";
 import DeleteButton from "../common/DeleteButton";
 
+import plusPrimaryIcon from "../../assets/icons/plus_primary.svg";
+
 type ProductImageButtonProps = {
   onFileSelect?: (file: File | null) => void;
 };
@@ -50,11 +52,7 @@ export default function ProductImageButton({
             className="h-full w-full object-cover"
           />
         ) : (
-          <img
-            src="/icons/plus_primary.svg"
-            alt="추가"
-            className="h-[90px] w-[90px]"
-          />
+          <img src={plusPrimaryIcon} alt="추가" className="h-[90px] w-[90px]" />
         )}
       </button>
 
