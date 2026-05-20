@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 import type { ProductStatus } from "../../types/product";
 import CommonButton from "../common/CommonButton";
 import ProductDetailCard from "./ProductDetailCard";
@@ -62,6 +64,8 @@ export default function ProductDetailContent({
   onDeleteClick,
   onFavoriteClick,
 }: ProductDetailContentProps) {
+  const [isMaintenanceEditing, setIsMaintenanceEditing] = useState(false);
+
   return (
     <div className="flex w-full flex-shrink-0 flex-col items-center gap-[20px] px-[10px]">
       <ProductDetailCard
@@ -86,15 +90,18 @@ export default function ProductDetailContent({
         repairinfos={repairHistories}
         officialUrl={officialUrl}
         customerServiceUrl={customerServiceUrl}
+        onMaintenanceEditingChange={setIsMaintenanceEditing}
       />
 
-      <div className="flex w-full items-center justify-end gap-[10px] px-[10px] pb-[15px]">
-        <CommonButton variant="secondary" onClick={onEditClick}>
-          수정
-        </CommonButton>
+      {!isMaintenanceEditing && (
+        <div className="flex w-full items-center justify-end gap-[10px] px-[10px] pb-[15px]">
+          <CommonButton variant="secondary" onClick={onEditClick}>
+            수정
+          </CommonButton>
 
-        <CommonButton onClick={onDeleteClick}>삭제</CommonButton>
-      </div>
+          <CommonButton onClick={onDeleteClick}>삭제</CommonButton>
+        </div>
+      )}
     </div>
   );
 }
