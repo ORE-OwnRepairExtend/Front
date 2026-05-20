@@ -25,67 +25,84 @@ export default function ProductRegisterModal({
     >
       <div
         className="
-          relative
-          inline-flex h-[480px] w-[450px]
+          flex h-[500px] w-[400px] py-[30px] shrink-0
           flex-col items-center justify-center gap-[40px]
           rounded-[20px] bg-secondary-01
         "
       >
         {/* 닫기 버튼 */}
-        <button
-          type="button"
-          onClick={onClose}
-          className="
-            absolute right-[20px] top-[20px]
-            cursor-pointer
-          "
-        >
-          <img src={closeIcon} alt="닫기" width={30} height={30} />
-        </button>
-
-        {/* 제목 */}
-        <p
-          className="
-            text-title-main text-primary-01
-          "
-        >
-          제품 등록
-        </p>
-
-        {/* 버튼 영역 */}
         <div
           className="
-            flex flex-col gap-[20px]
-            w-[350px]
+            flex w-full items-center justify-end
+            gap-[10px] px-[28px]
           "
         >
           <button
             type="button"
-            onClick={onUploadClick}
+            onClick={onClose}
             className="
-              w-full
-              rounded-[20px] bg-secondary-03
-              py-[20px]
-              text-button-b-20 text-white
+              h-[24px] w-[24px]
               cursor-pointer
             "
           >
-            이미지 업로드
+            <img src={closeIcon} alt="닫기" width={24} height={24} />
           </button>
+        </div>
 
-          <button
-            type="button"
-            onClick={onManualClick}
+        {/* 모달 내부 컨텐츠 */}
+        <div
+          className="
+            flex flex-1 flex-col items-center justify-between
+            self-stretch px-[50px]
+          "
+        >
+          {/* 제목 */}
+          <p
             className="
-              w-full
+            self-stretch text-center
+            text-title-main text-primary-01
+          "
+          >
+            제품 등록
+          </p>
+
+          {/* 버튼 영역 */}
+          <div
+            className="
+              flex flex-1 flex-col items-center justify-center
+              gap-[40px] self-stretch
+            "
+          >
+            <button
+              type="button"
+              onClick={onUploadClick}
+              className="
+              flex h-[50px] w-full
+              items-center justify-center
               rounded-[20px] bg-secondary-03
               py-[20px]
               text-button-b-20 text-white
               cursor-pointer
             "
-          >
-            수동 입력
-          </button>
+            >
+              이미지 업로드
+            </button>
+
+            <button
+              type="button"
+              onClick={onManualClick}
+              className="
+              flex h-[50px] w-full
+              items-center justify-center
+              rounded-[20px] bg-secondary-03
+              py-[20px]
+              text-button-b-20 text-white
+              cursor-pointer
+            "
+            >
+              수동 입력
+            </button>
+          </div>
         </div>
       </div>
     </div>
