@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { api } from "../../api/api";
 import SecondLayout from "../../layout/SecondLayout";
 import Header from "../../components/header/Header";
 import CategoryButton from "../../components/category/CategoryButton";
@@ -157,11 +158,41 @@ export default function ProductListPage() {
       <ProductRegisterModal
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onUploadSubmit={(file, sourceType) => {
-          console.log("선택된 파일:", file);
-          console.log("선택된 타입:", sourceType);
+        onUploadSubmit={async (file, sourceType) => {
+          try {
+            // 이미지 업로드
+            const formData = new FormData();
 
-          // todo: API 연결
+            formData.append("image", file);
+            formData.append("sourceType", sourceType);
+
+            const uploadResponse = await api.post(
+              "/product-sources",
+              formData,
+              {
+                headers: {
+                  "Content-Type": "multipart/form-data",
+                },
+              },
+            );
+
+            const sourceId = uploadResponse.data.sourceId;
+
+            // OCR 결과 조회
+            const resultResponse = await api.get(
+              `/product-sources/${sourceId}`,
+            );
+
+            // 제품 등록 페이지 이동
+            navigate("/products/new", {
+              state: resultResponse.data,
+            });
+
+            setIsModalOpen(false);
+          } catch (error) {
+            console.error("이미지 업로드 실패:", error);
+            alert("이미지 업로드에 실패했습니다.");
+          }
         }}
         onManualClick={() => {
           navigate("/products/new");
