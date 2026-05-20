@@ -36,6 +36,8 @@ type ProductDetailInfoProps = {
 
   officialUrl?: string;
   customerServiceUrl?: string;
+
+  onMaintenanceEditingChange?: (isEditing: boolean) => void;
 };
 
 export default function ProductDetailInfo({
@@ -49,6 +51,7 @@ export default function ProductDetailInfo({
   repairinfos,
   officialUrl,
   customerServiceUrl,
+  onMaintenanceEditingChange,
 }: ProductDetailInfoProps) {
   return (
     <section className="flex w-full flex-col items-center gap-[20px]">
@@ -82,14 +85,12 @@ export default function ProductDetailInfo({
         <ProductMaintenanceInfo
           purchaseDate={purchaseDate}
           categories={maintenanceCategories}
+          onEditingChange={onMaintenanceEditingChange}
         />
 
         <div className="h-[2px] w-full bg-gray-02/50" />
 
-        <ProductRepairInfo
-          productId={productId}
-          repairHistories={repairinfos}
-        />
+        <ProductRepairInfo productId={productId} repairHistories={repairinfos} />
 
         <div className="h-[2px] w-full bg-gray-02/50" />
 
@@ -104,6 +105,7 @@ export default function ProductDetailInfo({
                 공식 홈페이지
               </CommonButton>
             )}
+
             {customerServiceUrl && (
               <CommonButton
                 className="w-full"
@@ -114,6 +116,7 @@ export default function ProductDetailInfo({
             )}
           </div>
         )}
+
         {(officialUrl || customerServiceUrl) && (
           <div className="h-[2px] w-full bg-gray-02/50" />
         )}
