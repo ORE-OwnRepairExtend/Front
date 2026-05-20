@@ -157,9 +157,11 @@ export default function ProductListPage() {
       <ProductRegisterModal
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onUploadClick={() => {
-          console.log("이미지 업로드");
-          setIsModalOpen(false);
+        onUploadSubmit={(file, sourceType) => {
+          console.log("선택된 파일:", file);
+          console.log("선택된 타입:", sourceType);
+
+          // todo: API 연결
         }}
         onManualClick={() => {
           navigate("/products/new");
