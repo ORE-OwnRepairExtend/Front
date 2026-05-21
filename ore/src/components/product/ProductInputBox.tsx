@@ -36,23 +36,14 @@ type TextareaProps = BaseProps &
 
 type ProductInputBoxProps = InputProps | TextareaProps;
 
-export default function ProductInputBox({
-  value,
-  placeholder,
-  className,
-  inputClassName,
-  prefix,
-  suffix,
-  ...restProps
-}: ProductInputBoxProps) {
-  const isTextarea = "multiline" in restProps && restProps.multiline;
-
-  const hasSideText = Boolean(prefix || suffix);
+export default function ProductInputBox(props: ProductInputBoxProps) {
+  const isTextarea = props.multiline === true;
+  const hasSideText = Boolean(props.prefix || props.suffix);
 
   const wrapperStyle = clsx(
-    "flex items-center bg-neutral-01 px-[15px]  py-[10px] gap-[10px]",
+    "flex items-center bg-neutral-01 px-[15px] py-[10px] gap-[10px]",
     isTextarea ? "min-h-[40px] w-full" : "h-full",
-    className,
+    props.className,
   );
 
   const inputStyle = clsx(
@@ -61,14 +52,28 @@ export default function ProductInputBox({
     "placeholder:text-gray-02",
     "focus:outline-none focus:ring-0",
     hasSideText && "text-right",
-    inputClassName,
+    props.inputClassName,
   );
 
   const sideTextStyle =
     "shrink-0 text-body-r-15 text-primary-01 whitespace-nowrap";
 
-  if (isTextarea) {
-    const { onChange, ...textareaProps } = restProps;
+  if (props.multiline) {
+    const {
+      multiline: _multiline,
+      value,
+      placeholder,
+      className: _className,
+      inputClassName: _inputClassName,
+      prefix,
+      suffix,
+      onChange,
+      ...textareaProps
+    } = props;
+
+    void _multiline;
+    void _className;
+    void _inputClassName;
 
     return (
       <div className={wrapperStyle}>
@@ -88,11 +93,22 @@ export default function ProductInputBox({
   }
 
   const {
+    multiline: _multiline,
+    value,
+    placeholder,
+    className: _className,
+    inputClassName: _inputClassName,
+    prefix,
+    suffix,
     onChange,
     variant = "default",
     type = variant === "date" ? "date" : "text",
     ...inputProps
-  } = restProps;
+  } = props;
+
+  void _multiline;
+  void _className;
+  void _inputClassName;
 
   return (
     <div className={wrapperStyle}>

@@ -15,11 +15,28 @@ type PartItem = {
   cycle: string;
 };
 
-export default function ProductCreateContent() {
+type ExtractedProductData = {
+  sourceId: string;
+  imageUrl: string;
+  ocrText: string;
+  modelNumber: string;
+  sourceType: "RECEIPT" | "SMS" | "STICKER" | "MANUAL";
+  createdAt: string;
+};
+
+type ProductCreateContentProps = {
+  extractedData?: ExtractedProductData | null;
+};
+
+export default function ProductCreateContent({
+  extractedData,
+}: ProductCreateContentProps) {
   const [nickname, setNickname] = useState("");
-  const [productName, setProductName] = useState("");
+  const [productName, setProductName] = useState(
+    extractedData?.modelNumber ?? "",
+  );
   const [selectedCategory, setSelectedCategory] = useState("");
-  const [manual, setManual] = useState("");
+  const [manual, setManual] = useState(extractedData?.ocrText ?? "");
   const [purchaseDate, setPurchaseDate] = useState("");
   const [warrantyPeriod, setWarrantyPeriod] = useState("");
   const [noWarranty, setNoWarranty] = useState(false);
