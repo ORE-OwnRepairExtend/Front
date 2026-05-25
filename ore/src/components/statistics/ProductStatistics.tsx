@@ -110,7 +110,7 @@ export default function ProductStatistics({ products }: Props) {
   };
 
   return (
-    <div className="grid h-full w-full gap-[20px]">
+    <div className="grid w-full gap-[20px]">
       {/* 카테고리 통계 */}
       <div
         className="

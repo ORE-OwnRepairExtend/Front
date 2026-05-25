@@ -151,14 +151,14 @@ export default function MainPage() {
           </div>
 
           {/* 아래 영역 */}
-          <div className="flex gap-[25px] mt-[20px] h-[300px]">
+          <div className="flex items-start gap-[25px] mt-[20px]">
             {/* Warranty */}
-            <div className="w-[320px] bg-white rounded-[30px] p-[20px] flex flex-col h-full">
+            <div className="w-[320px] bg-white rounded-[30px] p-[20px] flex flex-col">
               <h2 className="text-title-main text-primary-01 mb-[10px]">
                 Warranty
               </h2>
 
-              <div className="flex-1 overflow-y-auto pr-[5px] flex flex-col gap-[10px] no-scrollbar">
+              <div className="flex flex-col gap-[10px]">
                 {warrantyList.map((item, idx) => {
                   const status = getProductStatus(item.remainingDays);
 
@@ -219,13 +219,11 @@ export default function MainPage() {
             </div>
 
             {/* statistics */}
-            <div className="flex-1 bg-white rounded-[30px] p-[20px] flex flex-col h-full">
+            <div className="flex-1 w-full bg-white rounded-[30px] p-[20px] flex flex-col">
               <h2 className="text-title-main text-primary-01">Statistics</h2>
 
-              <div className="flex-1 overflow-y-auto no-scrollbar">
-                <div className="h-[400px] flex items-center justify-center text-gray-02">
-                  <ProductStatistics products={mockStatisticsProducts} />
-                </div>
+              <div className="mt-[10px] w-full">
+                <ProductStatistics products={mockStatisticsProducts} />
               </div>
             </div>
           </div>
