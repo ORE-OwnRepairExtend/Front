@@ -4,11 +4,18 @@ import MainLayout from "../../layout/MainLayout";
 import Header from "../../components/header/Header";
 import ProductInfoCard from "../../components/common/ProductInfoCard";
 import { getProductStatus } from "../../utils/productStatus";
+import ProductStatistics from "../../components/statistics/ProductStatistics";
+import { mockStatisticsProducts } from "../../mocks/mockStatisticsData";
 
 const products = [
   { id: 1, name: "카메라", img: "/photos/camera.png", desc: "SONY-RX1R III" },
   { id: 2, name: "내폰", img: "/photos/phone.png", desc: "iPhone 15" },
-  { id: 3, name: "우리집 냉장고", img: "/photos/refrigerator.png", desc: "LG DIOS" },
+  {
+    id: 3,
+    name: "우리집 냉장고",
+    img: "/photos/refrigerator.png",
+    desc: "LG DIOS",
+  },
   { id: 4, name: "에어팟", img: "/photos/airpods.png", desc: "AirPods Pro" },
   { id: 5, name: "에어팟", img: "/photos/airpods.png", desc: "AirPods Pro" },
   { id: 6, name: "에어팟", img: "/photos/airpods.png", desc: "AirPods Pro" },
@@ -22,7 +29,7 @@ const warrantyList = [
   { name: "에어팟 - APPLE", remainingDays: -3 },
   { name: "카메라 - SONY", remainingDays: 5 },
   { name: "카메라 - SONY", remainingDays: 5 },
-  { name: "카메라 - SONY", remainingDays: 5 }
+  { name: "카메라 - SONY", remainingDays: 5 },
 ];
 
 export default function MainPage() {
@@ -144,14 +151,14 @@ export default function MainPage() {
           </div>
 
           {/* 아래 영역 */}
-          <div className="flex gap-[25px] mt-[20px] h-[300px]">
+          <div className="flex items-start gap-[25px] mt-[20px]">
             {/* Warranty */}
-            <div className="w-[320px] bg-white rounded-[30px] p-[20px] flex flex-col h-full">
+            <div className="w-[320px] bg-white rounded-[30px] p-[20px] flex flex-col">
               <h2 className="text-title-main text-primary-01 mb-[10px]">
                 Warranty
               </h2>
 
-              <div className="flex-1 overflow-y-auto pr-[5px] flex flex-col gap-[10px] no-scrollbar">
+              <div className="flex flex-col gap-[10px]">
                 {warrantyList.map((item, idx) => {
                   const status = getProductStatus(item.remainingDays);
 
@@ -159,19 +166,19 @@ export default function MainPage() {
                     status === "expired"
                       ? "bg-gray-400"
                       : status === "danger"
-                      ? "bg-red-500"
-                      : status === "imminent"
-                      ? "bg-[#D2D53A]"
-                      : "bg-green-500";
+                        ? "bg-red-500"
+                        : status === "imminent"
+                          ? "bg-[#D2D53A]"
+                          : "bg-green-500";
 
                   const statusText =
                     status === "expired"
                       ? "보증만료"
                       : status === "danger"
-                      ? "보증위험"
-                      : status === "imminent"
-                      ? "보증임박"
-                      : "보증정상";
+                        ? "보증위험"
+                        : status === "imminent"
+                          ? "보증임박"
+                          : "보증정상";
 
                   const [title, brand] = item.name.split(" - ");
 
@@ -181,11 +188,18 @@ export default function MainPage() {
                       className="flex justify-between items-center border-b-2 border-gray-02 pb-[5px]"
                     >
                       <span>
-                        <span className="text-black text-title-m-16">{title}</span>
+                        <span className="text-black text-title-m-16">
+                          {title}
+                        </span>
                         {brand && (
                           <>
-                            <span className="text-gray-01 text-body-r-12"> - </span>
-                            <span className="text-gray-01 text-body-r-12">{brand}</span>
+                            <span className="text-gray-01 text-body-r-12">
+                              {" "}
+                              -{" "}
+                            </span>
+                            <span className="text-gray-01 text-body-r-12">
+                              {brand}
+                            </span>
                           </>
                         )}
                       </span>
@@ -205,13 +219,11 @@ export default function MainPage() {
             </div>
 
             {/* statistics */}
-            <div className="flex-1 bg-white rounded-[30px] p-[20px] flex flex-col h-full">
+            <div className="flex-1 w-full bg-white rounded-[30px] p-[20px] flex flex-col">
               <h2 className="text-title-main text-primary-01">Statistics</h2>
 
-              <div className="flex-1 overflow-y-auto no-scrollbar">
-                <div className="h-[400px] flex items-center justify-center text-gray-02">
-                  (통계 들어갈 영역)
-                </div>
+              <div className="mt-[10px] w-full">
+                <ProductStatistics products={mockStatisticsProducts} />
               </div>
             </div>
           </div>
