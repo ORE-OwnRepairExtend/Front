@@ -3,17 +3,17 @@ import ProductInputBox from "./ProductInputBox";
 import ProductImageButton from "./ProductImageButton";
 import ProductCreateCategory from "./ProductCreateCategory";
 import CommonButton from "../common/CommonButton";
-import PartInputRow from "./PartInputRow";
+// import PartInputRow from "./PartInputRow";
 import ProductCheckbox from "./ProductCheckbox";
 import ProductFormRow from "./ProductFormRow";
 import Modal from "../common/Modal";
 import { productCategories } from "../../constants/productCategories";
 
-type PartItem = {
-  id: number;
-  name: string;
-  cycle: string;
-};
+// type PartItem = {
+//   id: number;
+//   name: string;
+//   cycle: string;
+// };
 
 type ExtractedProductData = {
   sourceId: string;
@@ -42,7 +42,7 @@ export default function ProductCreateContent({
   const [noWarranty, setNoWarranty] = useState(false);
   const [productImage, setProductImage] = useState<File | null>(null);
 
-  const [parts, setParts] = useState<PartItem[]>([]);
+  // const [parts, setParts] = useState<PartItem[]>([]);
 
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
   const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
@@ -55,23 +55,23 @@ export default function ProductCreateContent({
     purchaseDate !== "" &&
     (noWarranty || warrantyPeriod.trim() !== "");
 
-  const handlePartChange = (
-    id: number,
-    field: "name" | "cycle",
-    value: string,
-  ) => {
-    setParts((prev) =>
-      prev.map((part) => (part.id === id ? { ...part, [field]: value } : part)),
-    );
-  };
+  // const handlePartChange = (
+  //   id: number,
+  //   field: "name" | "cycle",
+  //   value: string,
+  // ) => {
+  //   setParts((prev) =>
+  //     prev.map((part) => (part.id === id ? { ...part, [field]: value } : part)),
+  //   );
+  // };
 
-  const handleAddPart = () => {
-    setParts((prev) => [...prev, { id: Date.now(), name: "", cycle: "" }]);
-  };
+  // const handleAddPart = () => {
+  //   setParts((prev) => [...prev, { id: Date.now(), name: "", cycle: "" }]);
+  // };
 
-  const handleDeletePart = (id: number) => {
-    setParts((prev) => prev.filter((part) => part.id !== id));
-  };
+  // const handleDeletePart = (id: number) => {
+  //   setParts((prev) => prev.filter((part) => part.id !== id));
+  // };
 
   const handleSubmit = () => {
     console.log({
@@ -83,7 +83,7 @@ export default function ProductCreateContent({
       warrantyPeriod: noWarranty ? null : warrantyPeriod,
       noWarranty,
       productImage,
-      parts,
+      // parts,
     });
   };
 
@@ -183,7 +183,7 @@ export default function ProductCreateContent({
             </div>
           </ProductFormRow>
 
-          {/* 부품 관리 */}
+          {/* 부품 관리
           <ProductFormRow label="부품관리">
             <div className="flex flex-col w-[390px] gap-[10px]">
               {parts.map((part) => (
@@ -203,7 +203,7 @@ export default function ProductCreateContent({
 
               <CommonButton onClick={handleAddPart}>추가하기</CommonButton>
             </div>
-          </ProductFormRow>
+          </ProductFormRow> */}
         </div>
       </div>
 
