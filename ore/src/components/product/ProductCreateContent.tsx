@@ -7,7 +7,12 @@ import CommonButton from "../common/CommonButton";
 import ProductCheckbox from "./ProductCheckbox";
 import ProductFormRow from "./ProductFormRow";
 import Modal from "../common/Modal";
-import { productCategories } from "../../constants/productCategories";
+import {
+  productCategories,
+  CATEGORY_MAP,
+} from "../../constants/productCategories";
+import { useNavigate } from "react-router-dom";
+import { api } from "../../api/api";
 
 // type PartItem = {
 //   id: number;
@@ -31,6 +36,8 @@ type ProductCreateContentProps = {
 export default function ProductCreateContent({
   extractedData,
 }: ProductCreateContentProps) {
+  const navigate = useNavigate();
+
   const [nickname, setNickname] = useState("");
   const [productName, setProductName] = useState(
     extractedData?.modelNumber ?? "",
@@ -44,6 +51,8 @@ export default function ProductCreateContent({
 
   // const [parts, setParts] = useState<PartItem[]>([]);
 
+  const [alertMessage, setAlertMessage] = useState("");
+
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
   const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
 
@@ -52,6 +61,7 @@ export default function ProductCreateContent({
   const isRequiredFilled =
     productName.trim() !== "" &&
     selectedCategory !== "" &&
+    manual.trim() !== "" &&
     purchaseDate !== "" &&
     (noWarranty || warrantyPeriod.trim() !== "");
 
@@ -73,18 +83,32 @@ export default function ProductCreateContent({
   //   setParts((prev) => prev.filter((part) => part.id !== id));
   // };
 
-  const handleSubmit = () => {
-    console.log({
-      nickname,
-      productName,
-      selectedCategory,
-      manual,
-      purchaseDate,
-      warrantyPeriod: noWarranty ? null : warrantyPeriod,
-      noWarranty,
-      productImage,
-      // parts,
-    });
+  const handleSubmit = async () => {
+    try {
+      const requestBody = {
+        ...(extractedData?.sourceId && {
+          sourceId: extractedData.sourceId,
+        }),
+        name: productName,
+        category: CATEGORY_MAP[selectedCategory as keyof typeof CATEGORY_MAP],
+        nickname: nickname.trim() || productName.trim(),
+        purchaseDate,
+        warrantyMonths: noWarranty ? 0 : Number(warrantyPeriod),
+        manual: {
+          manualContent: manual,
+        },
+        // part
+        // image
+      };
+
+      await api.post("/products", requestBody);
+
+      navigate("/products");
+    } catch (error) {
+      console.error("제품 등록 실패:", error);
+      setAlertMessage("제품 등록에 실패했습니다. 다시 시도해주세요.");
+      setIsAlertModalOpen(true);
+    }
   };
 
   return (
@@ -212,6 +236,7 @@ export default function ProductCreateContent({
           variant="secondary"
           onClick={() => {
             if (!isRequiredFilled) {
+              setAlertMessage("필수 항목을 모두 입력해주세요.");
               setIsAlertModalOpen(true);
               return;
             }
@@ -227,7 +252,7 @@ export default function ProductCreateContent({
       <Modal
         open={isAlertModalOpen}
         type="alert"
-        title="필수 항목을 모두 입력해주세요."
+        title={alertMessage}
         onClose={() => setIsAlertModalOpen(false)}
         onConfirm={() => setIsAlertModalOpen(false)}
         confirmText="확인"
@@ -239,8 +264,8 @@ export default function ProductCreateContent({
         title="제품을 등록하시겠습니까?"
         onClose={() => setIsSubmitModalOpen(false)}
         onCancel={() => setIsSubmitModalOpen(false)}
-        onConfirm={() => {
-          handleSubmit();
+        onConfirm={async () => {
+          await handleSubmit();
           setIsSubmitModalOpen(false);
         }}
         cancelText="취소"

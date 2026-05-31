@@ -39,3 +39,12 @@ export const productCategories: ProductCategory[] = [
     icon: <img src={otherIcon} className="w-[20px] h-[20px]" />,
   },
 ];
+
+export const CATEGORY_MAP = {
+  "모바일 기기": "MOBILE",
+  "PC 기기": "PC_LAPTOP",
+  "주방 가전": "KITCHEN",
+  "생활 가전": "LIVING",
+  "영상·음향": "VIDEO_AUDIO",
+  기타: "ETC",
+} as const;
