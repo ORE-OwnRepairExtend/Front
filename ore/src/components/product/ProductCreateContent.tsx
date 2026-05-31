@@ -89,19 +89,32 @@ export default function ProductCreateContent({
         ...(extractedData?.sourceId && {
           sourceId: extractedData.sourceId,
         }),
-        name: productName,
+        name: productName.trim(),
         category: CATEGORY_MAP[selectedCategory as keyof typeof CATEGORY_MAP],
         nickname: nickname.trim() || productName.trim(),
         purchaseDate,
         warrantyMonths: noWarranty ? 0 : Number(warrantyPeriod),
         manual: {
-          manualContent: manual,
+          manualContent: manual.trim(),
         },
         // part
         // image
       };
 
-      await api.post("/products", requestBody);
+      const response = await api.post("/products", requestBody);
+
+      const productId = response.data.productId;
+
+      if (!productId) {
+        throw new Error("productId가 응답에 없습니다.");
+      }
+
+      if (productImage) {
+        const formData = new FormData();
+        formData.append("image", productImage);
+
+        await api.post(`/products/${productId}/images`, formData);
+      }
 
       navigate("/products");
     } catch (error) {
