@@ -31,6 +31,12 @@ type RepairEditForm = {
   receiptImageUrl?: string;
 };
 
+type RepairUpdateResponse = {
+  repairId: string;
+  content: string;
+  cost: number;
+};
+
 type RepairDetailState = {
   repairId: string;
   repairTitle: string;
@@ -176,32 +182,41 @@ export default function RepairDetailPage() {
     if (!productId || !repairId || !repairDetail) return;
 
     const payload = {
-      repairTitle: editForm.title,
-      repairDate: editForm.repairDate,
-      repairContent: editForm.content,
-      repairCost: Number(editForm.price.replace(/,/g, "")),
-      repairShop: editForm.shopName,
-      receiptImageUrl: editForm.receiptImageUrl || undefined,
+      content: editForm.content,
+      cost: Number(editForm.price.replace(/,/g, "")),
     };
 
-    console.log("수정할 repairId:", repairId);
-    console.log("수정 payload:", payload);
+    try {
+      const response = await api.patch<RepairUpdateResponse>(
+        `/products/${productId}/repairs/${repairId}`,
+        payload,
+      );
 
-    // todo: api 연동 후 변경
-    // await updateRepair(productId, repairId, payload);
+      const data = response.data;
 
-    // 목업에서도 수정된 것처럼 보이게 화면 상태 갱신
-    setRepairDetail({
-      ...repairDetail,
-      repairTitle: payload.repairTitle,
-      repairDate: payload.repairDate,
-      repairContent: payload.repairContent,
-      repairCost: payload.repairCost,
-      repairShop: payload.repairShop,
-      receiptImageUrl: payload.receiptImageUrl,
-    });
+      // 현재 수정 API가 받지 않는 값들은 기존 값 유지
+      setRepairDetail({
+        ...repairDetail,
+        repairContent: data.content,
+        repairCost: data.cost,
+      });
 
-    setIsEditMode(false);
+      setIsEditMode(false);
+    } catch (error) {
+      console.error("수리 이력 수정 실패:", error);
+
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 401) {
+          setErrorMessage("인증 정보가 유효하지 않습니다.");
+        } else if (error.response?.status === 404) {
+          setErrorMessage("수리 기록을 찾을 수 없습니다.");
+        } else {
+          setErrorMessage("수리 이력 수정에 실패했습니다.");
+        }
+      } else {
+        setErrorMessage("알 수 없는 오류가 발생했습니다.");
+      }
+    }
   };
 
   // 삭제 함수
