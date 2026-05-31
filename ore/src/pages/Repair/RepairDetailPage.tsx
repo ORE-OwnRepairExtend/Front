@@ -5,10 +5,22 @@ import RepairDetailContent from "../../components/repair/RepairDetailContent";
 import SecondLayout from "../../layout/SecondLayout";
 import CommonButton from "../../components/common/CommonButton";
 import { mockProductListResponse } from "../../mocks/products";
-import { mockRepairDetailResponse } from "../../mocks/repairs";
 import { formatPrice } from "../../utils/formatPrice";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Modal from "../../components/common/Modal";
+import { api } from "../../api/api";
+import axios from "axios";
+
+type RepairDetailResponse = {
+  repairId: string;
+  title: string;
+  date: string;
+  content: string;
+  cost: number;
+  serviceCenter: string;
+  imageUrl?: string;
+  createdAt: string;
+};
 
 type RepairEditForm = {
   title: string;
@@ -40,23 +52,61 @@ export default function RepairDetailPage() {
     (item) => item.productId === productId,
   );
 
-  const initialRepairDetail = mockRepairDetailResponse.find(
-    (item) => item.repairId === repairId,
+  const [repairDetail, setRepairDetail] = useState<RepairDetailState | null>(
+    null,
   );
 
-  const [repairDetail, setRepairDetail] = useState<RepairDetailState | null>(
-    initialRepairDetail
-      ? {
-          repairId: initialRepairDetail.repairId,
-          repairTitle: initialRepairDetail.repairTitle,
-          repairDate: initialRepairDetail.repairDate,
-          repairContent: initialRepairDetail.repairContent,
-          repairCost: initialRepairDetail.repairCost,
-          repairShop: initialRepairDetail.repairShop,
-          receiptImageUrl: initialRepairDetail.receiptImageUrl,
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    const fetchRepairDetail = async () => {
+      if (!productId || !repairId) {
+        setErrorMessage("잘못된 접근입니다.");
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        setErrorMessage("");
+
+        const response = await api.get<RepairDetailResponse>(
+          `/products/${productId}/repairs/${repairId}`,
+        );
+
+        const data = response.data;
+
+        setRepairDetail({
+          repairId: data.repairId,
+          repairTitle: data.title,
+          repairDate: data.date,
+          repairContent: data.content,
+          repairCost: data.cost,
+          repairShop: data.serviceCenter,
+          receiptImageUrl: data.imageUrl,
+        });
+      } catch (error) {
+        console.error("수리 이력 상세 조회 실패:", error);
+
+        if (axios.isAxiosError(error)) {
+          if (error.response?.status === 401) {
+            setErrorMessage("인증 정보가 유효하지 않습니다.");
+          } else if (error.response?.status === 404) {
+            setErrorMessage("수리 이력을 찾을 수 없습니다.");
+          } else {
+            setErrorMessage("수리 이력 정보를 불러오지 못했습니다.");
+          }
+        } else {
+          setErrorMessage("알 수 없는 오류가 발생했습니다.");
         }
-      : null,
-  );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchRepairDetail();
+  }, [productId, repairId]);
 
   const [editForm, setEditForm] = useState<RepairEditForm>({
     title: "",
@@ -155,20 +205,44 @@ export default function RepairDetailPage() {
   };
 
   // 삭제 함수
-  const handleDelete = () => {
-    console.log("삭제할 repairId:", repairId);
+  const handleDelete = async () => {
+    if (!productId || !repairId) {
+      setErrorMessage("잘못된 접근입니다.");
+      return;
+    }
 
-    // todo: api 연동 후 변경
-    // await deleteRepair(productId, repairId);
+    try {
+      await api.delete(`/products/${productId}/repairs/${repairId}`);
 
-    // 삭제 후 이전 페이지로 이동
-    // todo: 삭제 후 페이지 이동 생각
-    navigate(-1);
+      navigate(`/products/${productId}/repairs`);
+    } catch (error) {
+      console.error("수리 이력 삭제 실패:", error);
+
+      if (axios.isAxiosError(error)) {
+        if (error.response?.status === 401) {
+          setErrorMessage("인증 정보가 유효하지 않습니다.");
+        } else if (error.response?.status === 404) {
+          setErrorMessage("수리 이력을 찾을 수 없습니다.");
+        } else {
+          setErrorMessage("수리 이력 삭제에 실패했습니다.");
+        }
+      } else {
+        setErrorMessage("알 수 없는 오류가 발생했습니다.");
+      }
+    }
   };
 
   // todo: 예외처리 디자인 생각
   if (!product) {
     return <div>제품을 찾을 수 없습니다.</div>;
+  }
+
+  if (isLoading) {
+    return <div>수리 이력 정보를 불러오는 중입니다.</div>;
+  }
+
+  if (errorMessage) {
+    return <div>{errorMessage}</div>;
   }
 
   if (!repairDetail) {
@@ -261,10 +335,7 @@ export default function RepairDetailPage() {
         title="해당 수리 이력을 삭제하시겠습니까?"
         onClose={() => setIsModalOpen(false)}
         onCancel={() => setIsModalOpen(false)}
-        onConfirm={() => {
-          handleDelete();
-          setIsModalOpen(false);
-        }}
+        onConfirm={handleDelete}
         cancelText="취소"
         confirmText="삭제"
       />
