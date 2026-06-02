@@ -13,6 +13,7 @@ import {
 } from "../../constants/productCategories";
 import { useNavigate } from "react-router-dom";
 import { api } from "../../api/api";
+import type { ApiProductCategory } from "../../types/category";
 
 // type PartItem = {
 //   id: number;
@@ -29,27 +30,70 @@ type ExtractedProductData = {
   createdAt: string;
 };
 
+type EditProductData = {
+  productId: string;
+  productName: string;
+  nickname: string;
+  category: ApiProductCategory;
+  imageUrl: string | null;
+  modelNumber: string | null;
+  purchaseDate: string | null;
+  warrantyMonths: number | null;
+  isFavorite: boolean;
+  hasRepairHistory: boolean;
+  createdAt: string;
+  manualContent?: string | null;
+};
+
 type ProductCreateContentProps = {
   extractedData?: ExtractedProductData | null;
+  isEditMode?: boolean;
+  editProductId?: string | null;
+  editProductData?: EditProductData | null;
+};
+
+const getCategoryLabel = (apiCategory?: ApiProductCategory | null) => {
+  if (!apiCategory) return "";
+
+  const matchedCategory = Object.entries(CATEGORY_MAP).find(
+    ([, value]) => value === apiCategory,
+  );
+
+  return matchedCategory?.[0] ?? "";
 };
 
 export default function ProductCreateContent({
   extractedData,
+  isEditMode = false,
+  editProductId = null,
+  editProductData = null,
 }: ProductCreateContentProps) {
   const navigate = useNavigate();
 
-  const [nickname, setNickname] = useState("");
+  const [nickname, setNickname] = useState(editProductData?.nickname ?? "");
   const [productName, setProductName] = useState(
-    extractedData?.modelNumber ?? "",
+    editProductData?.productName ?? extractedData?.modelNumber ?? "",
   );
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [manual, setManual] = useState(extractedData?.ocrText ?? "");
+  const [selectedCategory, setSelectedCategory] = useState(
+    getCategoryLabel(editProductData?.category),
+  );
+  const [manual, setManual] = useState(
+    editProductData?.manualContent ?? extractedData?.ocrText ?? "",
+  );
 
-  const [purchaseDate, setPurchaseDate] = useState("");
-  const [noPurchaseDate, setNoPurchaseDate] = useState(false);
+  const [purchaseDate, setPurchaseDate] = useState(
+    editProductData?.purchaseDate ?? "",
+  );
+  const [noPurchaseDate, setNoPurchaseDate] = useState(
+    editProductData?.purchaseDate === null,
+  );
 
-  const [warrantyPeriod, setWarrantyPeriod] = useState("");
-  const [noWarranty, setNoWarranty] = useState(false);
+  const [warrantyPeriod, setWarrantyPeriod] = useState(
+    editProductData?.warrantyMonths ? String(editProductData.warrantyMonths) : "",
+  );
+  const [noWarranty, setNoWarranty] = useState(
+    editProductData?.warrantyMonths === null,
+  );
 
   const [productImage, setProductImage] = useState<File | null>(null);
 
@@ -65,7 +109,7 @@ export default function ProductCreateContent({
   const isRequiredFilled =
     productName.trim() !== "" &&
     selectedCategory !== "" &&
-    manual.trim() !== "";
+    (isEditMode || manual.trim() !== "");
 
   // const handlePartChange = (
   //   id: number,
@@ -105,6 +149,29 @@ export default function ProductCreateContent({
         // image
       };
 
+      if (isEditMode && editProductId) {
+        const formData = new FormData();
+
+        formData.append("nickname", nickname.trim() || productName.trim());
+        formData.append(
+          "category",
+          CATEGORY_MAP[selectedCategory as keyof typeof CATEGORY_MAP],
+        );
+
+        if (productImage) {
+          formData.append("image", productImage);
+        }
+
+        await api.patch(`/products/${editProductId}`, formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+
+        navigate(`/products/${editProductId}`);
+        return;
+      }
+
       const response = await api.post("/products", requestBody);
 
       createdProductId = response.data.productId;
@@ -122,9 +189,9 @@ export default function ProductCreateContent({
 
       navigate(`/products/${createdProductId}`);
     } catch (error) {
-      console.error("제품 등록 실패:", error);
+      console.error(isEditMode ? "제품 수정 실패:" : "제품 등록 실패:", error);
 
-      if (createdProductId) {
+      if (!isEditMode && createdProductId) {
         try {
           await api.delete(`/products/${createdProductId}`);
         } catch (deleteError) {
@@ -132,7 +199,11 @@ export default function ProductCreateContent({
         }
       }
 
-      setAlertMessage("제품 등록에 실패했습니다.\n다시 시도해주세요.");
+      setAlertMessage(
+        isEditMode
+          ? "제품 수정에 실패했습니다.\n다시 시도해주세요."
+          : "제품 등록에 실패했습니다.\n다시 시도해주세요.",
+      );
       setIsAlertModalOpen(true);
     }
   };
@@ -162,6 +233,10 @@ export default function ProductCreateContent({
               onChange={(e) => setProductName(e.target.value)}
               placeholder="ex. APPLE-AirPods Pro 3"
               className="w-[380px]"
+              disabled={isEditMode}
+              inputClassName={
+                isEditMode ? "cursor-not-allowed text-gray-02" : ""
+              }
             />
           </ProductFormRow>
 
@@ -185,13 +260,17 @@ export default function ProductCreateContent({
           </ProductFormRow>
 
           {/* 매뉴얼 */}
-          <ProductFormRow label="매뉴얼" required>
+          <ProductFormRow label="매뉴얼" required={!isEditMode}>
             <ProductInputBox
               multiline
               value={manual}
               onChange={(e) => setManual(e.target.value)}
               placeholder="사용 방법을 입력해주세요"
               className="w-full"
+              disabled={isEditMode}
+              inputClassName={
+                isEditMode ? "cursor-not-allowed text-gray-02" : ""
+              }
             />
           </ProductFormRow>
 
@@ -202,10 +281,12 @@ export default function ProductCreateContent({
                 variant="date"
                 value={purchaseDate}
                 onChange={(e) => setPurchaseDate(e.target.value)}
-                disabled={noPurchaseDate}
+                disabled={isEditMode || noPurchaseDate}
                 className="w-[150px]"
                 inputClassName={
-                  noPurchaseDate ? "cursor-not-allowed text-gray-02" : ""
+                  isEditMode || noPurchaseDate
+                    ? "cursor-not-allowed text-gray-02"
+                    : ""
                 }
               />
 
@@ -230,10 +311,12 @@ export default function ProductCreateContent({
                 value={warrantyPeriod}
                 onChange={(e) => setWarrantyPeriod(e.target.value)}
                 suffix="개월"
-                disabled={noWarranty}
+                disabled={isEditMode || noWarranty}
                 className="w-[100px]"
                 inputClassName={
-                  noWarranty ? "cursor-not-allowed text-gray-02" : ""
+                  isEditMode || noWarranty
+                    ? "cursor-not-allowed text-gray-02"
+                    : ""
                 }
               />
               <ProductCheckbox
@@ -288,7 +371,7 @@ export default function ProductCreateContent({
           }}
           className="w-full"
         >
-          등록
+          {isEditMode ? "수정" : "등록"}
         </CommonButton>
       </div>
 
@@ -304,7 +387,9 @@ export default function ProductCreateContent({
       <Modal
         open={isSubmitModalOpen}
         type="confirm"
-        title="제품을 등록하시겠습니까?"
+        title={
+          isEditMode ? "제품을 수정하시겠습니까?" : "제품을 등록하시겠습니까?"
+        }
         onClose={() => setIsSubmitModalOpen(false)}
         onCancel={() => setIsSubmitModalOpen(false)}
         onConfirm={async () => {
@@ -312,7 +397,7 @@ export default function ProductCreateContent({
           setIsSubmitModalOpen(false);
         }}
         cancelText="취소"
-        confirmText="등록"
+        confirmText={isEditMode ? "수정" : "등록"}
       />
     </section>
   );
