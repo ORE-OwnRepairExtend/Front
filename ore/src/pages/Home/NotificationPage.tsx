@@ -147,8 +147,8 @@ export default function NotificationPage() {
                 (
                   item,
                 ): item is typeof item & {
-                  status: Exclude<typeof item.status, "valid">;
-                } => item.status !== "valid",
+                  status: Exclude<typeof item.status, "valid" | "empty">;
+                } => item.status !== "valid" && item.status !== "empty",
               )
               .map((item) => {
                 const isSelected = selectedIds.includes(item.id);
