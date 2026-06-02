@@ -4,7 +4,6 @@ import ProfileCard from "../components/profile/ProfileCard";
 import FavoriteCard from "../components/profile/FavoriteCard";
 import { api } from "../api/api";
 import type { ProductWithStatus } from "../types/product";
-import { CATEGORY_LABEL_MAP } from "../constants/productCategories";
 import type { ApiProductCategory } from "../types/category";
 
 type MainLayoutProps = {
@@ -68,7 +67,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
             hasRepairHistory: product.hasRepairHistory,
             purchaseDate: product.purchaseDate,
             createdAt: product.createdAt,
-            category: CATEGORY_LABEL_MAP[product.category],
+            category: product.category,
             status: "valid" as const, // todo: 보증 정보 기준 계산
           }),
         );

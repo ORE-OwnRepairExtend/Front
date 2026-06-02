@@ -1,19 +1,68 @@
 import SecondLayout from "../../layout/SecondLayout";
 import Header from "../../components/header/Header";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ProductSummary } from "../../types/product";
 import CommonButton from "../../components/common/CommonButton";
 import ProductCard from "../../components/common/ProductCard";
 import ProductSelectModal from "../../components/repair/ProductSelectModal";
-import { mockProductListResponse } from "../../mocks/products";
 import RepairDetailContent from "../../components/repair/RepairDetailContent";
 import Modal from "../../components/common/Modal";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { api } from "../../api/api";
+import type { ApiProductCategory } from "../../types/category";
+
+type ProductListResponse = {
+  productId: string;
+  name: string;
+  nickname: string;
+  category: ApiProductCategory;
+  imageUrl: string;
+  isFavorite: boolean;
+  hasRepairHistory: boolean;
+  purchaseDate: string;
+  createdAt: string;
+};
 
 export default function RepairCreatePage() {
+  const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const { productId } = useParams();
 
-  const products = mockProductListResponse;
+  const [products, setProducts] = useState<ProductSummary[]>([]);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await api.get<ProductListResponse[]>("/products");
+
+        const mappedProducts: ProductSummary[] = response.data.map(
+          (product) => ({
+            productId: product.productId,
+            productName: product.name,
+            nickname: product.nickname,
+            category: product.category,
+            imageUrl: product.imageUrl,
+            isFavorite: product.isFavorite,
+            hasRepairHistory: product.hasRepairHistory,
+            purchaseDate: product.purchaseDate,
+            createdAt: product.createdAt,
+          }),
+        );
+
+        setProducts(mappedProducts);
+      } catch (error) {
+        console.error("제품 목록 조회 실패:", error);
+
+        setAlertModal({
+          open: true,
+          message: "제품 목록을 불러오지 못했습니다.",
+        });
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   const defaultProduct =
     products.find((p) => p.productId === productId) ?? null;
@@ -62,23 +111,41 @@ export default function RepairCreatePage() {
     setIsSubmitModalOpen(true);
   };
 
-  const handleSubmit = () => {
-    if (!currentProduct) return;
+  const handleSubmit = async () => {
+    if (!currentProduct || isSubmitting) return;
 
     const payload = {
       date: form.repairDate,
       content: form.content,
-      cost: Number(form.price.replace(/,/g, "")),
-      imageUrl: form.receiptImage ? URL.createObjectURL(form.receiptImage) : "",
+      cost: form.price ? Number(form.price.replace(/,/g, "")) : 0,
+      imageUrl: "",
     };
 
-    console.log("등록 productId:", currentProduct.productId);
-    console.log("등록 payload:", payload);
+    try {
+      setIsSubmitting(true);
 
-    setIsSubmitModalOpen(false);
+      await api.post(`/products/${currentProduct.productId}/repairs`, payload);
 
-    // todo: api 연동
-    // POST /products/${currentProduct.productId}/repairs
+      setIsSubmitModalOpen(false);
+
+      setAlertModal({
+        open: true,
+        message: "수리 이력이 등록되었습니다.",
+      });
+
+      navigate(`/products/${currentProduct.productId}/repairs`);
+    } catch (error) {
+      console.error("수리 이력 등록 실패:", error);
+
+      setIsSubmitModalOpen(false);
+
+      setAlertModal({
+        open: true,
+        message: "수리 이력 등록에 실패했습니다.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -156,7 +223,10 @@ export default function RepairCreatePage() {
                 onContentChange={(v) => setForm((p) => ({ ...p, content: v }))}
                 onPriceChange={(v) => {
                   const onlyNumber = v.replace(/[^0-9]/g, "");
-                  const priceWithComma = onlyNumber.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                  const priceWithComma = onlyNumber.replace(
+                    /\B(?=(\d{3})+(?!\d))/g,
+                    ",",
+                  );
 
                   setForm((p) => ({
                     ...p,

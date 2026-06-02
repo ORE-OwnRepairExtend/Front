@@ -60,6 +60,10 @@ export default function Modal({
           <p
             className="
             text-title-sb-24
+                whitespace-pre-line
+                    text-center
+
+
           "
           >
             {title}

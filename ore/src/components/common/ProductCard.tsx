@@ -1,13 +1,16 @@
 import forwardIcon from "../../assets/icons/forword.svg";
 import closeIcon from "../../assets/icons/close.svg";
 
+import defaultLogoImage from "../../../public/photos/logo.png";
+
 type ProductCardProps = {
-  imageSrc: string;
+  imageSrc?: string | null;
   name: string;
   description: string;
   actionType?: "arrow" | "close";
   showAction?: boolean;
   className?: string;
+  imageSize?: number;
   onClick?: () => void;
   onActionClick?: () => void;
 };
@@ -18,9 +21,12 @@ export default function ProductCard({
   actionType = "arrow",
   showAction = true,
   className,
+  imageSize = 150,
   onClick,
   onActionClick,
 }: ProductCardProps) {
+  const displayImageSrc = imageSrc || defaultLogoImage;
+
   return (
     <button
       type="button"
@@ -37,12 +43,19 @@ export default function ProductCard({
       {/* 제품이미지 */}
       <div
         className="
-          flex h-[100px] w-[100px] shrink-0 items-center justify-center
-          rounded-[20px]
-          overflow-hidden
-        "
+    flex shrink-0 items-center justify-center
+    overflow-hidden rounded-[20px] bg-white
+  "
+        style={{
+          width: imageSize,
+          height: imageSize,
+        }}
       >
-        <img src={imageSrc} alt={name} className="h-full w-full object-full" />
+        <img
+          src={displayImageSrc}
+          alt={name}
+          className="h-full w-full object-full"
+        />
       </div>
 
       {/* 제품설명 */}
