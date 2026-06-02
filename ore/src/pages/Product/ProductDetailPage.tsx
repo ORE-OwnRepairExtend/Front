@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import SecondLayout from "../../layout/SecondLayout";
 import Header from "../../components/header/Header";
@@ -36,6 +36,8 @@ type ProductWarrantyResponse = {
 };
 
 export default function ProductDetailPage() {
+  const navigate = useNavigate();
+
   const { productId } = useParams();
 
   const [product, setProduct] = useState<ProductDetailResponse | null>(null);
@@ -117,8 +119,45 @@ export default function ProductDetailPage() {
     price: formatPrice(repair.repairCost),
   }));
 
-  console.log("상세 API purchaseDate:", product.purchaseDate);
-  console.log("보증 API purchaseDate:", warranty?.purchaseDate);
+  const handleFavoriteClick = async () => {
+    if (!productId || !product) return;
+
+    const nextFavorite = !isFavorite;
+
+    try {
+      setIsFavorite(nextFavorite);
+
+      const response = await api.patch<{
+        productId: string;
+        isFavorite: boolean;
+      }>(`/products/${productId}/favorite`, {
+        isFavorite: nextFavorite,
+      });
+
+      setIsFavorite(response.data.isFavorite);
+      setProduct((prev) =>
+        prev ? { ...prev, isFavorite: response.data.isFavorite } : prev,
+      );
+    } catch (error) {
+      console.error("즐겨찾기 수정 실패:", error);
+
+      setIsFavorite(isFavorite);
+      alert("즐겨찾기 상태 변경에 실패했습니다.");
+    }
+  };
+
+  const handleDeleteProduct = async () => {
+    if (!productId) return;
+
+    try {
+      await api.delete(`/products/${productId}`);
+
+      navigate("/products", { replace: true });
+    } catch (error) {
+      console.error("제품 삭제 실패:", error);
+      alert("제품 삭제에 실패했습니다.");
+    }
+  };
 
   return (
     <SecondLayout>
@@ -149,9 +188,9 @@ export default function ProductDetailPage() {
               repairHistories={repairInfoes}
               officialUrl="https://example.com"
               customerServiceUrl="https://example.com/customer"
-              onFavoriteClick={() => setIsFavorite((prev) => !prev)}
+              onFavoriteClick={handleFavoriteClick}
               onEditClick={() => console.log("수정")}
-              onDeleteClick={() => console.log("삭제")}
+              onDeleteClick={handleDeleteProduct}
             />
           </div>
         </div>
