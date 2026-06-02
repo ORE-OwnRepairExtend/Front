@@ -55,8 +55,9 @@ export default function ProductInputBox(props: ProductInputBoxProps) {
     props.inputClassName,
   );
 
-  const sideTextStyle =
-    "shrink-0 text-body-r-15 text-primary-01 whitespace-nowrap";
+  const sideTextStyle = props.disabled
+    ? "shrink-0 text-body-r-15 text-gray-02 whitespace-nowrap"
+    : "shrink-0 text-body-r-15 text-primary-01 whitespace-nowrap";
 
   if (props.multiline) {
     const {
