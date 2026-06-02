@@ -282,7 +282,7 @@ export default function MainPage() {
                     >
                       <ProductInfoCard
                         name={item.nickname}
-                        img={item.imageUrl || "/photos/camera.png"}
+                        img={item.imageUrl}
                         desc={item.name}
                       />
                     </div>
