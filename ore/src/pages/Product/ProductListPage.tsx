@@ -9,7 +9,6 @@ import ProductCard from "../../components/common/ProductCard";
 import ProductRegisterModal from "../../components/common/ProductRegisterModal";
 import { productCategories as categories } from "../../constants/productCategories";
 
-import cameraImg from "../../assets/camera.png";
 
 type Product = {
   productId: string;
@@ -180,7 +179,7 @@ const filteredProducts = useMemo(() => {
                 onClick={() => navigate(`/products/${item.productId}`)}
               >
                 <ProductCard
-                  imageSrc={item.imageUrl || cameraImg}
+                  imageSrc={item.imageUrl}
                   name={item.nickname}
                   description={item.name}
                 />
