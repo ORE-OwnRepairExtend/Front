@@ -1,25 +1,12 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { api } from "../../api/api";
 import MainLayout from "../../layout/MainLayout";
 import Header from "../../components/header/Header";
 import ProductInfoCard from "../../components/common/ProductInfoCard";
 import { getProductStatus } from "../../utils/productStatus";
 import ProductStatistics from "../../components/statistics/ProductStatistics";
 import { mockStatisticsProducts } from "../../mocks/mockStatisticsData";
-
-const products = [
-  { id: 1, name: "카메라", img: "/photos/camera.png", desc: "SONY-RX1R III" },
-  { id: 2, name: "내폰", img: "/photos/phone.png", desc: "iPhone 15" },
-  {
-    id: 3,
-    name: "우리집 냉장고",
-    img: "/photos/refrigerator.png",
-    desc: "LG DIOS",
-  },
-  { id: 4, name: "에어팟", img: "/photos/airpods.png", desc: "AirPods Pro" },
-  { id: 5, name: "에어팟", img: "/photos/airpods.png", desc: "AirPods Pro" },
-  { id: 6, name: "에어팟", img: "/photos/airpods.png", desc: "AirPods Pro" },
-];
 
 const warrantyList = [
   { name: "카메라 - SONY", remainingDays: 5 },
@@ -32,14 +19,47 @@ const warrantyList = [
   { name: "카메라 - SONY", remainingDays: 5 },
 ];
 
+type Product = {
+  productId: string;
+  name: string;
+  nickname: string;
+  category: string;
+  imageUrl: string;
+  isFavorite: boolean;
+  hasRepairHistory: boolean;
+  purchaseDate: string;
+  createdAt: string;
+};
+
 export default function MainPage() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const [isDown, setIsDown] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
+
+  const fetchProducts = async () => {
+    try {
+      setIsLoading(true);
+
+      const response = await api.get<Product[]>("/products");
+
+      setProducts(response.data);
+    } catch (error) {
+      console.error("제품 목록 조회 실패:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDown(true);
@@ -130,22 +150,32 @@ export default function MainPage() {
                 </div>
 
                 {/* 제품 카드 */}
-                {products.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex-shrink-0 cursor-pointer"
-                    onClick={() => {
-                      if (isDragging) return;
-                      navigate(`/products/${item.id}`);
-                    }}
-                  >
-                    <ProductInfoCard
-                      name={item.name}
-                      img={item.img}
-                      desc={item.desc}
-                    />
+                {isLoading ? (
+                  <div className="flex h-[135px] w-full items-center justify-center text-gray-02 text-body-r-15">
+                    제품 목록을 불러오는 중입니다.
                   </div>
-                ))}
+                ) : products.length === 0 ? (
+                  <div className="flex h-[135px] w-full items-center justify-center text-gray-02 text-body-r-15">
+                    등록된 제품이 없습니다.
+                  </div>
+                ) : (
+                  products.map((item) => (
+                    <div
+                      key={item.productId}
+                      className="flex-shrink-0 cursor-pointer"
+                      onClick={() => {
+                        if (isDragging) return;
+                        navigate(`/products/${item.productId}`);
+                      }}
+                    >
+                      <ProductInfoCard
+                        name={item.name}
+                        img={item.imageUrl || "/photos/camera.png"}
+                        desc={item.nickname}
+                      />
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </div>
