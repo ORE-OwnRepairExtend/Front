@@ -305,69 +305,69 @@ export default function MainPage() {
               </h2>
 
               <div className="flex flex-col gap-[10px]">
-                {products.length === 0 ? (
-                  <div className="flex h-[120px] items-center justify-center text-gray-02 text-body-r-15">
-                    등록된 보증 정보가 없습니다.
-                  </div>
-                ) : (
-                  products.map((item) => {
-                    const remainingDays = getRemainingDays(
-                      item.purchaseDate,
-                      item.warrantyMonths,
-                    );
+              {products.length === 0 ? (
+                <div className="flex h-[120px] items-center justify-center text-gray-02 text-body-r-15">
+                  등록된 보증 정보가 없습니다.
+                </div>
+              ) : (
+                products.map((item) => {
+                  const remainingDays = getRemainingDays(
+                    item.purchaseDate,
+                    item.warrantyMonths,
+                  );
 
-                    const status =
-                      remainingDays === null ? "empty" : getProductStatus(remainingDays);
+                  const status =
+                    remainingDays === null ? "empty" : getProductStatus(remainingDays);
 
-                    const statusColor =
-                      status === "expired"
-                        ? "bg-gray-400"
-                        : status === "danger"
-                          ? "bg-red-500"
-                          : status === "imminent"
-                            ? "bg-[#D2D53A]"
-                            : status === "empty"
-                              ? "bg-gray-300"
-                              : "bg-green-500";
+                  const statusColor =
+                    status === "expired"
+                      ? "bg-gray-400"
+                      : status === "danger"
+                        ? "bg-red-500"
+                        : status === "imminent"
+                          ? "bg-[#D2D53A]"
+                          : status === "empty"
+                            ? "bg-gray-300"
+                            : "bg-green-500";
 
-                    const statusText =
-                      status === "expired"
-                        ? "보증만료"
-                        : status === "danger"
-                          ? "보증위험"
-                          : status === "imminent"
-                            ? "보증임박"
-                            : status === "empty"
-                              ? "보증없음"
-                              : "보증정상";
+                  const statusText =
+                    status === "expired"
+                      ? "보증만료"
+                      : status === "danger"
+                        ? "보증위험"
+                        : status === "imminent"
+                          ? "보증임박"
+                          : status === "empty"
+                            ? "보증없음"
+                            : "보증유효";
 
-                    return (
-                      <div
-                        key={item.productId}
-                        className="flex justify-between items-center border-b-2 border-gray-02 pb-[5px]"
-                      >
-                        <span>
-                          <span className="text-black text-title-m-16">
-                            {item.nickname}
-                          </span>
-                          <span className="text-gray-01 text-body-r-12"> - </span>
-                          <span className="text-gray-01 text-body-r-12">
-                            {item.name}
-                          </span>
+                  return (
+                    <div
+                      key={item.productId}
+                      className="flex justify-between items-center border-b-2 border-gray-02 pb-[5px]"
+                    >
+                      <span>
+                        <span className="text-black text-title-m-16">
+                          {item.nickname}
                         </span>
+                        <span className="text-gray-01 text-body-r-12"> - </span>
+                        <span className="text-gray-01 text-body-r-12">
+                          {item.name}
+                        </span>
+                      </span>
 
-                        <div className="flex items-center gap-[6px]">
-                          <span
-                            className={`w-[12px] h-[12px] rounded-full ${statusColor}`}
-                          />
-                          <span className="text-body-m-10 text-gray-01">
-                            {statusText}
-                          </span>
-                        </div>
+                      <div className="flex items-center gap-[6px]">
+                        <span
+                          className={`w-[12px] h-[12px] rounded-full ${statusColor}`}
+                        />
+                        <span className="text-body-m-10 text-gray-01">
+                          {statusText}
+                        </span>
                       </div>
-                    );
-                  })
-                )}
+                    </div>
+                  );
+                })
+              )}
               </div>
             </div>
 
