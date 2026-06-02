@@ -3,12 +3,14 @@ import type { ProductStatus } from "../../types/product";
 import starFillIcon from "../../assets/icons/star_fill.svg";
 import starEmptyIcon from "../../assets/icons/star_empty.svg";
 
+import defaultLogoImage from "../../../public/photos/logo.png";
+
 type ProductDetailCardProps = {
-  imageSrc: string;
+  imageSrc?: string | null;
   nickname: string;
   productName: string;
   category: string;
-  purchaseDate: string;
+  purchaseDate: string | null;
   status: ProductStatus;
   isFavorite: boolean;
   onClick?: () => void;
@@ -32,11 +34,6 @@ const statusColor: Record<ProductStatus, string> = {
   empty: "bg-gray-02",
 };
 
-const categoryText: Record<string, string> = {
-  mobile: "전자기기",
-  kitchen: "주방가전",
-};
-
 export default function ProductDetailCard({
   imageSrc,
   nickname,
@@ -49,6 +46,8 @@ export default function ProductDetailCard({
   onFavoriteClick,
   className,
 }: ProductDetailCardProps) {
+  const displayImageSrc = imageSrc || defaultLogoImage;
+
   return (
     <button
       type="button"
@@ -69,7 +68,7 @@ export default function ProductDetailCard({
         "
       >
         <img
-          src={imageSrc}
+          src={displayImageSrc}
           alt={nickname}
           className="h-full w-full object-cover"
         />
@@ -86,7 +85,7 @@ export default function ProductDetailCard({
             <div className="flex max-w-full items-start gap-[5px] text-body-m-16 text-gray-01">
               <p className="truncate">{productName}</p>
               <span>·</span>
-              <p className="shrink-0">{categoryText[category]}</p>
+              <p className="shrink-0">{category}</p>
             </div>
           </div>
 
@@ -112,7 +111,10 @@ export default function ProductDetailCard({
 
         {/* 구분선 아래 영역 */}
         <div className="flex flex-col items-start gap-[10px]">
-          <p className="text-body-r-16 text-gray-01">구매일 : {purchaseDate}</p>
+          <p className="text-body-r-16 text-gray-01">
+            {" "}
+            구매일 : {purchaseDate ?? "정보 없음"}
+          </p>
 
           <div className="flex items-center justify-center gap-[20px]">
             <span

@@ -5,6 +5,7 @@ import CommonButton from "../common/CommonButton";
 import ProductDetailCard from "./ProductDetailCard";
 import ProductDetailInfo from "./ProductDetailInfo";
 import type { MaintenanceHistoryItem } from "../../utils/maintenanceDate";
+import Modal from "../common/Modal";
 
 type MaintenanceCategory = {
   id: string;
@@ -23,17 +24,19 @@ type RepairInfoItem = {
 type ProductDetailContentProps = {
   productId: string;
 
-  imageSrc: string;
+  imageSrc: string | null;
   nickname: string;
   productName: string;
   category: string;
-  purchaseDate: string;
+  purchaseDate: string | null;
   status: ProductStatus;
   isFavorite: boolean;
 
   manualContent?: string;
   manualPdfUrl?: string;
-  warrantyMonths: number;
+  warrantyMonths?: number | null;
+  warrantyEndDate?: string;
+  remainingDays?: number;
   maintenanceCategories: MaintenanceCategory[];
   repairHistories: RepairInfoItem[];
   officialUrl?: string;
@@ -56,6 +59,8 @@ export default function ProductDetailContent({
   manualContent,
   manualPdfUrl,
   warrantyMonths,
+  warrantyEndDate,
+  remainingDays,
   maintenanceCategories,
   repairHistories,
   officialUrl,
@@ -65,6 +70,14 @@ export default function ProductDetailContent({
   onFavoriteClick,
 }: ProductDetailContentProps) {
   const [isMaintenanceEditing, setIsMaintenanceEditing] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+  const showWarrantyInfo =
+    purchaseDate !== null &&
+    warrantyMonths !== null &&
+    warrantyMonths !== undefined &&
+    warrantyEndDate !== undefined &&
+    remainingDays !== undefined;
 
   return (
     <div className="flex w-full flex-shrink-0 flex-col items-center gap-[20px] px-[10px]">
@@ -85,7 +98,10 @@ export default function ProductDetailContent({
         manualPdfUrl={manualPdfUrl}
         purchaseDate={purchaseDate}
         status={status}
+        showWarrantyInfo={showWarrantyInfo}
         warrantyMonths={warrantyMonths}
+        warrantyEndDate={warrantyEndDate}
+        remainingDays={remainingDays}
         maintenanceCategories={maintenanceCategories}
         repairinfos={repairHistories}
         officialUrl={officialUrl}
@@ -98,10 +114,24 @@ export default function ProductDetailContent({
           <CommonButton variant="secondary" onClick={onEditClick}>
             수정
           </CommonButton>
-
-          <CommonButton onClick={onDeleteClick}>삭제</CommonButton>
+          <CommonButton onClick={() => setIsDeleteModalOpen(true)}>
+            삭제
+          </CommonButton>
         </div>
       )}
+
+      <Modal
+        open={isDeleteModalOpen}
+        title="해당 제품을 삭제하시겠습니까?"
+        onClose={() => setIsDeleteModalOpen(false)}
+        onCancel={() => setIsDeleteModalOpen(false)}
+        onConfirm={() => {
+          setIsDeleteModalOpen(false);
+          onDeleteClick?.();
+        }}
+        cancelText="취소"
+        confirmText="삭제"
+      />
     </div>
   );
 }

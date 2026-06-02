@@ -1,7 +1,7 @@
 import type { ProductStatus } from "../../types/product";
 
 // 알림에서는 valid 상태를 사용하지 않기 때문에 제외
-type NotificationStatus = Exclude<ProductStatus, "valid">;
+type NotificationStatus = Exclude<ProductStatus, "valid" | "empty">;
 
 type NotificationCardProps = {
   title: string;

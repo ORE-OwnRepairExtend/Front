@@ -105,9 +105,7 @@ export default function NotificationPage() {
   // 선택 토글
   const toggleSelect = (id: number) => {
     setSelectedIds((prev) =>
-      prev.includes(id)
-        ? prev.filter((v) => v !== id)
-        : [...prev, id]
+      prev.includes(id) ? prev.filter((v) => v !== id) : [...prev, id],
     );
   };
 
@@ -146,16 +144,17 @@ export default function NotificationPage() {
                 status: getProductStatus(item.remainingDays),
               }))
               .filter(
-                (item): item is typeof item & {
-                  status: Exclude<typeof item.status, "valid">;
-                } => item.status !== "valid"
+                (
+                  item,
+                ): item is typeof item & {
+                  status: Exclude<typeof item.status, "valid" | "empty">;
+                } => item.status !== "valid" && item.status !== "empty",
               )
               .map((item) => {
                 const isSelected = selectedIds.includes(item.id);
 
                 return (
                   <div key={item.id} className="flex items-center gap-[10px]">
-                    
                     {/* 체크박스 */}
                     {isSelectMode && (
                       <img

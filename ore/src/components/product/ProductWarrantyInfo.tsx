@@ -1,13 +1,11 @@
-import {
-  getVisibleWarrantyTimeline,
-  getWarrantyExpiredDate,
-} from "../../utils/warrantyDate";
 import { formatDate } from "../../utils/formatDate";
 import type { ProductStatus } from "../../types/product";
 
 type ProductWarrantyInfoProps = {
-  purchaseDate: string;
-  warrantyMonths?: number | null;
+  purchaseDate?: string;
+  warrantyMonths?: number;
+  warrantyEndDate?: string;
+  remainingDays?: number;
   status: ProductStatus;
 };
 
@@ -19,42 +17,82 @@ const STATUS_STYLE: Record<ProductStatus, string> = {
   empty: "bg-gray-02",
 };
 
+const STATUS_LABEL: Record<ProductStatus, string> = {
+  valid: "유효",
+  imminent: "임박",
+  danger: "위험",
+  expired: "만료",
+  empty: "미등록",
+};
+
+const STATUS_ORDER: ProductStatus[] = [
+  "valid",
+  "imminent",
+  "danger",
+  "expired",
+];
+
+function getWarrantyTimelineFromApi(
+  purchaseDate: string,
+  warrantyEndDate: string,
+  status: ProductStatus,
+) {
+  const purchase = new Date(purchaseDate);
+  const expired = new Date(warrantyEndDate);
+
+  const imminent = new Date(expired);
+  imminent.setDate(imminent.getDate() - 31);
+
+  const danger = new Date(expired);
+  danger.setDate(danger.getDate() - 7);
+
+  const safeImminent = imminent < purchase ? purchase : imminent;
+  const safeDanger = danger < purchase ? purchase : danger;
+
+  const timeline = [
+    {
+      status: "valid" as ProductStatus,
+      label: STATUS_LABEL.valid,
+      date: formatDate(purchase),
+    },
+    {
+      status: "imminent" as ProductStatus,
+      label: STATUS_LABEL.imminent,
+      date: formatDate(safeImminent),
+    },
+    {
+      status: "danger" as ProductStatus,
+      label: STATUS_LABEL.danger,
+      date: formatDate(safeDanger),
+    },
+    {
+      status: "expired" as ProductStatus,
+      label: STATUS_LABEL.expired,
+      date: formatDate(expired),
+    },
+  ];
+
+  const currentIndex = STATUS_ORDER.indexOf(status);
+
+  if (currentIndex === -1) return [];
+
+  return timeline.slice(0, currentIndex + 1).reverse();
+}
+
 export default function ProductWarrantyInfo({
   purchaseDate,
   warrantyMonths,
+  warrantyEndDate,
+  status,
 }: ProductWarrantyInfoProps) {
-  const hasWarranty =
-    status !== "empty" &&
-    typeof warrantyMonths === "number" &&
-    warrantyMonths > 0;
+  if (!purchaseDate || !warrantyEndDate || warrantyMonths == null) return null;
 
-  if (!hasWarranty) {
-    return (
-      <section className="flex w-full flex-col items-start gap-[10px] px-[10px]">
-        <h3 className="flex w-full items-center text-body-sb-20 text-primary-01">
-          보증 정보
-        </h3>
-
-        <div className="flex items-center gap-[80px] text-body-m-16">
-          <span>구매일 : {formatDate(new Date(purchaseDate))}</span>
-          <span>만료일 : -</span>
-          <span>보증기간 : -</span>
-        </div>
-
-        <div className="flex w-full items-center rounded-[30px] bg-white/50 px-[40px] py-[30px]">
-          <p className="text-body-m-16 text-gray-01">
-            보증 정보가 등록되지 않았습니다.
-          </p>
-        </div>
-      </section>
-    );
-  }
-
-  const expiredDate = getWarrantyExpiredDate(purchaseDate, warrantyMonths);
-  const timeline = getVisibleWarrantyTimeline(
+  const timeline = getWarrantyTimelineFromApi(
     purchaseDate,
-    warrantyMonths,
-  ).reverse();
+    warrantyEndDate,
+    status,
+  );
+
   return (
     <section className="flex w-full flex-col items-start gap-[10px] px-[10px]">
       <h3 className="flex w-full items-center text-body-sb-20 text-primary-01">
@@ -63,7 +101,7 @@ export default function ProductWarrantyInfo({
 
       <div className="flex items-center gap-[80px] text-body-m-16">
         <span>구매일 : {formatDate(new Date(purchaseDate))}</span>
-        <span>만료일 : {formatDate(expiredDate)}</span>
+        <span>만료일 : {formatDate(new Date(warrantyEndDate))}</span>
         <span>보증기간 : {warrantyMonths}개월</span>
       </div>
 
@@ -72,21 +110,20 @@ export default function ProductWarrantyInfo({
           {/* 세로 점선 */}
           <div
             className="
-      absolute left-[16.5px] top-[10px] h-[calc(100%-20px)]
-      border-l-2 border-dashed border-gray-01
-    "
+              absolute left-[16.5px] top-[10px] h-[calc(100%-20px)]
+              border-l-2 border-dashed border-gray-01
+            "
           />
+
           {timeline.map((item) => (
             <div
               key={item.status}
               className="relative flex items-center gap-[10px]"
             >
-              {/* 상태 아이콘 */}
               <span
                 className={`z-10 h-[15px] w-[15px] rounded-full ${STATUS_STYLE[item.status]}`}
               />
 
-              {/* 텍스트 */}
               <span className="text-body-m-16">
                 · {item.label} - {item.date}
               </span>

@@ -1,45 +1,177 @@
-import { useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { api } from "../../api/api";
 import MainLayout from "../../layout/MainLayout";
 import Header from "../../components/header/Header";
 import ProductInfoCard from "../../components/common/ProductInfoCard";
 import { getProductStatus } from "../../utils/productStatus";
 import ProductStatistics from "../../components/statistics/ProductStatistics";
-import { mockStatisticsProducts } from "../../mocks/mockStatisticsData";
+import ProductRegisterModal from "../../components/common/ProductRegisterModal";
+import type { ProductStatus } from "../../types/product";
 
-const products = [
-  { id: 1, name: "카메라", img: "/photos/camera.png", desc: "SONY-RX1R III" },
-  { id: 2, name: "내폰", img: "/photos/phone.png", desc: "iPhone 15" },
-  {
-    id: 3,
-    name: "우리집 냉장고",
-    img: "/photos/refrigerator.png",
-    desc: "LG DIOS",
-  },
-  { id: 4, name: "에어팟", img: "/photos/airpods.png", desc: "AirPods Pro" },
-  { id: 5, name: "에어팟", img: "/photos/airpods.png", desc: "AirPods Pro" },
-  { id: 6, name: "에어팟", img: "/photos/airpods.png", desc: "AirPods Pro" },
-];
+type ProductListItem = {
+  productId: string;
+  name: string;
+  nickname: string;
+  category: string;
+  imageUrl: string;
+  isFavorite: boolean;
+  hasRepairHistory: boolean;
+  purchaseDate: string;
+  createdAt: string;
+};
 
-const warrantyList = [
-  { name: "카메라 - SONY", remainingDays: 5 },
-  { name: "내폰 - APPLE", remainingDays: 20 },
-  { name: "우리집 냉장고 - LG", remainingDays: 40 },
-  { name: "에어팟 - APPLE", remainingDays: -3 },
-  { name: "에어팟 - APPLE", remainingDays: -3 },
-  { name: "카메라 - SONY", remainingDays: 5 },
-  { name: "카메라 - SONY", remainingDays: 5 },
-  { name: "카메라 - SONY", remainingDays: 5 },
-];
+type ProductDetail = {
+  productId: string;
+  productName: string;
+  nickname: string;
+  category: string;
+  imageUrl: string;
+  modelNumber: string;
+  purchaseDate?: string;
+  puchaseDate?: string;
+  warrantyMonths: number;
+  isFavorite: boolean;
+  hasRepairHistory: boolean;
+  createdAt: string;
+};
+
+type Product = {
+  productId: string;
+  name: string;
+  nickname: string;
+  category: string;
+  imageUrl: string;
+  isFavorite: boolean;
+  hasRepairHistory: boolean;
+  purchaseDate: string;
+  createdAt: string;
+  warrantyMonths: number;
+  warrantyStatus: ProductStatus;
+};
+
+type StatisticsStatus = "expired" | "danger" | "imminent" | "valid" | "none";
+
+type StatisticsProduct = Omit<Product, "warrantyStatus"> & {
+  productStatus: StatisticsStatus;
+  warrantyStatus: StatisticsStatus;
+};
+
+const getWarrantyStatus = (
+  purchaseDate: string,
+  warrantyMonths: number,
+): ProductStatus => {
+  if (!purchaseDate || !warrantyMonths) return "empty";
+
+  const purchase = new Date(purchaseDate);
+  const expiredDate = new Date(purchase);
+
+  expiredDate.setMonth(expiredDate.getMonth() + warrantyMonths);
+
+  const today = new Date();
+
+  const diffTime = expiredDate.getTime() - today.getTime();
+  const remainingDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  return getProductStatus(remainingDays);
+};
+
+const getRemainingDays = (
+  purchaseDate: string,
+  warrantyMonths: number,
+): number | null => {
+  if (!purchaseDate || !warrantyMonths) return null;
+
+  const purchase = new Date(purchaseDate);
+  const expiredDate = new Date(purchase);
+
+  expiredDate.setMonth(expiredDate.getMonth() + warrantyMonths);
+
+  const today = new Date();
+
+  const diffTime = expiredDate.getTime() - today.getTime();
+
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+};
+
+const convertToStatisticsStatus = (status: ProductStatus): StatisticsStatus => {
+  return status === "empty" ? "none" : status;
+};
 
 export default function MainPage() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const [isDown, setIsDown] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
+
+  const fetchProducts = async () => {
+    try {
+      setIsLoading(true);
+
+      const response = await api.get<ProductListItem[]>("/products");
+
+      const productDetails = await Promise.all(
+        response.data.map(async (product) => {
+          const detailResponse = await api.get<ProductDetail>(
+            `/products/${product.productId}`,
+          );
+
+          const detail = detailResponse.data;
+
+          const purchaseDate =
+            detail.purchaseDate ?? detail.puchaseDate ?? product.purchaseDate;
+
+          return {
+            productId: detail.productId,
+            name: detail.productName,
+            nickname: detail.nickname,
+            category: detail.category,
+            imageUrl: detail.imageUrl,
+            isFavorite: detail.isFavorite,
+            hasRepairHistory: detail.hasRepairHistory,
+            purchaseDate,
+            createdAt: detail.createdAt,
+            warrantyMonths: detail.warrantyMonths,
+            warrantyStatus: getWarrantyStatus(
+              purchaseDate,
+              detail.warrantyMonths,
+            ),
+          };
+        }),
+      );
+
+      setProducts(productDetails);
+    } catch (error) {
+      console.error("제품 목록 조회 실패:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const statisticsProducts = useMemo<StatisticsProduct[]>(() => {
+    return products.map((product) => {
+      const statisticsStatus = convertToStatisticsStatus(
+        product.warrantyStatus,
+      );
+
+      return {
+        ...product,
+        productStatus: statisticsStatus,
+        warrantyStatus: statisticsStatus,
+      };
+    });
+  }, [products]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDown(true);
@@ -114,7 +246,7 @@ export default function MainPage() {
                   onMouseDown={(e) => e.stopPropagation()}
                   onClick={() => {
                     if (isDragging) return;
-                    navigate("/products/new");
+                    setIsModalOpen(true);
                   }}
                   className="
                     flex-shrink-0
@@ -130,22 +262,32 @@ export default function MainPage() {
                 </div>
 
                 {/* 제품 카드 */}
-                {products.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex-shrink-0 cursor-pointer"
-                    onClick={() => {
-                      if (isDragging) return;
-                      navigate(`/products/${item.id}`);
-                    }}
-                  >
-                    <ProductInfoCard
-                      name={item.name}
-                      img={item.img}
-                      desc={item.desc}
-                    />
+                {isLoading ? (
+                  <div className="flex h-[135px] min-w-full items-center justify-center text-gray-02 text-body-r-15">
+                    제품 목록을 불러오는 중입니다.
                   </div>
-                ))}
+                ) : products.length === 0 ? (
+                  <div className="flex h-[135px] min-w-full items-center justify-center text-gray-02 text-body-r-15">
+                    등록된 제품이 없습니다.
+                  </div>
+                ) : (
+                  products.map((item) => (
+                    <div
+                      key={item.productId}
+                      className="flex-shrink-0 cursor-pointer"
+                      onClick={() => {
+                        if (isDragging) return;
+                        navigate(`/products/${item.productId}`);
+                      }}
+                    >
+                      <ProductInfoCard
+                        name={item.nickname}
+                        img={item.imageUrl || "/photos/camera.png"}
+                        desc={item.name}
+                      />
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </div>
@@ -159,76 +301,130 @@ export default function MainPage() {
               </h2>
 
               <div className="flex flex-col gap-[10px]">
-                {warrantyList.map((item, idx) => {
-                  const status = getProductStatus(item.remainingDays);
+                {products.length === 0 ? (
+                  <div className="flex h-[120px] items-center justify-center text-gray-02 text-body-r-15">
+                    등록된 보증 정보가 없습니다.
+                  </div>
+                ) : (
+                  products.map((item) => {
+                    const remainingDays = getRemainingDays(
+                      item.purchaseDate,
+                      item.warrantyMonths,
+                    );
 
-                  const statusColor =
-                    status === "expired"
-                      ? "bg-gray-400"
-                      : status === "danger"
-                        ? "bg-red-500"
-                        : status === "imminent"
-                          ? "bg-[#D2D53A]"
-                          : "bg-green-500";
+                    const status =
+                      remainingDays === null
+                        ? "empty"
+                        : getProductStatus(remainingDays);
 
-                  const statusText =
-                    status === "expired"
-                      ? "보증만료"
-                      : status === "danger"
-                        ? "보증위험"
-                        : status === "imminent"
-                          ? "보증임박"
-                          : "보증정상";
+                    const statusColor =
+                      status === "expired"
+                        ? "bg-gray-01"
+                        : status === "danger"
+                          ? "bg-point-01"
+                          : status === "imminent"
+                            ? "bg-point-02"
+                            : status === "empty"
+                              ? "bg-gray-02"
+                              : "bg-point-03";
 
-                  const [title, brand] = item.name.split(" - ");
+                    const statusText =
+                      status === "expired"
+                        ? "보증만료"
+                        : status === "danger"
+                          ? "보증위험"
+                          : status === "imminent"
+                            ? "보증임박"
+                            : status === "empty"
+                              ? "보증없음"
+                              : "보증유효";
 
-                  return (
-                    <div
-                      key={idx}
-                      className="flex justify-between items-center border-b-2 border-gray-02 pb-[5px]"
-                    >
-                      <span>
-                        <span className="text-black text-title-m-16">
-                          {title}
+                    return (
+                      <div
+                        key={item.productId}
+                        className="flex justify-between items-center border-b-2 border-gray-02 pb-[5px]"
+                      >
+                        <span>
+                          <span className="text-black text-title-m-16">
+                            {item.nickname}
+                          </span>
+                          <span className="text-gray-01 text-body-r-12">
+                            {" "}
+                            -{" "}
+                          </span>
+                          <span className="text-gray-01 text-body-r-12">
+                            {item.name}
+                          </span>
                         </span>
-                        {brand && (
-                          <>
-                            <span className="text-gray-01 text-body-r-12">
-                              {" "}
-                              -{" "}
-                            </span>
-                            <span className="text-gray-01 text-body-r-12">
-                              {brand}
-                            </span>
-                          </>
-                        )}
-                      </span>
 
-                      <div className="flex items-center gap-[6px]">
-                        <span
-                          className={`w-[12px] h-[12px] rounded-full ${statusColor}`}
-                        />
-                        <span className="text-body-m-10 text-gray-01">
-                          {statusText}
-                        </span>
+                        <div className="flex items-center gap-[6px]">
+                          <span
+                            className={`w-[12px] h-[12px] rounded-full ${statusColor}`}
+                          />
+                          <span className="text-body-m-10 text-gray-01">
+                            {statusText}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                )}
               </div>
             </div>
 
-            {/* statistics */}
+            {/* Statistics */}
             <div className="flex-1 w-full bg-white rounded-[30px] p-[20px] flex flex-col">
               <h2 className="text-title-main text-primary-01">Statistics</h2>
 
               <div className="mt-[10px] w-full">
-                <ProductStatistics products={mockStatisticsProducts} />
+                <ProductStatistics products={statisticsProducts} />
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      <ProductRegisterModal
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onUploadSubmit={async (file, sourceType) => {
+          try {
+            const formData = new FormData();
+
+            formData.append("image", file);
+            formData.append("sourceType", sourceType);
+
+            const uploadResponse = await api.post(
+              "/product-sources",
+              formData,
+              {
+                headers: {
+                  "Content-Type": "multipart/form-data",
+                },
+              },
+            );
+
+            const sourceId = uploadResponse.data.sourceId;
+
+            const resultResponse = await api.get(
+              `/product-sources/${sourceId}`,
+            );
+
+            navigate("/products/new", {
+              state: resultResponse.data,
+            });
+
+            setIsModalOpen(false);
+          } catch (error) {
+            console.error("이미지 업로드 실패:", error);
+            alert("이미지 업로드에 실패했습니다.");
+          }
+        }}
+        onManualClick={() => {
+          navigate("/products/new");
+          setIsModalOpen(false);
+        }}
+      />
     </MainLayout>
   );
 }

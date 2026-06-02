@@ -1,7 +1,7 @@
 import CommonButton from "../common/CommonButton";
 import ProductManual from "./ProductManual";
 import ProductWarrantyInfo from "./ProductWarrantyInfo";
-import ProductMaintenanceInfo from "./ProductMaintenanceInfo";
+// import ProductMaintenanceInfo from "./ProductMaintenanceInfo";
 import type { MaintenanceHistoryItem } from "../../utils/maintenanceDate";
 import ProductRepairInfo from "./ProductRepairInfo";
 import type { ProductStatus } from "../../types/product";
@@ -26,8 +26,11 @@ type ProductDetailInfoProps = {
   manualContent?: string;
   manualPdfUrl?: string;
 
-  purchaseDate: string;
+  purchaseDate: string | null;
+  showWarrantyInfo: boolean;
   warrantyMonths?: number | null;
+  warrantyEndDate?: string;
+  remainingDays?: number;
   status: ProductStatus;
 
   maintenanceCategories: MaintenanceCategory[];
@@ -45,13 +48,16 @@ export default function ProductDetailInfo({
   manualContent,
   manualPdfUrl,
   purchaseDate,
+  showWarrantyInfo,
   warrantyMonths,
+  warrantyEndDate,
+  remainingDays,
   status,
-  maintenanceCategories,
+  // maintenanceCategories,
   repairinfos,
   officialUrl,
   customerServiceUrl,
-  onMaintenanceEditingChange,
+  // onMaintenanceEditingChange,
 }: ProductDetailInfoProps) {
   return (
     <section className="flex w-full flex-col items-center gap-[20px]">
@@ -74,23 +80,36 @@ export default function ProductDetailInfo({
 
         <div className="h-[2px] w-full bg-gray-02/50" />
 
-        <ProductWarrantyInfo
-          purchaseDate={purchaseDate}
-          warrantyMonths={warrantyMonths}
-          status={status}
-        />
+        {showWarrantyInfo &&
+          purchaseDate !== null &&
+          warrantyMonths !== null &&
+          warrantyMonths !== undefined &&
+          warrantyEndDate !== undefined && (
+            <>
+              <ProductWarrantyInfo
+                purchaseDate={purchaseDate}
+                warrantyMonths={warrantyMonths}
+                warrantyEndDate={warrantyEndDate}
+                remainingDays={remainingDays}
+                status={status}
+              />
 
-        <div className="h-[2px] w-full bg-gray-02/50" />
+              <div className="h-[2px] w-full bg-gray-02/50" />
+            </>
+          )}
 
-        <ProductMaintenanceInfo
+        {/* <ProductMaintenanceInfo
           purchaseDate={purchaseDate}
           categories={maintenanceCategories}
           onEditingChange={onMaintenanceEditingChange}
         />
 
-        <div className="h-[2px] w-full bg-gray-02/50" />
+        <div className="h-[2px] w-full bg-gray-02/50" /> */}
 
-        <ProductRepairInfo productId={productId} repairHistories={repairinfos} />
+        <ProductRepairInfo
+          productId={productId}
+          repairHistories={repairinfos}
+        />
 
         <div className="h-[2px] w-full bg-gray-02/50" />
 

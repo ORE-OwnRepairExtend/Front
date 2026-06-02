@@ -44,9 +44,13 @@ export default function ProductCreateContent({
   );
   const [selectedCategory, setSelectedCategory] = useState("");
   const [manual, setManual] = useState(extractedData?.ocrText ?? "");
+
   const [purchaseDate, setPurchaseDate] = useState("");
+  const [noPurchaseDate, setNoPurchaseDate] = useState(false);
+
   const [warrantyPeriod, setWarrantyPeriod] = useState("");
   const [noWarranty, setNoWarranty] = useState(false);
+
   const [productImage, setProductImage] = useState<File | null>(null);
 
   // const [parts, setParts] = useState<PartItem[]>([]);
@@ -61,9 +65,7 @@ export default function ProductCreateContent({
   const isRequiredFilled =
     productName.trim() !== "" &&
     selectedCategory !== "" &&
-    manual.trim() !== "" &&
-    purchaseDate !== "" &&
-    (noWarranty || warrantyPeriod.trim() !== "");
+    manual.trim() !== "";
 
   // const handlePartChange = (
   //   id: number,
@@ -92,8 +94,8 @@ export default function ProductCreateContent({
         name: productName.trim(),
         category: CATEGORY_MAP[selectedCategory as keyof typeof CATEGORY_MAP],
         nickname: nickname.trim() || productName.trim(),
-        purchaseDate,
-        warrantyMonths: noWarranty ? 0 : Number(warrantyPeriod),
+        purchaseDate: noWarranty ? null : purchaseDate,
+        warrantyMonths: noWarranty ? null : Number(warrantyPeriod),
         manual: {
           manualContent: manual.trim(),
         },
@@ -109,14 +111,21 @@ export default function ProductCreateContent({
         throw new Error("productId가 응답에 없습니다.");
       }
 
+      // todo:
+      // 이미지 업로드 api 후 확인
+
       if (productImage) {
         const formData = new FormData();
         formData.append("image", productImage);
 
-        await api.post(`/products/${productId}/images`, formData);
+        try {
+          await api.post(`/products/${productId}/images`, formData);
+        } catch (imageError) {
+          console.error("이미지 업로드 실패:", imageError);
+        }
       }
 
-      navigate("/products");
+      navigate(`/products/${productId}`);
     } catch (error) {
       console.error("제품 등록 실패:", error);
       setAlertMessage("제품 등록에 실패했습니다. 다시 시도해주세요.");
@@ -183,19 +192,36 @@ export default function ProductCreateContent({
           </ProductFormRow>
 
           {/* 구매일 */}
-          <ProductFormRow label="구매일" required>
-            {" "}
-            <ProductInputBox
-              variant="date"
-              value={purchaseDate}
-              onChange={(e) => setPurchaseDate(e.target.value)}
-              className="w-[150px]"
-            />
+          <ProductFormRow label="구매일">
+            <div className="flex gap-[60px]">
+              <ProductInputBox
+                variant="date"
+                value={purchaseDate}
+                onChange={(e) => setPurchaseDate(e.target.value)}
+                disabled={noPurchaseDate}
+                className="w-[150px]"
+                inputClassName={
+                  noPurchaseDate ? "cursor-not-allowed text-gray-02" : ""
+                }
+              />
+
+              <ProductCheckbox
+                checked={noPurchaseDate}
+                onChange={(checked) => {
+                  setNoPurchaseDate(checked);
+
+                  if (checked) {
+                    setPurchaseDate("");
+                  }
+                }}
+                label="정보 없음"
+              />
+            </div>
           </ProductFormRow>
 
           {/* 보증기간 */}
-          <ProductFormRow label="보증기간" required>
-            <div className="flex gap-[60px]">
+          <ProductFormRow label="보증기간">
+            <div className="flex gap-[110px]">
               <ProductInputBox
                 value={warrantyPeriod}
                 onChange={(e) => setWarrantyPeriod(e.target.value)}
@@ -215,7 +241,7 @@ export default function ProductCreateContent({
                     setWarrantyPeriod("");
                   }
                 }}
-                label="보증 없음"
+                label="정보 없음"
               />
             </div>
           </ProductFormRow>

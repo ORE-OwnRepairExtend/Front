@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../../api/api";
 import SecondLayout from "../../layout/SecondLayout";
@@ -11,10 +11,25 @@ import { productCategories as categories } from "../../constants/productCategori
 
 import cameraImg from "../../assets/camera.png";
 
+type Product = {
+  productId: string;
+  name: string;
+  nickname: string;
+  category: string;
+  imageUrl: string;
+  isFavorite: boolean;
+  hasRepairHistory: boolean;
+  purchaseDate: string;
+  createdAt: string;
+};
+
 export default function ProductListPage() {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
 
@@ -35,46 +50,63 @@ export default function ProductListPage() {
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isDown) return;
+
     e.preventDefault();
+
     const x = e.pageX - (scrollRef.current?.offsetLeft || 0);
     const walk = (x - startX) * 1.2;
+
     if (scrollRef.current) {
       scrollRef.current.scrollLeft = scrollLeft - walk;
     }
   };
 
-  const products = [
-    {
-      id: 1,
-      imageSrc: cameraImg,
-      name: "카메라",
-      description: "SONY 미러리스 카메라",
-    },
-    {
-      id: 2,
-      imageSrc: cameraImg,
-      name: "카메라",
-      description: "SONY 미러리스 카메라",
-    },
-    {
-      id: 3,
-      imageSrc: cameraImg,
-      name: "카메라",
-      description: "SONY 미러리스 카메라",
-    },
-    {
-      id: 4,
-      imageSrc: cameraImg,
-      name: "카메라",
-      description: "SONY 미러리스 카메라",
-    },
-    {
-      id: 5,
-      imageSrc: cameraImg,
-      name: "카메라",
-      description: "SONY 미러리스 카메라",
-    },
-  ];
+  const fetchProducts = async () => {
+    try {
+      setIsLoading(true);
+
+      const accessToken = localStorage.getItem("accessToken");
+
+      const response = await api.get<Product[]>("/products", {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      setProducts(response.data);
+    } catch (error) {
+      console.error("제품 목록 조회 실패:", error);
+      alert("제품 목록을 불러오지 못했습니다.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+const filteredProducts = useMemo(() => {
+  return products.filter((product) => {
+    const keyword = search.trim().toLowerCase();
+
+    const matchesSearch =
+      !keyword ||
+      product.name.toLowerCase().includes(keyword) ||
+      product.nickname.toLowerCase().includes(keyword);
+
+    const selectedCategory = categories[selected];
+
+    const matchesCategory =
+      selectedCategory.value === "ALL"
+        ? true
+        : selectedCategory.value === "FAVORITE"
+          ? product.isFavorite
+          : product.category === selectedCategory.value;
+
+    return matchesSearch && matchesCategory;
+  });
+}, [products, search, selected]);
 
   return (
     <SecondLayout>
@@ -98,6 +130,7 @@ export default function ProductListPage() {
               onClick={() => setSelected(0)}
             />
           </div>
+
           {/* 스크롤 영역 */}
           <div
             ref={scrollRef}
@@ -131,19 +164,29 @@ export default function ProductListPage() {
 
         {/* 리스트 */}
         <div className="flex flex-col gap-[20px] flex-1 overflow-y-auto no-scrollbar px-[20px]">
-          {products.map((item) => (
-            <div
-              key={item.id}
-              className="cursor-pointer"
-              onClick={() => navigate(`/products/${item.id}`)}
-            >
-              <ProductCard
-                imageSrc={item.imageSrc}
-                name={item.name}
-                description={item.description}
-              />
+          {isLoading ? (
+            <div className="text-center text-neutral-02">
+              제품 목록을 불러오는 중입니다.
             </div>
-          ))}
+          ) : filteredProducts.length === 0 ? (
+            <div className="text-center text-neutral-02">
+              등록된 제품이 없습니다.
+            </div>
+          ) : (
+            filteredProducts.map((item) => (
+              <div
+                key={item.productId}
+                className="cursor-pointer"
+                onClick={() => navigate(`/products/${item.productId}`)}
+              >
+                <ProductCard
+                  imageSrc={item.imageUrl || cameraImg}
+                  name={item.nickname}
+                  description={item.name}
+                />
+              </div>
+            ))
+          )}
         </div>
 
         {/* 버튼 */}
@@ -160,6 +203,8 @@ export default function ProductListPage() {
         onClose={() => setIsModalOpen(false)}
         onUploadSubmit={async (file, sourceType) => {
           try {
+            const accessToken = localStorage.getItem("accessToken");
+
             // 이미지 업로드
             const formData = new FormData();
 
@@ -171,6 +216,7 @@ export default function ProductListPage() {
               formData,
               {
                 headers: {
+                  Authorization: `Bearer ${accessToken}`,
                   "Content-Type": "multipart/form-data",
                 },
               },
@@ -181,6 +227,11 @@ export default function ProductListPage() {
             // OCR 결과 조회
             const resultResponse = await api.get(
               `/product-sources/${sourceId}`,
+              {
+                headers: {
+                  Authorization: `Bearer ${accessToken}`,
+                },
+              },
             );
 
             // 제품 등록 페이지 이동
