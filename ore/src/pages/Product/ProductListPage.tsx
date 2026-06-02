@@ -181,8 +181,8 @@ const filteredProducts = useMemo(() => {
               >
                 <ProductCard
                   imageSrc={item.imageUrl || cameraImg}
-                  name={item.name}
-                  description={item.nickname}
+                  name={item.nickname}
+                  description={item.name}
                 />
               </div>
             ))
