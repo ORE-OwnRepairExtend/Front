@@ -92,8 +92,8 @@ export default function ProductCreateContent({
         name: productName.trim(),
         category: CATEGORY_MAP[selectedCategory as keyof typeof CATEGORY_MAP],
         nickname: nickname.trim() || productName.trim(),
-        purchaseDate,
-        warrantyMonths: noWarranty ? 0 : Number(warrantyPeriod),
+        purchaseDate: noWarranty ? null : purchaseDate,
+        warrantyMonths: noWarranty ? null : Number(warrantyPeriod),
         manual: {
           manualContent: manual.trim(),
         },

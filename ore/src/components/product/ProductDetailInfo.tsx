@@ -28,6 +28,8 @@ type ProductDetailInfoProps = {
 
   purchaseDate: string;
   warrantyMonths?: number | null;
+  warrantyEndDate?: string;
+  remainingDays?: number;
   status: ProductStatus;
 
   maintenanceCategories: MaintenanceCategory[];
@@ -46,6 +48,8 @@ export default function ProductDetailInfo({
   manualPdfUrl,
   purchaseDate,
   warrantyMonths,
+  warrantyEndDate,
+  remainingDays,
   status,
   // maintenanceCategories,
   repairinfos,
@@ -77,6 +81,8 @@ export default function ProductDetailInfo({
         <ProductWarrantyInfo
           purchaseDate={purchaseDate}
           warrantyMonths={warrantyMonths}
+          warrantyEndDate={warrantyEndDate}
+          remainingDays={remainingDays}
           status={status}
         />
 

@@ -117,6 +117,9 @@ export default function ProductDetailPage() {
     price: formatPrice(repair.repairCost),
   }));
 
+  console.log("상세 API purchaseDate:", product.purchaseDate);
+  console.log("보증 API purchaseDate:", warranty?.purchaseDate);
+
   return (
     <SecondLayout>
       <div className="flex h-full flex-col">
@@ -134,14 +137,14 @@ export default function ProductDetailPage() {
               }
               purchaseDate={product.purchaseDate}
               status={
-                warranty ? getProductStatus(warranty.remainingDays) : "valid"
+                warranty ? getProductStatus(warranty.remainingDays) : "empty"
               }
               isFavorite={isFavorite}
               manualContent="호환자인 학습 방법과 공부 전략으로는 능동적 학습, 자기 주도 학습, 그룹 스터디와 장점 등이 있습니다."
               manualPdfUrl="https://example.com/manual.pdf"
-              warrantyMonths={
-                warranty?.warrantyMonths ?? product.warrantyMonths ?? 0
-              }
+              warrantyMonths={warranty?.warrantyMonths ?? null}
+              warrantyEndDate={warranty?.warrantyEndDate}
+              remainingDays={warranty?.remainingDays}
               maintenanceCategories={maintenanceCategories}
               repairHistories={repairInfoes}
               officialUrl="https://example.com"
