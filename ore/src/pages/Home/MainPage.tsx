@@ -7,6 +7,7 @@ import ProductInfoCard from "../../components/common/ProductInfoCard";
 import { getProductStatus } from "../../utils/productStatus";
 import ProductStatistics from "../../components/statistics/ProductStatistics";
 import { mockStatisticsProducts } from "../../mocks/mockStatisticsData";
+import ProductRegisterModal from "../../components/common/ProductRegisterModal";
 
 const warrantyList = [
   { name: "카메라 - SONY", remainingDays: 5 },
@@ -37,6 +38,7 @@ export default function MainPage() {
 
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [isDown, setIsDown] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -134,7 +136,7 @@ export default function MainPage() {
                   onMouseDown={(e) => e.stopPropagation()}
                   onClick={() => {
                     if (isDragging) return;
-                    navigate("/products/new");
+                    setIsModalOpen(true);
                   }}
                   className="
                     flex-shrink-0
@@ -259,6 +261,41 @@ export default function MainPage() {
           </div>
         </div>
       </div>
+      <ProductRegisterModal
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onUploadSubmit={async (file, sourceType) => {
+          try {
+            const formData = new FormData();
+
+            formData.append("image", file);
+            formData.append("sourceType", sourceType);
+
+            const uploadResponse = await api.post("/product-sources", formData, {
+              headers: {
+                "Content-Type": "multipart/form-data",
+              },
+            });
+
+            const sourceId = uploadResponse.data.sourceId;
+
+            const resultResponse = await api.get(`/product-sources/${sourceId}`);
+
+            navigate("/products/new", {
+              state: resultResponse.data,
+            });
+
+            setIsModalOpen(false);
+          } catch (error) {
+            console.error("이미지 업로드 실패:", error);
+            alert("이미지 업로드에 실패했습니다.");
+          }
+        }}
+        onManualClick={() => {
+          navigate("/products/new");
+          setIsModalOpen(false);
+        }}
+      />
     </MainLayout>
   );
 }
