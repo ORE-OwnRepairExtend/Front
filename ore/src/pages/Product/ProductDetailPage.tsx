@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import SecondLayout from "../../layout/SecondLayout";
 import Header from "../../components/header/Header";
@@ -36,6 +36,8 @@ type ProductWarrantyResponse = {
 };
 
 export default function ProductDetailPage() {
+  const navigate = useNavigate();
+
   const { productId } = useParams();
 
   const [product, setProduct] = useState<ProductDetailResponse | null>(null);
@@ -144,6 +146,19 @@ export default function ProductDetailPage() {
     }
   };
 
+  const handleDeleteProduct = async () => {
+    if (!productId) return;
+
+    try {
+      await api.delete(`/products/${productId}`);
+
+      navigate("/products", { replace: true });
+    } catch (error) {
+      console.error("제품 삭제 실패:", error);
+      alert("제품 삭제에 실패했습니다.");
+    }
+  };
+
   return (
     <SecondLayout>
       <div className="flex h-full flex-col">
@@ -175,7 +190,7 @@ export default function ProductDetailPage() {
               customerServiceUrl="https://example.com/customer"
               onFavoriteClick={handleFavoriteClick}
               onEditClick={() => console.log("수정")}
-              onDeleteClick={() => console.log("삭제")}
+              onDeleteClick={handleDeleteProduct}
             />
           </div>
         </div>
