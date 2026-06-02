@@ -24,7 +24,7 @@ type RepairInfoItem = {
 type ProductDetailContentProps = {
   productId: string;
 
-  imageSrc: string;
+  imageSrc: string | null;
   nickname: string;
   productName: string;
   category: string;
@@ -86,7 +86,7 @@ export default function ProductDetailContent({
         nickname={nickname}
         productName={productName}
         category={category}
-        purchaseDate={purchaseDate ?? "정보 없음"}
+        purchaseDate={purchaseDate}
         status={status}
         isFavorite={isFavorite}
         onFavoriteClick={onFavoriteClick}

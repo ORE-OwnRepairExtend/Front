@@ -10,7 +10,6 @@ import { api } from "../../api/api";
 import { CATEGORY_LABEL_MAP } from "../../constants/productCategories";
 import { getProductStatus } from "../../utils/productStatus";
 
-import defaultProductImage from "../../../public/photos/logo.png";
 import type { ApiProductCategory } from "../../types/category";
 
 type ProductDetailResponse = {
@@ -177,7 +176,7 @@ export default function ProductDetailPage() {
           <div className="my-[10px] flex flex-1 flex-col items-center gap-[10px] overflow-y-auto no-scrollbar">
             <ProductDetailContent
               productId={product.productId}
-              imageSrc={product.imageUrl ?? defaultProductImage}
+              imageSrc={product.imageUrl}
               nickname={product.nickname}
               productName={product.productName}
               category={
