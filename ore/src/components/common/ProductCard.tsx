@@ -10,6 +10,7 @@ type ProductCardProps = {
   actionType?: "arrow" | "close";
   showAction?: boolean;
   className?: string;
+  imageSize?: number;
   onClick?: () => void;
   onActionClick?: () => void;
 };
@@ -20,6 +21,7 @@ export default function ProductCard({
   actionType = "arrow",
   showAction = true,
   className,
+  imageSize = 150,
   onClick,
   onActionClick,
 }: ProductCardProps) {
@@ -41,10 +43,13 @@ export default function ProductCard({
       {/* 제품이미지 */}
       <div
         className="
-          flex h-[100px] w-[100px] shrink-0 items-center justify-center
-          rounded-[20px]
-          overflow-hidden
-        "
+    flex shrink-0 items-center justify-center
+    overflow-hidden rounded-[20px] bg-white
+  "
+        style={{
+          width: imageSize,
+          height: imageSize,
+        }}
       >
         <img
           src={displayImageSrc}

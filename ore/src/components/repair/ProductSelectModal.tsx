@@ -157,6 +157,7 @@ export default function ProductSelectModal({
                 description={product.productName}
                 showAction={false}
                 className="!p-[10px]"
+                imageSize={100}
                 onClick={() => onSelect(product)}
               />
             ))}
