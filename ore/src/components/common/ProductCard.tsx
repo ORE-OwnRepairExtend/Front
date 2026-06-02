@@ -1,8 +1,10 @@
 import forwardIcon from "../../assets/icons/forword.svg";
 import closeIcon from "../../assets/icons/close.svg";
 
+import defaultLogoImage from "../../../public/photos/logo.png";
+
 type ProductCardProps = {
-  imageSrc: string;
+  imageSrc?: string | null;
   name: string;
   description: string;
   actionType?: "arrow" | "close";
@@ -21,6 +23,8 @@ export default function ProductCard({
   onClick,
   onActionClick,
 }: ProductCardProps) {
+  const displayImageSrc = imageSrc || defaultLogoImage;
+
   return (
     <button
       type="button"
@@ -42,7 +46,11 @@ export default function ProductCard({
           overflow-hidden
         "
       >
-        <img src={imageSrc} alt={name} className="h-full w-full object-full" />
+        <img
+          src={displayImageSrc}
+          alt={name}
+          className="h-full w-full object-full"
+        />
       </div>
 
       {/* 제품설명 */}

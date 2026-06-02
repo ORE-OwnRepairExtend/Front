@@ -1,3 +1,5 @@
+import type { ApiProductCategory } from "./category";
+
 export type ProductStatus =
   | "expired"
   | "danger"
@@ -14,14 +16,7 @@ export type ProductSummary = {
   hasRepairHistory: boolean;
   purchaseDate: string;
   createdAt: string;
-
-  category:
-    | "모바일 기기"
-    | "PC 기기"
-    | "주방 가전"
-    | "생활 가전"
-    | "영상·음향"
-    | "기타";
+  category: ApiProductCategory;
 };
 
 export type WarrantyInfo = {

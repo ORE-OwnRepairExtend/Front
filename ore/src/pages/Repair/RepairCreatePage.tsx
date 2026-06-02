@@ -1,15 +1,27 @@
 import SecondLayout from "../../layout/SecondLayout";
 import Header from "../../components/header/Header";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ProductSummary } from "../../types/product";
 import CommonButton from "../../components/common/CommonButton";
 import ProductCard from "../../components/common/ProductCard";
 import ProductSelectModal from "../../components/repair/ProductSelectModal";
-import { mockProductListResponse } from "../../mocks/products";
 import RepairDetailContent from "../../components/repair/RepairDetailContent";
 import Modal from "../../components/common/Modal";
 import { useNavigate, useParams } from "react-router-dom";
 import { api } from "../../api/api";
+import type { ApiProductCategory } from "../../types/category";
+
+type ProductListResponse = {
+  productId: string;
+  name: string;
+  nickname: string;
+  category: ApiProductCategory;
+  imageUrl: string;
+  isFavorite: boolean;
+  hasRepairHistory: boolean;
+  purchaseDate: string;
+  createdAt: string;
+};
 
 export default function RepairCreatePage() {
   const navigate = useNavigate();
@@ -17,7 +29,40 @@ export default function RepairCreatePage() {
 
   const { productId } = useParams();
 
-  const products = mockProductListResponse;
+  const [products, setProducts] = useState<ProductSummary[]>([]);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await api.get<ProductListResponse[]>("/products");
+
+        const mappedProducts: ProductSummary[] = response.data.map(
+          (product) => ({
+            productId: product.productId,
+            productName: product.name,
+            nickname: product.nickname,
+            category: product.category,
+            imageUrl: product.imageUrl,
+            isFavorite: product.isFavorite,
+            hasRepairHistory: product.hasRepairHistory,
+            purchaseDate: product.purchaseDate,
+            createdAt: product.createdAt,
+          }),
+        );
+
+        setProducts(mappedProducts);
+      } catch (error) {
+        console.error("제품 목록 조회 실패:", error);
+
+        setAlertModal({
+          open: true,
+          message: "제품 목록을 불러오지 못했습니다.",
+        });
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   const defaultProduct =
     products.find((p) => p.productId === productId) ?? null;
