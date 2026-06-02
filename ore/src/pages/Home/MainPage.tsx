@@ -171,9 +171,9 @@ export default function MainPage() {
                       }}
                     >
                       <ProductInfoCard
-                        name={item.name}
+                        name={item.nickname}
                         img={item.imageUrl || "/photos/camera.png"}
-                        desc={item.nickname}
+                        desc={item.name}
                       />
                     </div>
                   ))
