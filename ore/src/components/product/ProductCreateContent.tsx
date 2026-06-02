@@ -3,17 +3,22 @@ import ProductInputBox from "./ProductInputBox";
 import ProductImageButton from "./ProductImageButton";
 import ProductCreateCategory from "./ProductCreateCategory";
 import CommonButton from "../common/CommonButton";
-import PartInputRow from "./PartInputRow";
+// import PartInputRow from "./PartInputRow";
 import ProductCheckbox from "./ProductCheckbox";
 import ProductFormRow from "./ProductFormRow";
 import Modal from "../common/Modal";
-import { productCategories } from "../../constants/productCategories";
+import {
+  productCategories,
+  CATEGORY_MAP,
+} from "../../constants/productCategories";
+import { useNavigate } from "react-router-dom";
+import { api } from "../../api/api";
 
-type PartItem = {
-  id: number;
-  name: string;
-  cycle: string;
-};
+// type PartItem = {
+//   id: number;
+//   name: string;
+//   cycle: string;
+// };
 
 type ExtractedProductData = {
   sourceId: string;
@@ -31,6 +36,8 @@ type ProductCreateContentProps = {
 export default function ProductCreateContent({
   extractedData,
 }: ProductCreateContentProps) {
+  const navigate = useNavigate();
+
   const [nickname, setNickname] = useState("");
   const [productName, setProductName] = useState(
     extractedData?.modelNumber ?? "",
@@ -42,7 +49,9 @@ export default function ProductCreateContent({
   const [noWarranty, setNoWarranty] = useState(false);
   const [productImage, setProductImage] = useState<File | null>(null);
 
-  const [parts, setParts] = useState<PartItem[]>([]);
+  // const [parts, setParts] = useState<PartItem[]>([]);
+
+  const [alertMessage, setAlertMessage] = useState("");
 
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
   const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
@@ -52,39 +61,74 @@ export default function ProductCreateContent({
   const isRequiredFilled =
     productName.trim() !== "" &&
     selectedCategory !== "" &&
+    manual.trim() !== "" &&
     purchaseDate !== "" &&
     (noWarranty || warrantyPeriod.trim() !== "");
 
-  const handlePartChange = (
-    id: number,
-    field: "name" | "cycle",
-    value: string,
-  ) => {
-    setParts((prev) =>
-      prev.map((part) => (part.id === id ? { ...part, [field]: value } : part)),
-    );
-  };
+  // const handlePartChange = (
+  //   id: number,
+  //   field: "name" | "cycle",
+  //   value: string,
+  // ) => {
+  //   setParts((prev) =>
+  //     prev.map((part) => (part.id === id ? { ...part, [field]: value } : part)),
+  //   );
+  // };
 
-  const handleAddPart = () => {
-    setParts((prev) => [...prev, { id: Date.now(), name: "", cycle: "" }]);
-  };
+  // const handleAddPart = () => {
+  //   setParts((prev) => [...prev, { id: Date.now(), name: "", cycle: "" }]);
+  // };
 
-  const handleDeletePart = (id: number) => {
-    setParts((prev) => prev.filter((part) => part.id !== id));
-  };
+  // const handleDeletePart = (id: number) => {
+  //   setParts((prev) => prev.filter((part) => part.id !== id));
+  // };
 
-  const handleSubmit = () => {
-    console.log({
-      nickname,
-      productName,
-      selectedCategory,
-      manual,
-      purchaseDate,
-      warrantyPeriod: noWarranty ? null : warrantyPeriod,
-      noWarranty,
-      productImage,
-      parts,
-    });
+  const handleSubmit = async () => {
+    try {
+      const requestBody = {
+        ...(extractedData?.sourceId && {
+          sourceId: extractedData.sourceId,
+        }),
+        name: productName.trim(),
+        category: CATEGORY_MAP[selectedCategory as keyof typeof CATEGORY_MAP],
+        nickname: nickname.trim() || productName.trim(),
+        purchaseDate: noWarranty ? null : purchaseDate,
+        warrantyMonths: noWarranty ? null : Number(warrantyPeriod),
+        manual: {
+          manualContent: manual.trim(),
+        },
+        // part
+        // image
+      };
+
+      const response = await api.post("/products", requestBody);
+
+      const productId = response.data.productId;
+
+      if (!productId) {
+        throw new Error("productId가 응답에 없습니다.");
+      }
+
+      // todo:
+      // 이미지 업로드 api 후 확인
+
+      if (productImage) {
+        const formData = new FormData();
+        formData.append("image", productImage);
+
+        try {
+          await api.post(`/products/${productId}/images`, formData);
+        } catch (imageError) {
+          console.error("이미지 업로드 실패:", imageError);
+        }
+      }
+
+      navigate(`/products/${productId}`);
+    } catch (error) {
+      console.error("제품 등록 실패:", error);
+      setAlertMessage("제품 등록에 실패했습니다. 다시 시도해주세요.");
+      setIsAlertModalOpen(true);
+    }
   };
 
   return (
@@ -183,7 +227,7 @@ export default function ProductCreateContent({
             </div>
           </ProductFormRow>
 
-          {/* 부품 관리 */}
+          {/* 부품 관리
           <ProductFormRow label="부품관리">
             <div className="flex flex-col w-[390px] gap-[10px]">
               {parts.map((part) => (
@@ -203,7 +247,7 @@ export default function ProductCreateContent({
 
               <CommonButton onClick={handleAddPart}>추가하기</CommonButton>
             </div>
-          </ProductFormRow>
+          </ProductFormRow> */}
         </div>
       </div>
 
@@ -212,6 +256,7 @@ export default function ProductCreateContent({
           variant="secondary"
           onClick={() => {
             if (!isRequiredFilled) {
+              setAlertMessage("필수 항목을 모두 입력해주세요.");
               setIsAlertModalOpen(true);
               return;
             }
@@ -227,7 +272,7 @@ export default function ProductCreateContent({
       <Modal
         open={isAlertModalOpen}
         type="alert"
-        title="필수 항목을 모두 입력해주세요."
+        title={alertMessage}
         onClose={() => setIsAlertModalOpen(false)}
         onConfirm={() => setIsAlertModalOpen(false)}
         confirmText="확인"
@@ -239,8 +284,8 @@ export default function ProductCreateContent({
         title="제품을 등록하시겠습니까?"
         onClose={() => setIsSubmitModalOpen(false)}
         onCancel={() => setIsSubmitModalOpen(false)}
-        onConfirm={() => {
-          handleSubmit();
+        onConfirm={async () => {
+          await handleSubmit();
           setIsSubmitModalOpen(false);
         }}
         cancelText="취소"

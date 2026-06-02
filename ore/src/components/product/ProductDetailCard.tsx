@@ -32,11 +32,6 @@ const statusColor: Record<ProductStatus, string> = {
   empty: "bg-gray-02",
 };
 
-const categoryText: Record<string, string> = {
-  mobile: "전자기기",
-  kitchen: "주방가전",
-};
-
 export default function ProductDetailCard({
   imageSrc,
   nickname,
@@ -86,7 +81,7 @@ export default function ProductDetailCard({
             <div className="flex max-w-full items-start gap-[5px] text-body-m-16 text-gray-01">
               <p className="truncate">{productName}</p>
               <span>·</span>
-              <p className="shrink-0">{categoryText[category]}</p>
+              <p className="shrink-0">{category}</p>
             </div>
           </div>
 

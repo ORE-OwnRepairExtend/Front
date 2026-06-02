@@ -1,4 +1,4 @@
-import type { ProductCategory } from "../types/category";
+import type { ApiProductCategory, ProductCategory } from "../types/category";
 
 import starIcon from "../assets/star.svg";
 import phoneIcon from "../assets/phone.svg";
@@ -39,3 +39,21 @@ export const productCategories: ProductCategory[] = [
     icon: <img src={otherIcon} className="w-[20px] h-[20px]" />,
   },
 ];
+
+export const CATEGORY_MAP = {
+  "모바일 기기": "MOBILE",
+  "PC 기기": "PC_LAPTOP",
+  "주방 가전": "KITCHEN",
+  "생활 가전": "LIVING",
+  "영상·음향": "VIDEO_AUDIO",
+  기타: "ETC",
+} as const satisfies Record<string, ApiProductCategory>;
+
+export const CATEGORY_LABEL_MAP: Record<ApiProductCategory, string> = {
+  MOBILE: "모바일 기기",
+  PC_LAPTOP: "PC 기기",
+  KITCHEN: "주방 가전",
+  LIVING: "생활 가전",
+  VIDEO_AUDIO: "영상·음향",
+  ETC: "기타",
+};

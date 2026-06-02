@@ -33,7 +33,9 @@ type ProductDetailContentProps = {
 
   manualContent?: string;
   manualPdfUrl?: string;
-  warrantyMonths: number;
+  warrantyMonths?: number | null;
+  warrantyEndDate?: string;
+  remainingDays?: number;
   maintenanceCategories: MaintenanceCategory[];
   repairHistories: RepairInfoItem[];
   officialUrl?: string;
@@ -56,6 +58,8 @@ export default function ProductDetailContent({
   manualContent,
   manualPdfUrl,
   warrantyMonths,
+  warrantyEndDate,
+  remainingDays,
   maintenanceCategories,
   repairHistories,
   officialUrl,
@@ -86,6 +90,8 @@ export default function ProductDetailContent({
         purchaseDate={purchaseDate}
         status={status}
         warrantyMonths={warrantyMonths}
+        warrantyEndDate={warrantyEndDate}
+        remainingDays={remainingDays}
         maintenanceCategories={maintenanceCategories}
         repairinfos={repairHistories}
         officialUrl={officialUrl}
