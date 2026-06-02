@@ -26,7 +26,8 @@ type ProductDetailInfoProps = {
   manualContent?: string;
   manualPdfUrl?: string;
 
-  purchaseDate: string;
+  purchaseDate: string | null;
+  showWarrantyInfo: boolean;
   warrantyMonths?: number | null;
   warrantyEndDate?: string;
   remainingDays?: number;
@@ -47,6 +48,7 @@ export default function ProductDetailInfo({
   manualContent,
   manualPdfUrl,
   purchaseDate,
+  showWarrantyInfo,
   warrantyMonths,
   warrantyEndDate,
   remainingDays,
@@ -78,15 +80,23 @@ export default function ProductDetailInfo({
 
         <div className="h-[2px] w-full bg-gray-02/50" />
 
-        <ProductWarrantyInfo
-          purchaseDate={purchaseDate}
-          warrantyMonths={warrantyMonths}
-          warrantyEndDate={warrantyEndDate}
-          remainingDays={remainingDays}
-          status={status}
-        />
+        {showWarrantyInfo &&
+          purchaseDate !== null &&
+          warrantyMonths !== null &&
+          warrantyMonths !== undefined &&
+          warrantyEndDate !== undefined && (
+            <>
+              <ProductWarrantyInfo
+                purchaseDate={purchaseDate}
+                warrantyMonths={warrantyMonths}
+                warrantyEndDate={warrantyEndDate}
+                remainingDays={remainingDays}
+                status={status}
+              />
 
-        <div className="h-[2px] w-full bg-gray-02/50" />
+              <div className="h-[2px] w-full bg-gray-02/50" />
+            </>
+          )}
 
         {/* <ProductMaintenanceInfo
           purchaseDate={purchaseDate}

@@ -59,11 +59,11 @@ export const CATEGORY_MAP = {
   기타: "ETC",
 } as const satisfies Record<string, ApiProductCategory>;
 
-export const CATEGORY_LABEL_MAP: Record<ApiProductCategory, string> = {
+export const CATEGORY_LABEL_MAP = {
   MOBILE: "모바일 기기",
   PC_LAPTOP: "PC 기기",
   KITCHEN: "주방 가전",
   LIVING: "생활 가전",
   VIDEO_AUDIO: "영상·음향",
   ETC: "기타",
-};
+} as const satisfies Record<ApiProductCategory, ProductCategory["label"]>;
