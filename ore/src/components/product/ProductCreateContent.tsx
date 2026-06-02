@@ -109,14 +109,21 @@ export default function ProductCreateContent({
         throw new Error("productId가 응답에 없습니다.");
       }
 
+      // todo:
+      // 이미지 업로드 api 후 확인
+
       if (productImage) {
         const formData = new FormData();
         formData.append("image", productImage);
 
-        await api.post(`/products/${productId}/images`, formData);
+        try {
+          await api.post(`/products/${productId}/images`, formData);
+        } catch (imageError) {
+          console.error("이미지 업로드 실패:", imageError);
+        }
       }
 
-      navigate("/products");
+      navigate(`/products/${productId}`);
     } catch (error) {
       console.error("제품 등록 실패:", error);
       setAlertMessage("제품 등록에 실패했습니다. 다시 시도해주세요.");
