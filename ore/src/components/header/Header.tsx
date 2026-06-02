@@ -73,7 +73,7 @@ export default function Header({
           {showCloseButton ? (
             <button
               type="button"
-              onClick={() => navigate(-1)}
+              onClick={() => navigate("/products/")}
               className="cursor-pointer"
             >
               <img src={closeIcon} alt="닫기" className="h-[30px] w-[30px]" />
