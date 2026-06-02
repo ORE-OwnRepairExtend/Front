@@ -10,6 +10,7 @@ import { api } from "../../api/api";
 import { CATEGORY_LABEL_MAP } from "../../constants/productCategories";
 import { getProductStatus } from "../../utils/productStatus";
 
+import defaultProductImage from "../../../public/photos/logo.png";
 import type { ApiProductCategory } from "../../types/category";
 
 type ProductDetailResponse = {
@@ -19,8 +20,8 @@ type ProductDetailResponse = {
   category: ApiProductCategory;
   imageUrl: string | null;
   modelNumber: string | null;
-  purchaseDate: string | null;
-  warrantyMonths: number | null;
+  purchaseDate: string;
+  warrantyMonths: number;
   isFavorite: boolean;
   hasRepairHistory: boolean;
   createdAt: string;
@@ -36,7 +37,6 @@ type ProductWarrantyResponse = {
 
 export default function ProductDetailPage() {
   const navigate = useNavigate();
-
   const { productId } = useParams();
 
   const [product, setProduct] = useState<ProductDetailResponse | null>(null);
@@ -62,15 +62,6 @@ export default function ProductDetailPage() {
         setProduct(productResponse.data);
         setIsFavorite(productResponse.data.isFavorite);
 
-        const hasWarrantyInfo =
-          productResponse.data.purchaseDate !== null &&
-          productResponse.data.warrantyMonths !== null;
-
-        if (!hasWarrantyInfo) {
-          setWarranty(null);
-          return;
-        }
-
         try {
           const warrantyResponse = await api.get<ProductWarrantyResponse>(
             `/products/${productId}/warranty`,
@@ -91,6 +82,70 @@ export default function ProductDetailPage() {
 
     fetchProductDetail();
   }, [productId]);
+
+  const handleFavoriteClick = async () => {
+    if (!productId || !product) return;
+
+    const nextFavorite = !isFavorite;
+
+    try {
+      setIsFavorite(nextFavorite);
+
+      const response = await api.patch<{
+        productId: string;
+        isFavorite: boolean;
+      }>(`/products/${productId}/favorite`, {
+        isFavorite: nextFavorite,
+      });
+
+      setIsFavorite(response.data.isFavorite);
+      setProduct((prev) =>
+        prev ? { ...prev, isFavorite: response.data.isFavorite } : prev,
+      );
+    } catch (error) {
+      console.error("즐겨찾기 수정 실패:", error);
+
+      setIsFavorite(isFavorite);
+      alert("즐겨찾기 상태 변경에 실패했습니다.");
+    }
+  };
+
+  const handleEditProduct = () => {
+    if (!product) return;
+
+    navigate("/products/new", {
+      state: {
+        mode: "edit",
+        productId: product.productId,
+        productData: {
+          productId: product.productId,
+          productName: product.productName,
+          nickname: product.nickname,
+          category: product.category,
+          imageUrl: product.imageUrl,
+          modelNumber: product.modelNumber,
+          purchaseDate: product.purchaseDate,
+          warrantyMonths: product.warrantyMonths,
+          isFavorite: product.isFavorite,
+          hasRepairHistory: product.hasRepairHistory,
+          createdAt: product.createdAt,
+        },
+      },
+    });
+  };
+
+  const handleDeleteProduct = async () => {
+    if (!productId) return;
+
+    try {
+      await api.delete(`/products/${productId}`);
+
+      navigate("/products", { replace: true });
+    } catch (error) {
+      console.error("제품 삭제 실패:", error);
+      alert("제품 삭제에 실패했습니다.");
+    }
+  };
 
   if (isLoading) {
     return <div>제품 정보를 불러오는 중입니다.</div>;
@@ -127,46 +182,6 @@ export default function ProductDetailPage() {
     price: formatPrice(repair.repairCost),
   }));
 
-  const handleFavoriteClick = async () => {
-    if (!productId || !product) return;
-
-    const nextFavorite = !isFavorite;
-
-    try {
-      setIsFavorite(nextFavorite);
-
-      const response = await api.patch<{
-        productId: string;
-        isFavorite: boolean;
-      }>(`/products/${productId}/favorite`, {
-        isFavorite: nextFavorite,
-      });
-
-      setIsFavorite(response.data.isFavorite);
-      setProduct((prev) =>
-        prev ? { ...prev, isFavorite: response.data.isFavorite } : prev,
-      );
-    } catch (error) {
-      console.error("즐겨찾기 수정 실패:", error);
-
-      setIsFavorite(isFavorite);
-      alert("즐겨찾기 상태 변경에 실패했습니다.");
-    }
-  };
-
-  const handleDeleteProduct = async () => {
-    if (!productId) return;
-
-    try {
-      await api.delete(`/products/${productId}`);
-
-      navigate("/products", { replace: true });
-    } catch (error) {
-      console.error("제품 삭제 실패:", error);
-      alert("제품 삭제에 실패했습니다.");
-    }
-  };
-
   return (
     <SecondLayout>
       <div className="flex h-full flex-col">
@@ -176,12 +191,10 @@ export default function ProductDetailPage() {
           <div className="my-[10px] flex flex-1 flex-col items-center gap-[10px] overflow-y-auto no-scrollbar">
             <ProductDetailContent
               productId={product.productId}
-              imageSrc={product.imageUrl}
+              imageSrc={product.imageUrl ?? defaultProductImage}
               nickname={product.nickname}
               productName={product.productName}
-              category={
-                CATEGORY_LABEL_MAP[product.category] ?? product.category
-              }
+              category={CATEGORY_LABEL_MAP[product.category] ?? product.category}
               purchaseDate={product.purchaseDate}
               status={
                 warranty ? getProductStatus(warranty.remainingDays) : "empty"
@@ -197,7 +210,7 @@ export default function ProductDetailPage() {
               officialUrl="https://example.com"
               customerServiceUrl="https://example.com/customer"
               onFavoriteClick={handleFavoriteClick}
-              onEditClick={() => console.log("수정")}
+              onEditClick={handleEditProduct}
               onDeleteClick={handleDeleteProduct}
             />
           </div>
