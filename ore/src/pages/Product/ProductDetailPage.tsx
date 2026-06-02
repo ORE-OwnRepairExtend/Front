@@ -20,8 +20,8 @@ type ProductDetailResponse = {
   category: ApiProductCategory;
   imageUrl: string | null;
   modelNumber: string | null;
-  purchaseDate: string;
-  warrantyMonths: number;
+  purchaseDate: string | null;
+  warrantyMonths: number | null;
   isFavorite: boolean;
   hasRepairHistory: boolean;
   createdAt: string;
@@ -62,6 +62,15 @@ export default function ProductDetailPage() {
 
         setProduct(productResponse.data);
         setIsFavorite(productResponse.data.isFavorite);
+
+        const hasWarrantyInfo =
+          productResponse.data.purchaseDate !== null &&
+          productResponse.data.warrantyMonths !== null;
+
+        if (!hasWarrantyInfo) {
+          setWarranty(null);
+          return;
+        }
 
         try {
           const warrantyResponse = await api.get<ProductWarrantyResponse>(

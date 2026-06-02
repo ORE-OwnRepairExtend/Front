@@ -28,7 +28,7 @@ type ProductDetailContentProps = {
   nickname: string;
   productName: string;
   category: string;
-  purchaseDate: string;
+  purchaseDate: string | null;
   status: ProductStatus;
   isFavorite: boolean;
 
@@ -72,6 +72,13 @@ export default function ProductDetailContent({
   const [isMaintenanceEditing, setIsMaintenanceEditing] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
+  const showWarrantyInfo =
+    purchaseDate !== null &&
+    warrantyMonths !== null &&
+    warrantyMonths !== undefined &&
+    warrantyEndDate !== undefined &&
+    remainingDays !== undefined;
+
   return (
     <div className="flex w-full flex-shrink-0 flex-col items-center gap-[20px] px-[10px]">
       <ProductDetailCard
@@ -79,7 +86,7 @@ export default function ProductDetailContent({
         nickname={nickname}
         productName={productName}
         category={category}
-        purchaseDate={purchaseDate}
+        purchaseDate={purchaseDate ?? "정보 없음"}
         status={status}
         isFavorite={isFavorite}
         onFavoriteClick={onFavoriteClick}
@@ -91,6 +98,7 @@ export default function ProductDetailContent({
         manualPdfUrl={manualPdfUrl}
         purchaseDate={purchaseDate}
         status={status}
+        showWarrantyInfo={showWarrantyInfo}
         warrantyMonths={warrantyMonths}
         warrantyEndDate={warrantyEndDate}
         remainingDays={remainingDays}

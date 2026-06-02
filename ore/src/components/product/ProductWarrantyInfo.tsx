@@ -2,8 +2,8 @@ import { formatDate } from "../../utils/formatDate";
 import type { ProductStatus } from "../../types/product";
 
 type ProductWarrantyInfoProps = {
-  purchaseDate: string;
-  warrantyMonths?: number | null;
+  purchaseDate?: string;
+  warrantyMonths?: number;
   warrantyEndDate?: string;
   remainingDays?: number;
   status: ProductStatus;
@@ -85,33 +85,7 @@ export default function ProductWarrantyInfo({
   warrantyEndDate,
   status,
 }: ProductWarrantyInfoProps) {
-  const hasWarranty =
-    status !== "empty" &&
-    typeof warrantyMonths === "number" &&
-    warrantyMonths > 0 &&
-    !!warrantyEndDate;
-
-  if (!hasWarranty) {
-    return (
-      <section className="flex w-full flex-col items-start gap-[10px] px-[10px]">
-        <h3 className="flex w-full items-center text-body-sb-20 text-primary-01">
-          보증 정보
-        </h3>
-
-        <div className="flex items-center gap-[80px] text-body-m-16">
-          <span>구매일 : {formatDate(new Date(purchaseDate))}</span>
-          <span>만료일 : -</span>
-          <span>보증기간 : -</span>
-        </div>
-
-        <div className="flex w-full items-center rounded-[30px] bg-white/50 px-[40px] py-[30px]">
-          <p className="text-body-m-16 text-gray-01">
-            보증 정보가 등록되지 않았습니다.
-          </p>
-        </div>
-      </section>
-    );
-  }
+  if (!purchaseDate || !warrantyEndDate || warrantyMonths == null) return null;
 
   const timeline = getWarrantyTimelineFromApi(
     purchaseDate,
