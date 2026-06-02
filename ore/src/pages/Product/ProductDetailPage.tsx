@@ -1,35 +1,93 @@
 import { useParams } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import SecondLayout from "../../layout/SecondLayout";
 import Header from "../../components/header/Header";
 import ProductDetailContent from "../../components/product/ProductDetailContent";
 
-import { mockProductListResponse } from "../../mocks/products";
-import { mockWarrantyListResponse } from "../../mocks/warranty";
 import { mockRepairHistoryResponse } from "../../mocks/repairs";
-import { mergeProductsWithWarranty } from "../../utils/productMapper";
 import { formatPrice } from "../../utils/formatPrice";
+import { api } from "../../api/api";
+import { CATEGORY_LABEL_MAP } from "../../constants/productCategories";
+import { getProductStatus } from "../../utils/productStatus";
+
+import defaultProductImage from "../../../public/photos/logo.png";
+import type { ApiProductCategory } from "../../types/category";
+
+type ProductDetailResponse = {
+  productId: string;
+  productName: string;
+  nickname: string;
+  category: ApiProductCategory;
+  imageUrl: string | null;
+  modelNumber: string | null;
+  purchaseDate: string;
+  warrantyMonths: number;
+  isFavorite: boolean;
+  hasRepairHistory: boolean;
+  createdAt: string;
+};
+
+type ProductWarrantyResponse = {
+  productId: string;
+  purchaseDate: string;
+  warrantyMonths: number;
+  warrantyEndDate: string;
+  remainingDays: number;
+};
 
 export default function ProductDetailPage() {
   const { productId } = useParams();
 
-  const productsWithStatus = mergeProductsWithWarranty(
-    mockProductListResponse,
-    mockWarrantyListResponse,
+  const [product, setProduct] = useState<ProductDetailResponse | null>(null);
+  const [warranty, setWarranty] = useState<ProductWarrantyResponse | null>(
+    null,
   );
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const product = productsWithStatus.find(
-    (item) => item.productId === productId,
-  );
+  useEffect(() => {
+    const fetchProductDetail = async () => {
+      if (!productId) return;
 
-  const warrantyInfo = mockWarrantyListResponse.find(
-    (item) => item.productId === productId,
-  );
+      try {
+        setIsLoading(true);
+        setErrorMessage("");
 
-  const [isFavorite, setIsFavorite] = useState(product?.isFavorite ?? false);
+        const productResponse = await api.get<ProductDetailResponse>(
+          `/products/${productId}`,
+        );
 
-  if (!product) {
-    return <div>제품 정보를 찾을 수 없습니다.</div>;
+        setProduct(productResponse.data);
+        setIsFavorite(productResponse.data.isFavorite);
+
+        try {
+          const warrantyResponse = await api.get<ProductWarrantyResponse>(
+            `/products/${productId}/warranty`,
+          );
+
+          setWarranty(warrantyResponse.data);
+        } catch (warrantyError) {
+          console.error("보증 정보 조회 실패:", warrantyError);
+          setWarranty(null);
+        }
+      } catch (error) {
+        console.error("제품 상세 조회 실패:", error);
+        setErrorMessage("제품 정보를 불러오지 못했습니다.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProductDetail();
+  }, [productId]);
+
+  if (isLoading) {
+    return <div>제품 정보를 불러오는 중입니다.</div>;
+  }
+
+  if (errorMessage || !product) {
+    return <div>{errorMessage || "제품 정보를 찾을 수 없습니다."}</div>;
   }
 
   const maintenanceCategories = [
@@ -68,16 +126,22 @@ export default function ProductDetailPage() {
           <div className="my-[10px] flex flex-1 flex-col items-center gap-[10px] overflow-y-auto no-scrollbar">
             <ProductDetailContent
               productId={product.productId}
-              imageSrc={product.imageUrl}
+              imageSrc={product.imageUrl ?? defaultProductImage}
               nickname={product.nickname}
               productName={product.productName}
-              category={product.category}
+              category={
+                CATEGORY_LABEL_MAP[product.category] ?? product.category
+              }
               purchaseDate={product.purchaseDate}
-              status={product.status}
+              status={
+                warranty ? getProductStatus(warranty.remainingDays) : "valid"
+              }
               isFavorite={isFavorite}
               manualContent="호환자인 학습 방법과 공부 전략으로는 능동적 학습, 자기 주도 학습, 그룹 스터디와 장점 등이 있습니다."
               manualPdfUrl="https://example.com/manual.pdf"
-              warrantyMonths={warrantyInfo?.warrantyMonths ?? 0}
+              warrantyMonths={
+                warranty?.warrantyMonths ?? product.warrantyMonths ?? 0
+              }
               maintenanceCategories={maintenanceCategories}
               repairHistories={repairInfoes}
               officialUrl="https://example.com"
