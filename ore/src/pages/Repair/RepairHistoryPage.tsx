@@ -71,6 +71,16 @@ export default function RepairHistoryPage() {
     fetchData();
   }, [productId]);
 
+  if (isLoading) {
+    return (
+      <SecondLayout>
+        <div className="flex h-full min-h-0 flex-col">
+          <Header title="Repair" />
+        </div>
+      </SecondLayout>
+    );
+  }
+
   if (!product) {
     return <div>제품을 찾을 수 없습니다.</div>;
   }
@@ -92,11 +102,7 @@ export default function RepairHistoryPage() {
 
           <div className="mt-[11px] flex min-h-0 flex-1 flex-col gap-[20px] px-[10px]">
             <div className="no-scrollbar flex flex-1 flex-col gap-[10px] overflow-y-auto">
-              {isLoading ? (
-                <div className="text-gray-02">
-                  수리 이력을 불러오는 중입니다.
-                </div>
-              ) : repairHistoryList.length === 0 ? (
+              {repairHistoryList.length === 0 ? (
                 <div className="text-gray-02 text-center">
                   등록된 수리 이력이 없습니다.
                 </div>

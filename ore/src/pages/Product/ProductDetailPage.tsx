@@ -202,7 +202,13 @@ export default function ProductDetailPage() {
   };
 
   if (isLoading) {
-    return <div>제품 정보를 불러오는 중입니다.</div>;
+    return (
+      <SecondLayout>
+        <div className="flex h-full flex-col">
+          <Header title="Product" showNotification={false} showCloseButton />
+        </div>
+      </SecondLayout>
+    );
   }
 
   if (errorMessage || !product) {

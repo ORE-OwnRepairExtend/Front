@@ -296,7 +296,13 @@ export default function RepairDetailPage() {
 
   // todo: 예외처리 디자인 생각
   if (isLoading) {
-    return <div>수리 이력 정보를 불러오는 중입니다.</div>;
+    return (
+      <SecondLayout>
+        <div className="flex h-full flex-col">
+          <Header title="Repair" />
+        </div>
+      </SecondLayout>
+    );
   }
 
   if (errorMessage) {
