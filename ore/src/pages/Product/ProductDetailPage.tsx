@@ -3,8 +3,6 @@ import { useEffect, useState } from "react";
 import SecondLayout from "../../layout/SecondLayout";
 import Header from "../../components/header/Header";
 import ProductDetailContent from "../../components/product/ProductDetailContent";
-
-import { mockRepairHistoryResponse } from "../../mocks/repairs";
 import { formatPrice } from "../../utils/formatPrice";
 import { api } from "../../api/api";
 import { CATEGORY_LABEL_MAP } from "../../constants/productCategories";
@@ -45,6 +43,14 @@ type ProductOfficialManualResponse = {
   customerCenter: string;
 };
 
+type RepairHistoryResponse = {
+  repairId: string;
+  date: string;
+  title: string;
+  cost: number;
+  createdAt: string;
+};
+
 export default function ProductDetailPage() {
   const navigate = useNavigate();
   const { productId } = useParams();
@@ -56,6 +62,9 @@ export default function ProductDetailPage() {
   const [isFavorite, setIsFavorite] = useState(false);
   const [officialManual, setOfficialManual] =
     useState<ProductOfficialManualResponse | null>(null);
+  const [repairHistories, setRepairHistories] = useState<
+    RepairHistoryResponse[]
+  >([]);
 
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
@@ -73,8 +82,26 @@ export default function ProductDetailPage() {
           `/products/${productId}`,
         );
 
-        setProduct(productResponse.data);
-        setIsFavorite(productResponse.data.isFavorite);
+        const productData = productResponse.data;
+
+        setProduct(productData);
+        setIsFavorite(productData.isFavorite);
+
+        // 수리 이력
+        if (productData.hasRepairHistory) {
+          try {
+            const repairResponse = await api.get<RepairHistoryResponse[]>(
+              `/products/${productId}/repairs`,
+            );
+
+            setRepairHistories(repairResponse.data);
+          } catch (repairError) {
+            console.error("수리 이력 조회 실패:", repairError);
+            setRepairHistories([]);
+          }
+        } else {
+          setRepairHistories([]);
+        }
 
         // 보증 정보
         try {
@@ -202,11 +229,11 @@ export default function ProductDetailPage() {
     },
   ];
 
-  const repairInfoes = mockRepairHistoryResponse.slice(0, 3).map((repair) => ({
+  const repairInfoes = repairHistories.slice(0, 3).map((repair) => ({
     repairId: repair.repairId,
-    repairName: repair.repairContent,
-    repairDate: repair.repairDate,
-    price: formatPrice(repair.repairCost),
+    repairName: repair.title,
+    repairDate: repair.date,
+    price: formatPrice(repair.cost),
   }));
 
   return (

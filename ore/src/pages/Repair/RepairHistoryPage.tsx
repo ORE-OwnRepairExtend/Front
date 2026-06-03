@@ -97,7 +97,9 @@ export default function RepairHistoryPage() {
                   수리 이력을 불러오는 중입니다.
                 </div>
               ) : repairHistoryList.length === 0 ? (
-                <div className="text-gray-02">등록된 수리 이력이 없습니다.</div>
+                <div className="text-gray-02 text-center">
+                  등록된 수리 이력이 없습니다.
+                </div>
               ) : (
                 repairHistoryList.map((item) => (
                   <RepairHistoryCard
