@@ -4,7 +4,6 @@ import Header from "../../components/header/Header";
 import RepairDetailContent from "../../components/repair/RepairDetailContent";
 import SecondLayout from "../../layout/SecondLayout";
 import CommonButton from "../../components/common/CommonButton";
-import { mockProductListResponse } from "../../mocks/products";
 import { formatPrice } from "../../utils/formatPrice";
 import { useEffect, useState } from "react";
 import Modal from "../../components/common/Modal";
@@ -20,6 +19,14 @@ type RepairDetailResponse = {
   serviceCenter: string;
   imageUrl?: string;
   createdAt: string;
+};
+
+type ProductDetailResponse = {
+  productId: string;
+  productName: string;
+  nickname: string;
+  category: string;
+  imageUrl?: string | null;
 };
 
 type RepairEditForm = {
@@ -54,9 +61,7 @@ export default function RepairDetailPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
 
-  const product = mockProductListResponse.find(
-    (item) => item.productId === productId,
-  );
+  const [product, setProduct] = useState<ProductDetailResponse | null>(null);
 
   const [repairDetail, setRepairDetail] = useState<RepairDetailState | null>(
     null,
@@ -77,20 +82,26 @@ export default function RepairDetailPage() {
         setIsLoading(true);
         setErrorMessage("");
 
-        const response = await api.get<RepairDetailResponse>(
-          `/products/${productId}/repairs/${repairId}`,
-        );
+        const [productResponse, repairResponse] = await Promise.all([
+          api.get<ProductDetailResponse>(`/products/${productId}`),
+          api.get<RepairDetailResponse>(
+            `/products/${productId}/repairs/${repairId}`,
+          ),
+        ]);
 
-        const data = response.data;
+        const productData = productResponse.data;
+        const repairData = repairResponse.data;
+
+        setProduct(productData);
 
         setRepairDetail({
-          repairId: data.repairId,
-          repairTitle: data.title,
-          repairDate: data.date,
-          repairContent: data.content,
-          repairCost: data.cost,
-          repairShop: data.serviceCenter,
-          receiptImageUrl: data.imageUrl,
+          repairId: repairData.repairId,
+          repairTitle: repairData.title,
+          repairDate: repairData.date,
+          repairContent: repairData.content,
+          repairCost: repairData.cost,
+          repairShop: repairData.serviceCenter,
+          receiptImageUrl: repairData.imageUrl,
         });
       } catch (error) {
         console.error("수리 이력 상세 조회 실패:", error);
@@ -248,16 +259,16 @@ export default function RepairDetailPage() {
   };
 
   // todo: 예외처리 디자인 생각
-  if (!product) {
-    return <div>제품을 찾을 수 없습니다.</div>;
-  }
-
   if (isLoading) {
     return <div>수리 이력 정보를 불러오는 중입니다.</div>;
   }
 
   if (errorMessage) {
     return <div>{errorMessage}</div>;
+  }
+
+  if (!product) {
+    return <div>제품을 찾을 수 없습니다.</div>;
   }
 
   if (!repairDetail) {
@@ -278,7 +289,9 @@ export default function RepairDetailPage() {
                 description={product.productName}
                 actionType="close"
                 onClick={() => navigate(`/products/${product.productId}`)}
-                onActionClick={() => navigate(-1)}
+                onActionClick={() =>
+                  navigate(`/products/${product.productId}/repairs`)
+                }
               />
             </div>
 

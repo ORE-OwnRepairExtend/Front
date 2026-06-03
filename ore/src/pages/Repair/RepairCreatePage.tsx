@@ -149,11 +149,6 @@ export default function RepairCreatePage() {
 
       setIsSubmitModalOpen(false);
 
-      setAlertModal({
-        open: true,
-        message: "수리 이력이 등록되었습니다.",
-      });
-
       navigate(`/products/${currentProduct.productId}/repairs/${repairId}`);
     } catch (error) {
       console.error("수리 이력 등록 실패:", error);
