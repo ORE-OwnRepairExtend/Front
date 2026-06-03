@@ -100,7 +100,13 @@ export default function RepairCreatePage() {
       return;
     }
 
-    if (!form.title || !form.repairDate || !form.content) {
+    if (
+      !form.title ||
+      !form.repairDate ||
+      !form.content ||
+      !form.shopName ||
+      !form.price
+    ) {
       setAlertModal({
         open: true,
         message: "수리 이력을 입력해주세요.",
@@ -114,17 +120,32 @@ export default function RepairCreatePage() {
   const handleSubmit = async () => {
     if (!currentProduct || isSubmitting) return;
 
-    const payload = {
-      date: form.repairDate,
-      content: form.content,
-      cost: form.price ? Number(form.price.replace(/,/g, "")) : 0,
-      imageUrl: "",
-    };
+    const formData = new FormData();
+
+    formData.append("date", form.repairDate);
+    formData.append("title", form.title);
+    formData.append("content", form.content);
+    formData.append("serviceCenter", form.shopName);
+    formData.append("cost", form.price.replace(/,/g, ""));
+
+    if (form.receiptImage) {
+      formData.append("image", form.receiptImage);
+    }
 
     try {
       setIsSubmitting(true);
 
-      await api.post(`/products/${currentProduct.productId}/repairs`, payload);
+      const response = await api.post(
+        `/products/${currentProduct.productId}/repairs`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        },
+      );
+
+      const repairId = response.data.repairId;
 
       setIsSubmitModalOpen(false);
 
@@ -133,7 +154,7 @@ export default function RepairCreatePage() {
         message: "수리 이력이 등록되었습니다.",
       });
 
-      navigate(`/products/${currentProduct.productId}/repairs`);
+      navigate(`/products/${currentProduct.productId}/repairs/${repairId}`);
     } catch (error) {
       console.error("수리 이력 등록 실패:", error);
 
