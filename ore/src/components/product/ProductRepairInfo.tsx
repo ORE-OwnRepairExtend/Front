@@ -39,17 +39,25 @@ export default function ProductRepairInfo({
 
       {/* 수리 이력 리스트 */}
       <div className="flex w-full flex-col gap-[10px]">
-        {repairHistories.map((repair) => (
-          <RepairHistoryCard
-            key={repair.repairId}
-            repairName={repair.repairName}
-            repairDate={repair.repairDate}
-            price={repair.price}
-            onClick={() =>
-              navigate(`/products/${productId}/repairs/${repair.repairId}`)
-            }
-          />
-        ))}
+        {repairHistories.length === 0 ? (
+          <div className="flex w-full items-center justify-center rounded-[20px] bg-white/50 px-[30px] py-[25px]">
+            <p className="text-body-m-16 text-gray-01">
+              등록된 수리 이력이 없습니다.
+            </p>
+          </div>
+        ) : (
+          repairHistories.map((repair) => (
+            <RepairHistoryCard
+              key={repair.repairId}
+              repairName={repair.repairName}
+              repairDate={repair.repairDate}
+              price={repair.price}
+              onClick={() =>
+                navigate(`/products/${productId}/repairs/${repair.repairId}`)
+              }
+            />
+          ))
+        )}
       </div>
     </section>
   );

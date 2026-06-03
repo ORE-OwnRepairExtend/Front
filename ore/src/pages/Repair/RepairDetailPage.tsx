@@ -4,7 +4,6 @@ import Header from "../../components/header/Header";
 import RepairDetailContent from "../../components/repair/RepairDetailContent";
 import SecondLayout from "../../layout/SecondLayout";
 import CommonButton from "../../components/common/CommonButton";
-import { mockProductListResponse } from "../../mocks/products";
 import { formatPrice } from "../../utils/formatPrice";
 import { useEffect, useState } from "react";
 import Modal from "../../components/common/Modal";
@@ -22,6 +21,14 @@ type RepairDetailResponse = {
   createdAt: string;
 };
 
+type ProductDetailResponse = {
+  productId: string;
+  productName: string;
+  nickname: string;
+  category: string;
+  imageUrl?: string | null;
+};
+
 type RepairEditForm = {
   title: string;
   repairDate: string;
@@ -33,8 +40,12 @@ type RepairEditForm = {
 
 type RepairUpdateResponse = {
   repairId: string;
+  title: string;
+  date: string;
   content: string;
+  serviceCenter: string;
   cost: number;
+  imageUrl?: string | null;
 };
 
 type RepairDetailState = {
@@ -54,13 +65,14 @@ export default function RepairDetailPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
 
-  const product = mockProductListResponse.find(
-    (item) => item.productId === productId,
-  );
+  const [product, setProduct] = useState<ProductDetailResponse | null>(null);
 
   const [repairDetail, setRepairDetail] = useState<RepairDetailState | null>(
     null,
   );
+
+  const [receiptImageFile, setReceiptImageFile] = useState<File | null>(null);
+  const [isReceiptImageDeleted, setIsReceiptImageDeleted] = useState(false);
 
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
@@ -77,20 +89,26 @@ export default function RepairDetailPage() {
         setIsLoading(true);
         setErrorMessage("");
 
-        const response = await api.get<RepairDetailResponse>(
-          `/products/${productId}/repairs/${repairId}`,
-        );
+        const [productResponse, repairResponse] = await Promise.all([
+          api.get<ProductDetailResponse>(`/products/${productId}`),
+          api.get<RepairDetailResponse>(
+            `/products/${productId}/repairs/${repairId}`,
+          ),
+        ]);
 
-        const data = response.data;
+        const productData = productResponse.data;
+        const repairData = repairResponse.data;
+
+        setProduct(productData);
 
         setRepairDetail({
-          repairId: data.repairId,
-          repairTitle: data.title,
-          repairDate: data.date,
-          repairContent: data.content,
-          repairCost: data.cost,
-          repairShop: data.serviceCenter,
-          receiptImageUrl: data.imageUrl,
+          repairId: repairData.repairId,
+          repairTitle: repairData.title,
+          repairDate: repairData.date,
+          repairContent: repairData.content,
+          repairCost: repairData.cost,
+          repairShop: repairData.serviceCenter,
+          receiptImageUrl: repairData.imageUrl,
         });
       } catch (error) {
         console.error("수리 이력 상세 조회 실패:", error);
@@ -151,71 +169,97 @@ export default function RepairDetailPage() {
     }));
   };
 
-  const handleReceiptImageChange = (file: File | null) => {
-    if (!file) {
-      setEditForm((prev) => ({
-        ...prev,
-        receiptImageUrl: undefined,
-      }));
-      return;
-    }
+  const handleReceiptImageDelete = () => {
+    setReceiptImageFile(null);
 
-    const previewUrl = URL.createObjectURL(file);
+    // 기존 저장 이미지가 있을 때만 서버 이미지 삭제 플래그 true
+    setIsReceiptImageDeleted(Boolean(repairDetail?.receiptImageUrl));
 
     setEditForm((prev) => ({
       ...prev,
-      receiptImageUrl: previewUrl,
+      receiptImageUrl: undefined,
+    }));
+  };
+
+  const handleReceiptImageChange = (file: File | null) => {
+    if (!file) return;
+
+    setReceiptImageFile(file);
+    setIsReceiptImageDeleted(false);
+
+    setEditForm((prev) => ({
+      ...prev,
+      receiptImageUrl: URL.createObjectURL(file),
     }));
   };
 
   const handleEditStart = () => {
     setEditForm(getInitialForm(repairDetail));
+    setReceiptImageFile(null);
+    setIsReceiptImageDeleted(false);
     setIsEditMode(true);
   };
 
   const handleEditCancel = () => {
     setEditForm(getInitialForm(repairDetail));
+    setReceiptImageFile(null);
+    setIsReceiptImageDeleted(false);
     setIsEditMode(false);
   };
 
   const handleEditSave = async () => {
     if (!productId || !repairId || !repairDetail) return;
 
-    const payload = {
-      content: editForm.content,
-      cost: Number(editForm.price.replace(/,/g, "")),
-    };
-
     try {
+      const formData = new FormData();
+
+      formData.append("date", editForm.repairDate);
+      formData.append("title", editForm.title);
+      formData.append("content", editForm.content);
+      formData.append("serviceCenter", editForm.shopName);
+      formData.append("cost", editForm.price.replace(/,/g, ""));
+
+      if (receiptImageFile) {
+        formData.append("image", receiptImageFile);
+      }
+
+      // X 버튼으로 기존 이미지를 삭제했고, 새 이미지를 선택하지 않은 경우
+      // 기존 저장 이미지가 있었고, 그걸 삭제한 경우에만 DELETE /image 호출
+      if (
+        isReceiptImageDeleted &&
+        !receiptImageFile &&
+        repairDetail.receiptImageUrl
+      ) {
+        await api.delete(`/products/${productId}/repairs/${repairId}/image`);
+      }
       const response = await api.patch<RepairUpdateResponse>(
         `/products/${productId}/repairs/${repairId}`,
-        payload,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        },
       );
 
       const data = response.data;
 
-      // 현재 수정 API가 받지 않는 값들은 기존 값 유지
       setRepairDetail({
-        ...repairDetail,
+        repairId: data.repairId,
+        repairTitle: data.title,
+        repairDate: data.date,
         repairContent: data.content,
         repairCost: data.cost,
+        repairShop: data.serviceCenter,
+        receiptImageUrl: data.imageUrl ?? undefined,
       });
 
+      setReceiptImageFile(null);
+      setIsReceiptImageDeleted(false);
       setIsEditMode(false);
     } catch (error) {
       console.error("수리 이력 수정 실패:", error);
-
-      if (axios.isAxiosError(error)) {
-        if (error.response?.status === 401) {
-          setErrorMessage("인증 정보가 유효하지 않습니다.");
-        } else if (error.response?.status === 404) {
-          setErrorMessage("수리 기록을 찾을 수 없습니다.");
-        } else {
-          setErrorMessage("수리 이력 수정에 실패했습니다.");
-        }
-      } else {
-        setErrorMessage("알 수 없는 오류가 발생했습니다.");
-      }
+      setErrorMessage("수리 이력 수정에 실패했습니다.");
     }
   };
 
@@ -229,7 +273,8 @@ export default function RepairDetailPage() {
     try {
       await api.delete(`/products/${productId}/repairs/${repairId}`);
 
-      navigate(`/products/${productId}/repairs`);
+      setIsModalOpen(false);
+      navigate(`/products/${productId}/repairs`, { replace: true });
     } catch (error) {
       console.error("수리 이력 삭제 실패:", error);
 
@@ -237,27 +282,35 @@ export default function RepairDetailPage() {
         if (error.response?.status === 401) {
           setErrorMessage("인증 정보가 유효하지 않습니다.");
         } else if (error.response?.status === 404) {
-          setErrorMessage("수리 이력을 찾을 수 없습니다.");
+          setErrorMessage("수리 기록을 찾을 수 없습니다.");
         } else {
           setErrorMessage("수리 이력 삭제에 실패했습니다.");
         }
       } else {
         setErrorMessage("알 수 없는 오류가 발생했습니다.");
       }
+
+      setIsModalOpen(false);
     }
   };
 
   // todo: 예외처리 디자인 생각
-  if (!product) {
-    return <div>제품을 찾을 수 없습니다.</div>;
-  }
-
   if (isLoading) {
-    return <div>수리 이력 정보를 불러오는 중입니다.</div>;
+    return (
+      <SecondLayout>
+        <div className="flex h-full flex-col">
+          <Header title="Repair" />
+        </div>
+      </SecondLayout>
+    );
   }
 
   if (errorMessage) {
     return <div>{errorMessage}</div>;
+  }
+
+  if (!product) {
+    return <div>제품을 찾을 수 없습니다.</div>;
   }
 
   if (!repairDetail) {
@@ -278,7 +331,9 @@ export default function RepairDetailPage() {
                 description={product.productName}
                 actionType="close"
                 onClick={() => navigate(`/products/${product.productId}`)}
-                onActionClick={() => navigate(-1)}
+                onActionClick={() =>
+                  navigate(`/products/${product.productId}/repairs`)
+                }
               />
             </div>
 
@@ -316,6 +371,7 @@ export default function RepairDetailPage() {
                 onPriceChange={handlePriceChange}
                 onShopNameChange={handleChange("shopName")}
                 onReceiptImageChange={handleReceiptImageChange}
+                onReceiptImageDelete={handleReceiptImageDelete}
               />
 
               {/* 하단 버튼 */}

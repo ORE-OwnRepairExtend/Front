@@ -3,8 +3,6 @@ import { useEffect, useState } from "react";
 import SecondLayout from "../../layout/SecondLayout";
 import Header from "../../components/header/Header";
 import ProductDetailContent from "../../components/product/ProductDetailContent";
-
-import { mockRepairHistoryResponse } from "../../mocks/repairs";
 import { formatPrice } from "../../utils/formatPrice";
 import { api } from "../../api/api";
 import { CATEGORY_LABEL_MAP } from "../../constants/productCategories";
@@ -24,6 +22,10 @@ type ProductDetailResponse = {
   warrantyMonths: number;
   isFavorite: boolean;
   hasRepairHistory: boolean;
+  manual: {
+    manualContent: string;
+  } | null;
+  // 일단은 매뉴얼 null 허용
   createdAt: string;
 };
 
@@ -35,6 +37,20 @@ type ProductWarrantyResponse = {
   remainingDays: number;
 };
 
+type ProductOfficialManualResponse = {
+  manualUrl: string;
+  manualSummary: string;
+  customerCenter: string;
+};
+
+type RepairHistoryResponse = {
+  repairId: string;
+  date: string;
+  title: string;
+  cost: number;
+  createdAt: string;
+};
+
 export default function ProductDetailPage() {
   const navigate = useNavigate();
   const { productId } = useParams();
@@ -44,6 +60,12 @@ export default function ProductDetailPage() {
     null,
   );
   const [isFavorite, setIsFavorite] = useState(false);
+  const [officialManual, setOfficialManual] =
+    useState<ProductOfficialManualResponse | null>(null);
+  const [repairHistories, setRepairHistories] = useState<
+    RepairHistoryResponse[]
+  >([]);
+
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -55,13 +77,33 @@ export default function ProductDetailPage() {
         setIsLoading(true);
         setErrorMessage("");
 
+        // 제품 상세
         const productResponse = await api.get<ProductDetailResponse>(
           `/products/${productId}`,
         );
 
-        setProduct(productResponse.data);
-        setIsFavorite(productResponse.data.isFavorite);
+        const productData = productResponse.data;
 
+        setProduct(productData);
+        setIsFavorite(productData.isFavorite);
+
+        // 수리 이력
+        if (productData.hasRepairHistory) {
+          try {
+            const repairResponse = await api.get<RepairHistoryResponse[]>(
+              `/products/${productId}/repairs`,
+            );
+
+            setRepairHistories(repairResponse.data);
+          } catch (repairError) {
+            console.error("수리 이력 조회 실패:", repairError);
+            setRepairHistories([]);
+          }
+        } else {
+          setRepairHistories([]);
+        }
+
+        // 보증 정보
         try {
           const warrantyResponse = await api.get<ProductWarrantyResponse>(
             `/products/${productId}/warranty`,
@@ -71,6 +113,18 @@ export default function ProductDetailPage() {
         } catch (warrantyError) {
           console.error("보증 정보 조회 실패:", warrantyError);
           setWarranty(null);
+        }
+
+        // 공식 매뉴얼
+        try {
+          const manualResponse = await api.get<ProductOfficialManualResponse>(
+            `/products/${productId}/manual`,
+          );
+
+          setOfficialManual(manualResponse.data);
+        } catch (manualError) {
+          console.error("공식 매뉴얼 조회 실패:", manualError);
+          setOfficialManual(null);
         }
       } catch (error) {
         console.error("제품 상세 조회 실패:", error);
@@ -148,7 +202,13 @@ export default function ProductDetailPage() {
   };
 
   if (isLoading) {
-    return <div>제품 정보를 불러오는 중입니다.</div>;
+    return (
+      <SecondLayout>
+        <div className="flex h-full flex-col">
+          <Header title="Product" showNotification={false} showCloseButton />
+        </div>
+      </SecondLayout>
+    );
   }
 
   if (errorMessage || !product) {
@@ -175,11 +235,11 @@ export default function ProductDetailPage() {
     },
   ];
 
-  const repairInfoes = mockRepairHistoryResponse.slice(0, 3).map((repair) => ({
+  const repairInfoes = repairHistories.slice(0, 3).map((repair) => ({
     repairId: repair.repairId,
-    repairName: repair.repairContent,
-    repairDate: repair.repairDate,
-    price: formatPrice(repair.repairCost),
+    repairName: repair.title,
+    repairDate: repair.date,
+    price: formatPrice(repair.cost),
   }));
 
   return (
@@ -194,21 +254,23 @@ export default function ProductDetailPage() {
               imageSrc={product.imageUrl ?? defaultProductImage}
               nickname={product.nickname}
               productName={product.productName}
-              category={CATEGORY_LABEL_MAP[product.category] ?? product.category}
+              category={
+                CATEGORY_LABEL_MAP[product.category] ?? product.category
+              }
               purchaseDate={product.purchaseDate}
               status={
                 warranty ? getProductStatus(warranty.remainingDays) : "empty"
               }
               isFavorite={isFavorite}
-              manualContent="호환자인 학습 방법과 공부 전략으로는 능동적 학습, 자기 주도 학습, 그룹 스터디와 장점 등이 있습니다."
-              manualPdfUrl="https://example.com/manual.pdf"
+              manualContent={product.manual?.manualContent ?? null}
+              manualPdfUrl={officialManual?.manualUrl}
               warrantyMonths={warranty?.warrantyMonths ?? null}
               warrantyEndDate={warranty?.warrantyEndDate}
               remainingDays={warranty?.remainingDays}
               maintenanceCategories={maintenanceCategories}
               repairHistories={repairInfoes}
               officialUrl="https://example.com"
-              customerServiceUrl="https://example.com/customer"
+              customerServiceUrl={undefined}
               onFavoriteClick={handleFavoriteClick}
               onEditClick={handleEditProduct}
               onDeleteClick={handleDeleteProduct}

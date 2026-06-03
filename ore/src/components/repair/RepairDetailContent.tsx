@@ -18,6 +18,7 @@ type RepairDetailContentProps = {
   onPriceChange?: (value: string) => void;
   onShopNameChange?: (value: string) => void;
   onReceiptImageChange?: (file: File | null) => void;
+  onReceiptImageDelete?: () => void;
 };
 
 export default function RepairDetailContent({
@@ -34,6 +35,7 @@ export default function RepairDetailContent({
   onPriceChange,
   onShopNameChange,
   onReceiptImageChange,
+  onReceiptImageDelete,
 }: RepairDetailContentProps) {
   const [isReceiptDeleteModalOpen, setIsReceiptDeleteModalOpen] =
     useState(false);
@@ -203,7 +205,7 @@ export default function RepairDetailContent({
         onClose={() => setIsReceiptDeleteModalOpen(false)}
         onCancel={() => setIsReceiptDeleteModalOpen(false)}
         onConfirm={() => {
-          onReceiptImageChange?.(null);
+          onReceiptImageDelete?.();
           setIsReceiptDeleteModalOpen(false);
         }}
         cancelText="취소"

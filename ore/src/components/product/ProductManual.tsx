@@ -1,7 +1,7 @@
 import CommonButton from "../common/CommonButton";
 
 type ProductManualProps = {
-  content?: string;
+  content?: string | null;
   onPdfClick?: () => void;
 };
 
@@ -15,17 +15,21 @@ export default function ProductManual({
       <div className="flex items-center justify-between">
         <h3 className="text-body-sb-20 text-primary-01">매뉴얼</h3>
 
-        <CommonButton
-          variant="secondary"
-          className="py-[10px]"
-          onClick={onPdfClick}
-        >
-          PDF 원문
-        </CommonButton>
+        {onPdfClick && (
+          <CommonButton
+            variant="secondary"
+            className="py-[10px]"
+            onClick={onPdfClick}
+          >
+            PDF 원문
+          </CommonButton>
+        )}
       </div>
 
       {/* 내용 */}
-      <div className="flex flex-col gap-[10px] text-body-m-16">{content}</div>
+      <div className="flex flex-col gap-[10px] text-body-m-16">
+        {content || "등록된 매뉴얼 정보가 없습니다."}
+      </div>
     </section>
   );
 }
