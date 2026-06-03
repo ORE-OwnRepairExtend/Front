@@ -32,8 +32,8 @@ type ProductDetailContentProps = {
   status: ProductStatus;
   isFavorite: boolean;
 
-  manualContent?: string;
-  manualPdfUrl?: string;
+  manualContent?: string | null;
+  manualPdfUrl?: string | null;
   warrantyMonths?: number | null;
   warrantyEndDate?: string;
   remainingDays?: number;

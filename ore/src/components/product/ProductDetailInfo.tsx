@@ -23,8 +23,8 @@ type RepairInfoItem = {
 type ProductDetailInfoProps = {
   productId: string;
 
-  manualContent?: string;
-  manualPdfUrl?: string;
+  manualContent?: string | null;
+  manualPdfUrl?: string | null;
 
   purchaseDate: string | null;
   showWarrantyInfo: boolean;

@@ -24,6 +24,10 @@ type ProductDetailResponse = {
   warrantyMonths: number;
   isFavorite: boolean;
   hasRepairHistory: boolean;
+  manual: {
+    manualContent: string;
+  } | null;
+  // 일단은 매뉴얼 null 허용
   createdAt: string;
 };
 
@@ -194,13 +198,15 @@ export default function ProductDetailPage() {
               imageSrc={product.imageUrl ?? defaultProductImage}
               nickname={product.nickname}
               productName={product.productName}
-              category={CATEGORY_LABEL_MAP[product.category] ?? product.category}
+              category={
+                CATEGORY_LABEL_MAP[product.category] ?? product.category
+              }
               purchaseDate={product.purchaseDate}
               status={
                 warranty ? getProductStatus(warranty.remainingDays) : "empty"
               }
               isFavorite={isFavorite}
-              manualContent="호환자인 학습 방법과 공부 전략으로는 능동적 학습, 자기 주도 학습, 그룹 스터디와 장점 등이 있습니다."
+              manualContent={product.manual?.manualContent ?? null}
               manualPdfUrl="https://example.com/manual.pdf"
               warrantyMonths={warranty?.warrantyMonths ?? null}
               warrantyEndDate={warranty?.warrantyEndDate}
