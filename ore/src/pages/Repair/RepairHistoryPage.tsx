@@ -2,7 +2,6 @@ import { useNavigate, useParams } from "react-router-dom";
 import SecondLayout from "../../layout/SecondLayout";
 import Header from "../../components/header/Header";
 import ProductCard from "../../components/common/ProductCard";
-import { mockProductListResponse } from "../../mocks/products";
 import AddButton from "../../components/common/AddButton";
 import RepairHistoryCard from "../../components/repair/RepairHistoryCard";
 import { formatPrice } from "../../utils/formatPrice";
@@ -17,42 +16,59 @@ type RepairHistory = {
   createdAt: string;
 };
 
+type ProductDetail = {
+  productId: string;
+  productName: string;
+  nickname: string;
+  category: string;
+  imageUrl: string | null;
+  modelNumber: string | null;
+  purchaseDate: string | null;
+  warrantyMonths: number | null;
+  isFavorite: boolean;
+  hasRepairHistory: boolean;
+  manual: {
+    manualContent: string;
+  } | null;
+  createdAt: string;
+};
+
 export default function RepairHistoryPage() {
   const navigate = useNavigate();
   const { productId } = useParams();
+
+  const [product, setProduct] = useState<ProductDetail | null>(null);
 
   const [repairHistoryList, setRepairHistoryList] = useState<RepairHistory[]>(
     [],
   );
   const [isLoading, setIsLoading] = useState(true);
 
-  const product = mockProductListResponse.find(
-    (item) => item.productId === productId,
-  );
-
   // todo: 예외처리 디자인 생각
 
   useEffect(() => {
     if (!productId) return;
 
-    const fetchRepairHistoryList = async () => {
+    const fetchData = async () => {
       try {
         setIsLoading(true);
 
-        const response = await api.get<RepairHistory[]>(
-          `/products/${productId}/repairs`,
-        );
+        const [productResponse, repairHistoryResponse] = await Promise.all([
+          api.get<ProductDetail>(`/products/${productId}`),
+          api.get<RepairHistory[]>(`/products/${productId}/repairs`),
+        ]);
 
-        setRepairHistoryList(response.data);
+        setProduct(productResponse.data);
+        setRepairHistoryList(repairHistoryResponse.data);
       } catch (error) {
-        console.error("수리 이력 목록 조회 실패:", error);
-        alert("수리 이력 목록을 불러오지 못했습니다.");
+        console.error("수리 이력 페이지 조회 실패:", error);
+        alert("수리 이력 정보를 불러오지 못했습니다.");
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchRepairHistoryList();
+    fetchData();
   }, [productId]);
 
   if (!product) {
