@@ -39,6 +39,12 @@ type ProductWarrantyResponse = {
   remainingDays: number;
 };
 
+type ProductOfficialManualResponse = {
+  manualUrl: string;
+  manualSummary: string;
+  customerCenter: string;
+};
+
 export default function ProductDetailPage() {
   const navigate = useNavigate();
   const { productId } = useParams();
@@ -48,6 +54,9 @@ export default function ProductDetailPage() {
     null,
   );
   const [isFavorite, setIsFavorite] = useState(false);
+  const [officialManual, setOfficialManual] =
+    useState<ProductOfficialManualResponse | null>(null);
+
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -59,6 +68,7 @@ export default function ProductDetailPage() {
         setIsLoading(true);
         setErrorMessage("");
 
+        // 제품 상세
         const productResponse = await api.get<ProductDetailResponse>(
           `/products/${productId}`,
         );
@@ -66,6 +76,7 @@ export default function ProductDetailPage() {
         setProduct(productResponse.data);
         setIsFavorite(productResponse.data.isFavorite);
 
+        // 보증 정보
         try {
           const warrantyResponse = await api.get<ProductWarrantyResponse>(
             `/products/${productId}/warranty`,
@@ -75,6 +86,18 @@ export default function ProductDetailPage() {
         } catch (warrantyError) {
           console.error("보증 정보 조회 실패:", warrantyError);
           setWarranty(null);
+        }
+
+        // 공식 매뉴얼
+        try {
+          const manualResponse = await api.get<ProductOfficialManualResponse>(
+            `/products/${productId}/manual`,
+          );
+
+          setOfficialManual(manualResponse.data);
+        } catch (manualError) {
+          console.error("공식 매뉴얼 조회 실패:", manualError);
+          setOfficialManual(null);
         }
       } catch (error) {
         console.error("제품 상세 조회 실패:", error);
@@ -207,14 +230,14 @@ export default function ProductDetailPage() {
               }
               isFavorite={isFavorite}
               manualContent={product.manual?.manualContent ?? null}
-              manualPdfUrl="https://example.com/manual.pdf"
+              manualPdfUrl={officialManual?.manualUrl}
               warrantyMonths={warranty?.warrantyMonths ?? null}
               warrantyEndDate={warranty?.warrantyEndDate}
               remainingDays={warranty?.remainingDays}
               maintenanceCategories={maintenanceCategories}
               repairHistories={repairInfoes}
               officialUrl="https://example.com"
-              customerServiceUrl="https://example.com/customer"
+              customerServiceUrl={undefined}
               onFavoriteClick={handleFavoriteClick}
               onEditClick={handleEditProduct}
               onDeleteClick={handleDeleteProduct}

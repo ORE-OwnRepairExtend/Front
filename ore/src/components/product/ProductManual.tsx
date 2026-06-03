@@ -15,13 +15,15 @@ export default function ProductManual({
       <div className="flex items-center justify-between">
         <h3 className="text-body-sb-20 text-primary-01">매뉴얼</h3>
 
-        <CommonButton
-          variant="secondary"
-          className="py-[10px]"
-          onClick={onPdfClick}
-        >
-          PDF 원문
-        </CommonButton>
+        {onPdfClick && (
+          <CommonButton
+            variant="secondary"
+            className="py-[10px]"
+            onClick={onPdfClick}
+          >
+            PDF 원문
+          </CommonButton>
+        )}
       </div>
 
       {/* 내용 */}
