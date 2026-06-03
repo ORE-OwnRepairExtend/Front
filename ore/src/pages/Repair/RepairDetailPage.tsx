@@ -273,7 +273,8 @@ export default function RepairDetailPage() {
     try {
       await api.delete(`/products/${productId}/repairs/${repairId}`);
 
-      navigate(`/products/${productId}/repairs`);
+      setIsModalOpen(false);
+      navigate(`/products/${productId}/repairs`, { replace: true });
     } catch (error) {
       console.error("수리 이력 삭제 실패:", error);
 
@@ -281,13 +282,15 @@ export default function RepairDetailPage() {
         if (error.response?.status === 401) {
           setErrorMessage("인증 정보가 유효하지 않습니다.");
         } else if (error.response?.status === 404) {
-          setErrorMessage("수리 이력을 찾을 수 없습니다.");
+          setErrorMessage("수리 기록을 찾을 수 없습니다.");
         } else {
           setErrorMessage("수리 이력 삭제에 실패했습니다.");
         }
       } else {
         setErrorMessage("알 수 없는 오류가 발생했습니다.");
       }
+
+      setIsModalOpen(false);
     }
   };
 
