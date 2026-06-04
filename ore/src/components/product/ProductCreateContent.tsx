@@ -98,6 +98,8 @@ export default function ProductCreateContent({
   );
 
   const [productImage, setProductImage] = useState<File | null>(null);
+  const [isImageDeleted, setIsImageDeleted] = useState(false);
+  
 
   // const [parts, setParts] = useState<PartItem[]>([]);
 
@@ -169,6 +171,10 @@ export default function ProductCreateContent({
             "Content-Type": "multipart/form-data",
           },
         });
+
+        if (isImageDeleted && !productImage) {
+          await api.delete(`/products/${editProductId}/image`);
+        }
 
         navigate(`/products/${editProductId}`);
         return;
@@ -264,7 +270,16 @@ export default function ProductCreateContent({
           <ProductFormRow label="제품 대표 이미지">
             <ProductImageButton
               imageUrl={editProductData?.imageUrl ?? extractedData?.imageUrl ?? ""}
-              onFileSelect={setProductImage}
+              onFileSelect={(file) => {
+                setProductImage(file);
+
+                if (file) {
+                  setIsImageDeleted(false);
+                }
+              }}
+              onImageDelete={() => {
+                setIsImageDeleted(true);
+              }}
             />
           </ProductFormRow>
 

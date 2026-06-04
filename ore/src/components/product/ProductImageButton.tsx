@@ -6,11 +6,13 @@ import plusPrimaryIcon from "../../assets/icons/plus_primary.svg";
 type ProductImageButtonProps = {
   imageUrl?: string | null;
   onFileSelect?: (file: File | null) => void;
+  onImageDelete?: () => void;
 };
 
 export default function ProductImageButton({
   imageUrl,
   onFileSelect,
+  onImageDelete,
 }: ProductImageButtonProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>(imageUrl ?? "");
@@ -36,6 +38,7 @@ export default function ProductImageButton({
   const handleDelete = () => {
     setPreviewUrl("");
     onFileSelect?.(null);
+    onImageDelete?.();
 
     if (inputRef.current) {
       inputRef.current.value = "";
