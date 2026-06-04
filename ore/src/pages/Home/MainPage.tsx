@@ -8,6 +8,9 @@ import { getProductStatus } from "../../utils/productStatus";
 import ProductStatistics from "../../components/statistics/ProductStatistics";
 import ProductRegisterModal from "../../components/common/ProductRegisterModal";
 import type { ProductStatus } from "../../types/product";
+import OcrConfirmModal, {
+  type OcrConfirmForm,
+} from "../../components/product/OcrConfirmModal";
 
 type ProductListItem = {
   productId: string;
@@ -48,6 +51,19 @@ type Product = {
   createdAt: string;
   warrantyMonths: number;
   warrantyStatus: ProductStatus;
+};
+
+type SourceType = "RECEIPT" | "SMS" | "STICKER" | "MANUAL";
+
+type ProductSourceResponse = {
+  sourceId: string;
+  imageUrl: string;
+  ocrText: string | null;
+  brandName: string | null;
+  productName: string | null;
+  modelNumber: string | null;
+  sourceType: SourceType;
+  createdAt: string;
 };
 
 type StatisticsStatus = "expired" | "danger" | "imminent" | "valid" | "none";
@@ -105,6 +121,18 @@ export default function MainPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const [registerModalKey, setRegisterModalKey] = useState(0);
+
+  const [ocrResult, setOcrResult] = useState<ProductSourceResponse | null>(
+    null,
+  );
+
+  const [ocrForm, setOcrForm] = useState<OcrConfirmForm>({
+    brandName: "",
+    productName: "",
+    modelNumber: "",
+  });
 
   const [isDown, setIsDown] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -246,6 +274,7 @@ export default function MainPage() {
                   onMouseDown={(e) => e.stopPropagation()}
                   onClick={() => {
                     if (isDragging) return;
+                    setRegisterModalKey((prev) => prev + 1);
                     setIsModalOpen(true);
                   }}
                   className="
@@ -385,6 +414,7 @@ export default function MainPage() {
       </div>
 
       <ProductRegisterModal
+        key={registerModalKey}
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onUploadSubmit={async (file, sourceType) => {
@@ -394,7 +424,7 @@ export default function MainPage() {
             formData.append("image", file);
             formData.append("sourceType", sourceType);
 
-            const uploadResponse = await api.post(
+            const uploadResponse = await api.post<ProductSourceResponse>(
               "/product-sources",
               formData,
               {
@@ -404,14 +434,13 @@ export default function MainPage() {
               },
             );
 
-            const sourceId = uploadResponse.data.sourceId;
+            const uploadedData = uploadResponse.data;
 
-            const resultResponse = await api.get(
-              `/product-sources/${sourceId}`,
-            );
-
-            navigate("/products/new", {
-              state: resultResponse.data,
+            setOcrResult(uploadedData);
+            setOcrForm({
+              brandName: uploadedData.brandName ?? "",
+              productName: uploadedData.productName ?? "",
+              modelNumber: uploadedData.modelNumber ?? "",
             });
 
             setIsModalOpen(false);
@@ -423,6 +452,43 @@ export default function MainPage() {
         onManualClick={() => {
           navigate("/products/new");
           setIsModalOpen(false);
+        }}
+      />
+
+      <OcrConfirmModal
+        open={!!ocrResult}
+        form={ocrForm}
+        onChange={(key, value) => {
+          setOcrForm((prev) => ({
+            ...prev,
+            [key]: value,
+          }));
+        }}
+        onClose={() => {
+          setOcrResult(null);
+        }}
+        onSubmit={async () => {
+          if (!ocrResult) return;
+
+          try {
+            const response = await api.patch<ProductSourceResponse>(
+              `/product-sources/${ocrResult.sourceId}`,
+              {
+                brandName: ocrForm.brandName,
+                productName: ocrForm.productName,
+                modelNumber: ocrForm.modelNumber,
+              },
+            );
+
+            navigate("/products/new", {
+              state: response.data,
+            });
+
+            setOcrResult(null);
+          } catch (error) {
+            console.error("OCR 분석 제품 정보 수정 실패:", error);
+            alert("제품 정보 확인에 실패했습니다.");
+          }
         }}
       />
     </MainLayout>
