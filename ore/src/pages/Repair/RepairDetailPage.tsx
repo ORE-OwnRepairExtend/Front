@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import ProductCard from "../../components/common/ProductCard";
 import Header from "../../components/header/Header";
 import RepairDetailContent from "../../components/repair/RepairDetailContent";
@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import Modal from "../../components/common/Modal";
 import { api } from "../../api/api";
 import axios from "axios";
+import RepairAlarmCreateModal from "../../components/repair/RepairAlarmCreateModal";
 
 type RepairDetailResponse = {
   repairId: string;
@@ -61,9 +62,18 @@ type RepairDetailState = {
 export default function RepairDetailPage() {
   const navigate = useNavigate();
   const { productId, repairId } = useParams();
+  const location = useLocation();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+
+  const [isAlarmConfirmModalOpen, setIsAlarmConfirmModalOpen] = useState(false);
+  const [isAlarmCreateModalOpen, setIsAlarmCreateModalOpen] = useState(false);
+
+  const [alarmTitle, setAlarmTitle] = useState("");
+  const [alarmDate, setAlarmDate] = useState("");
+
+  const [isAlarmSubmitting, setIsAlarmSubmitting] = useState(false);
 
   const [product, setProduct] = useState<ProductDetailResponse | null>(null);
 
@@ -76,6 +86,11 @@ export default function RepairDetailPage() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+
+  const [alertModal, setAlertModal] = useState({
+    open: false,
+    message: "",
+  });
 
   useEffect(() => {
     const fetchRepairDetail = async () => {
@@ -131,6 +146,17 @@ export default function RepairDetailPage() {
 
     fetchRepairDetail();
   }, [productId, repairId]);
+
+  useEffect(() => {
+    if (location.state?.showAlarmConfirmModal) {
+      setIsAlarmConfirmModalOpen(true);
+
+      navigate(location.pathname, {
+        replace: true,
+        state: {},
+      });
+    }
+  }, [location.state, location.pathname, navigate]);
 
   const [editForm, setEditForm] = useState<RepairEditForm>({
     title: "",
@@ -294,6 +320,42 @@ export default function RepairDetailPage() {
     }
   };
 
+  // 알림 등록 함수
+  const handleCreateRepairReminder = async () => {
+    if (!productId || !repairId || isAlarmSubmitting) return;
+
+    if (!alarmTitle || !alarmDate) {
+      setAlertModal({
+        open: true,
+        message: "알림 정보를 입력해주세요.",
+      });
+      return;
+    }
+
+    try {
+      setIsAlarmSubmitting(true);
+
+      await api.post(`/products/${productId}/repair-reminders`, {
+        title: alarmTitle,
+        remindAt: alarmDate,
+        repairId,
+      });
+
+      setIsAlarmCreateModalOpen(false);
+      setAlarmTitle("");
+      setAlarmDate("");
+    } catch (error) {
+      console.error("수리 알림 등록 실패:", error);
+
+      setAlertModal({
+        open: true,
+        message: "수리 알림 등록에 실패했습니다.",
+      });
+    } finally {
+      setIsAlarmSubmitting(false);
+    }
+  };
+
   // todo: 예외처리 디자인 생각
   if (isLoading) {
     return (
@@ -409,6 +471,35 @@ export default function RepairDetailPage() {
         onConfirm={handleDelete}
         cancelText="취소"
         confirmText="삭제"
+      />
+      <Modal
+        open={isAlarmConfirmModalOpen}
+        title={"해당 제품에 대한\n추가 알림을 등록 하시겠습니까?"}
+        onClose={() => setIsAlarmConfirmModalOpen(false)}
+        onCancel={() => setIsAlarmConfirmModalOpen(false)}
+        onConfirm={() => {
+          setIsAlarmConfirmModalOpen(false);
+          setIsAlarmCreateModalOpen(true);
+        }}
+        cancelText="취소"
+        confirmText="등록"
+      />
+
+      <RepairAlarmCreateModal
+        open={isAlarmCreateModalOpen}
+        alarmTitle={alarmTitle}
+        alarmDate={alarmDate}
+        onChangeAlarmTitle={setAlarmTitle}
+        onChangeAlarmDate={setAlarmDate}
+        onClose={() => setIsAlarmCreateModalOpen(false)}
+        onSubmit={handleCreateRepairReminder}
+      />
+      <Modal
+        open={alertModal.open}
+        type="alert"
+        title={alertModal.message}
+        onClose={() => setAlertModal({ open: false, message: "" })}
+        onConfirm={() => setAlertModal({ open: false, message: "" })}
       />
     </SecondLayout>
   );

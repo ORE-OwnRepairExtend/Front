@@ -5,6 +5,7 @@ import FavoriteCard from "../components/profile/FavoriteCard";
 import { api } from "../api/api";
 import type { ProductWithStatus } from "../types/product";
 import type { ApiProductCategory } from "../types/category";
+import { getProductStatus } from "../utils/productStatus";
 
 type MainLayoutProps = {
   children: ReactNode;
@@ -27,6 +28,7 @@ type ProductListResponse = {
   isFavorite: boolean;
   hasRepairHistory: boolean;
   purchaseDate: string;
+  remainingDays: number | null;
   createdAt: string;
 };
 
@@ -68,7 +70,10 @@ export default function MainLayout({ children }: MainLayoutProps) {
             purchaseDate: product.purchaseDate,
             createdAt: product.createdAt,
             category: product.category,
-            status: "valid" as const, // todo: 보증 정보 기준 계산
+            status:
+              product.remainingDays === null
+                ? "empty"
+                : getProductStatus(product.remainingDays),
           }),
         );
 
