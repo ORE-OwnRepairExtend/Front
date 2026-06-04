@@ -2,11 +2,13 @@ import notificationIcon from "../../assets/icons/notification.svg";
 
 type NotificationButtonProps = {
   hasUnread?: boolean;
+  unreadCount?: number;
   onClick?: () => void;
 };
 
 export default function NotificationButton({
   hasUnread = false,
+  unreadCount = 0,
   onClick,
 }: NotificationButtonProps) {
   return (
@@ -32,12 +34,17 @@ export default function NotificationButton({
         <span
           className="
             absolute
-            top-[-2px] right-[-2px]
-            w-[10px] h-[10px]
+            top-[-6px] right-[-6px]
+            flex h-[18px] min-w-[18px]
+            items-center justify-center
             rounded-full
             bg-point-01
+            px-[5px]
+            text-[10px] font-bold text-white
           "
-        />
+        >
+          {unreadCount > 99 ? "99+" : unreadCount}
+        </span>
       )}
     </button>
   );
