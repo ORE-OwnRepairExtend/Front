@@ -7,7 +7,7 @@ import CommonButton from "../../components/common/CommonButton";
 import Modal from "../../components/common/Modal";
 import { useNotificationStore } from "../../store/notificationStore";
 import { api } from "../../api/api";
-import { readNotification } from "../../api/notification";
+import { readNotification, readAllNotifications } from "../../api/notification";
 
 import checkedIcon from "../../assets/checked.svg";
 import uncheckedIcon from "../../assets/unchecked.svg";
@@ -135,8 +135,13 @@ export default function NotificationPage() {
   };
 
   // 전체 읽음
-  const handleAllRead = () => {
-    markAllAsRead();
+  const handleAllRead = async () => {
+    try {
+      await readAllNotifications();
+      markAllAsRead();
+    } catch (error) {
+      console.error("알림 전체 읽음 처리 실패:", error);
+    }
   };
 
   return (
