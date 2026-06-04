@@ -8,7 +8,9 @@ import AddButton from "../../components/common/AddButton";
 import ProductCard from "../../components/common/ProductCard";
 import ProductRegisterModal from "../../components/common/ProductRegisterModal";
 import { productCategories as categories } from "../../constants/productCategories";
-
+import OcrConfirmModal, {
+  type OcrConfirmForm,
+} from "../../components/product/OcrConfirmModal";
 
 type Product = {
   productId: string;
@@ -22,13 +24,38 @@ type Product = {
   createdAt: string;
 };
 
+type SourceType = "RECEIPT" | "SMS" | "STICKER" | "MANUAL";
+
+type ProductSourceResponse = {
+  sourceId: string;
+  imageUrl: string;
+  ocrText: string | null;
+  brandName: string | null;
+  productName: string | null;
+  modelNumber: string | null;
+  sourceType: SourceType;
+  createdAt: string;
+};
+
 export default function ProductListPage() {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState(0);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const [ocrResult, setOcrResult] = useState<ProductSourceResponse | null>(
+    null,
+  );
+
+  const [ocrForm, setOcrForm] = useState<OcrConfirmForm>({
+    brandName: "",
+    productName: "",
+    modelNumber: "",
+  });
+
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  const [registerModalKey, setRegisterModalKey] = useState(0);
 
   const navigate = useNavigate();
 
@@ -85,27 +112,27 @@ export default function ProductListPage() {
     fetchProducts();
   }, []);
 
-const filteredProducts = useMemo(() => {
-  return products.filter((product) => {
-    const keyword = search.trim().toLowerCase();
+  const filteredProducts = useMemo(() => {
+    return products.filter((product) => {
+      const keyword = search.trim().toLowerCase();
 
-    const matchesSearch =
-      !keyword ||
-      product.name.toLowerCase().includes(keyword) ||
-      product.nickname.toLowerCase().includes(keyword);
+      const matchesSearch =
+        !keyword ||
+        product.name.toLowerCase().includes(keyword) ||
+        product.nickname.toLowerCase().includes(keyword);
 
-    const selectedCategory = categories[selected];
+      const selectedCategory = categories[selected];
 
-    const matchesCategory =
-      selectedCategory.value === "ALL"
-        ? true
-        : selectedCategory.value === "FAVORITE"
-          ? product.isFavorite
-          : product.category === selectedCategory.value;
+      const matchesCategory =
+        selectedCategory.value === "ALL"
+          ? true
+          : selectedCategory.value === "FAVORITE"
+            ? product.isFavorite
+            : product.category === selectedCategory.value;
 
-    return matchesSearch && matchesCategory;
-  });
-}, [products, search, selected]);
+      return matchesSearch && matchesCategory;
+    });
+  }, [products, search, selected]);
 
   return (
     <SecondLayout>
@@ -191,26 +218,32 @@ const filteredProducts = useMemo(() => {
         {/* 버튼 */}
         <div className="flex justify-end pr-[30px]">
           <div className="w-[174px]">
-            <AddButton title="제품 등록" onClick={() => setIsModalOpen(true)} />
+            <AddButton
+              title="제품 등록"
+              onClick={() => {
+                setRegisterModalKey((prev) => prev + 1);
+                setIsModalOpen(true);
+              }}
+            />
           </div>
         </div>
       </div>
 
       {/* 모달 */}
       <ProductRegisterModal
+        key={registerModalKey}
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onUploadSubmit={async (file, sourceType) => {
           try {
             const accessToken = localStorage.getItem("accessToken");
 
-            // 이미지 업로드
             const formData = new FormData();
 
             formData.append("image", file);
             formData.append("sourceType", sourceType);
 
-            const uploadResponse = await api.post(
+            const uploadResponse = await api.post<ProductSourceResponse>(
               "/product-sources",
               formData,
               {
@@ -221,21 +254,13 @@ const filteredProducts = useMemo(() => {
               },
             );
 
-            const sourceId = uploadResponse.data.sourceId;
+            const uploadedData = uploadResponse.data;
 
-            // OCR 결과 조회
-            const resultResponse = await api.get(
-              `/product-sources/${sourceId}`,
-              {
-                headers: {
-                  Authorization: `Bearer ${accessToken}`,
-                },
-              },
-            );
-
-            // 제품 등록 페이지 이동
-            navigate("/products/new", {
-              state: resultResponse.data,
+            setOcrResult(uploadedData);
+            setOcrForm({
+              brandName: uploadedData.brandName ?? "",
+              productName: uploadedData.productName ?? "",
+              modelNumber: uploadedData.modelNumber ?? "",
             });
 
             setIsModalOpen(false);
@@ -247,6 +272,49 @@ const filteredProducts = useMemo(() => {
         onManualClick={() => {
           navigate("/products/new");
           setIsModalOpen(false);
+        }}
+      />
+      <OcrConfirmModal
+        open={!!ocrResult}
+        form={ocrForm}
+        onChange={(key, value) => {
+          setOcrForm((prev) => ({
+            ...prev,
+            [key]: value,
+          }));
+        }}
+        onClose={() => {
+          setOcrResult(null);
+        }}
+        onSubmit={async () => {
+          if (!ocrResult) return;
+
+          try {
+            const accessToken = localStorage.getItem("accessToken");
+
+            const response = await api.patch<ProductSourceResponse>(
+              `/product-sources/${ocrResult.sourceId}`,
+              {
+                brandName: ocrForm.brandName,
+                productName: ocrForm.productName,
+                modelNumber: ocrForm.modelNumber,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${accessToken}`,
+                },
+              },
+            );
+
+            navigate("/products/new", {
+              state: response.data,
+            });
+
+            setOcrResult(null);
+          } catch (error) {
+            console.error("OCR 분석 제품 정보 수정 실패:", error);
+            alert("제품 정보 확인에 실패했습니다.");
+          }
         }}
       />
     </SecondLayout>
