@@ -73,6 +73,8 @@ export default function RepairDetailPage() {
   const [alarmTitle, setAlarmTitle] = useState("");
   const [alarmDate, setAlarmDate] = useState("");
 
+  const [isAlarmSubmitting, setIsAlarmSubmitting] = useState(false);
+
   const [product, setProduct] = useState<ProductDetailResponse | null>(null);
 
   const [repairDetail, setRepairDetail] = useState<RepairDetailState | null>(
@@ -84,6 +86,11 @@ export default function RepairDetailPage() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
+
+  const [alertModal, setAlertModal] = useState({
+    open: false,
+    message: "",
+  });
 
   useEffect(() => {
     const fetchRepairDetail = async () => {
@@ -313,6 +320,47 @@ export default function RepairDetailPage() {
     }
   };
 
+  // 알림 등록 함수
+  const handleCreateRepairReminder = async () => {
+    if (!productId || !repairId || isAlarmSubmitting) return;
+
+    if (!alarmTitle || !alarmDate) {
+      setAlertModal({
+        open: true,
+        message: "알림 정보를 입력해주세요.",
+      });
+      return;
+    }
+
+    try {
+      setIsAlarmSubmitting(true);
+
+      await api.post(`/products/${productId}/repair-reminders`, {
+        title: alarmTitle,
+        remindAt: alarmDate,
+        repairId,
+      });
+
+      setIsAlarmCreateModalOpen(false);
+      setAlarmTitle("");
+      setAlarmDate("");
+
+      setAlertModal({
+        open: true,
+        message: "알림이 등록되었습니다.",
+      });
+    } catch (error) {
+      console.error("수리 알림 등록 실패:", error);
+
+      setAlertModal({
+        open: true,
+        message: "수리 알림 등록에 실패했습니다.",
+      });
+    } finally {
+      setIsAlarmSubmitting(false);
+    }
+  };
+
   // todo: 예외처리 디자인 생각
   if (isLoading) {
     return (
@@ -431,14 +479,14 @@ export default function RepairDetailPage() {
       />
       <Modal
         open={isAlarmConfirmModalOpen}
-        title={"해당 제품에 대한\n추가 알림을등록 하시겠습니까?"}
+        title={"해당 제품에 대한\n추가 알림을 등록 하시겠습니까?"}
         onClose={() => setIsAlarmConfirmModalOpen(false)}
         onCancel={() => setIsAlarmConfirmModalOpen(false)}
         onConfirm={() => {
           setIsAlarmConfirmModalOpen(false);
           setIsAlarmCreateModalOpen(true);
         }}
-        cancelText="아니오"
+        cancelText="취소"
         confirmText="등록"
       />
 
@@ -449,16 +497,14 @@ export default function RepairDetailPage() {
         onChangeAlarmTitle={setAlarmTitle}
         onChangeAlarmDate={setAlarmDate}
         onClose={() => setIsAlarmCreateModalOpen(false)}
-        onSubmit={() => {
-          console.log("알림 등록", {
-            productId,
-            repairId,
-            alarmTitle,
-            alarmDate,
-          });
-
-          setIsAlarmCreateModalOpen(false);
-        }}
+        onSubmit={handleCreateRepairReminder}
+      />
+      <Modal
+        open={alertModal.open}
+        type="alert"
+        title={alertModal.message}
+        onClose={() => setAlertModal({ open: false, message: "" })}
+        onConfirm={() => setAlertModal({ open: false, message: "" })}
       />
     </SecondLayout>
   );
