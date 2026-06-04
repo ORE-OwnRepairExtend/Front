@@ -6,24 +6,21 @@ const STATUS_LABEL: Record<ProductStatus, string> = {
   imminent: "임박",
   danger: "위험",
   expired: "만료",
+  empty: "없음",
 };
 
 export function getWarrantyExpiredDate(
-  purchaseDate: string,
-  warrantyMonths: number,
+  warrantyEndDate: string,
 ): Date {
-  const expiredDate = new Date(purchaseDate);
-  expiredDate.setMonth(expiredDate.getMonth() + warrantyMonths);
-
-  return expiredDate;
+  return new Date(warrantyEndDate);
 }
 
 export function getWarrantyTimeline(
   purchaseDate: string,
-  warrantyMonths: number,
+  warrantyEndDate: string,
 ): WarrantyTimelineItem[] {
   const purchase = new Date(purchaseDate);
-  const expired = getWarrantyExpiredDate(purchaseDate, warrantyMonths);
+  const expired = getWarrantyExpiredDate(warrantyEndDate);
 
   const imminent = new Date(expired);
   imminent.setDate(imminent.getDate() - 31);
@@ -57,10 +54,10 @@ export function getWarrantyTimeline(
 
 export function getVisibleWarrantyTimeline(
   purchaseDate: string,
-  warrantyMonths: number,
+  warrantyEndDate: string,
   today: Date = new Date(),
 ): WarrantyTimelineItem[] {
-  const timeline = getWarrantyTimeline(purchaseDate, warrantyMonths);
+  const timeline = getWarrantyTimeline(purchaseDate, warrantyEndDate);
 
   return timeline.filter((item) => {
     const statusDate = new Date(item.date.replaceAll(".", "-"));

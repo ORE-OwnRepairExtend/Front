@@ -89,13 +89,17 @@ export default function ProductCreateContent({
   );
 
   const [warrantyPeriod, setWarrantyPeriod] = useState(
-    editProductData?.warrantyMonths ? String(editProductData.warrantyMonths) : "",
+    editProductData?.warrantyMonths
+      ? String(editProductData.warrantyMonths)
+      : "",
   );
   const [noWarranty, setNoWarranty] = useState(
     editProductData?.warrantyMonths === null,
   );
 
   const [productImage, setProductImage] = useState<File | null>(null);
+  const [isImageDeleted, setIsImageDeleted] = useState(false);
+  
 
   // const [parts, setParts] = useState<PartItem[]>([]);
 
@@ -133,12 +137,15 @@ export default function ProductCreateContent({
     let createdProductId: string | null = null;
 
     try {
+      const category =
+        CATEGORY_MAP[selectedCategory as keyof typeof CATEGORY_MAP];
+
       const requestBody = {
         ...(extractedData?.sourceId && {
           sourceId: extractedData.sourceId,
         }),
         name: productName.trim(),
-        category: CATEGORY_MAP[selectedCategory as keyof typeof CATEGORY_MAP],
+        category,
         nickname: nickname.trim() || productName.trim(),
         purchaseDate: noPurchaseDate ? null : purchaseDate,
         warrantyMonths: noWarranty ? null : Number(warrantyPeriod),
@@ -153,10 +160,7 @@ export default function ProductCreateContent({
         const formData = new FormData();
 
         formData.append("nickname", nickname.trim() || productName.trim());
-        formData.append(
-          "category",
-          CATEGORY_MAP[selectedCategory as keyof typeof CATEGORY_MAP],
-        );
+        formData.append("category", category);
 
         if (productImage) {
           formData.append("image", productImage);
@@ -167,6 +171,10 @@ export default function ProductCreateContent({
             "Content-Type": "multipart/form-data",
           },
         });
+
+        if (isImageDeleted && !productImage) {
+          await api.delete(`/products/${editProductId}/image`);
+        }
 
         navigate(`/products/${editProductId}`);
         return;
@@ -184,7 +192,11 @@ export default function ProductCreateContent({
         const formData = new FormData();
         formData.append("image", productImage);
 
-        await api.post(`/products/${createdProductId}/image`, formData);
+        await api.post(`/products/${createdProductId}/image`, formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
       }
 
       navigate(`/products/${createdProductId}`);
@@ -256,7 +268,19 @@ export default function ProductCreateContent({
 
           {/* 제품 대표 이미지 */}
           <ProductFormRow label="제품 대표 이미지">
-            <ProductImageButton onFileSelect={setProductImage} />
+            <ProductImageButton
+              imageUrl={editProductData?.imageUrl ?? extractedData?.imageUrl ?? ""}
+              onFileSelect={(file) => {
+                setProductImage(file);
+
+                if (file) {
+                  setIsImageDeleted(false);
+                }
+              }}
+              onImageDelete={() => {
+                setIsImageDeleted(true);
+              }}
+            />
           </ProductFormRow>
 
           {/* 매뉴얼 */}
@@ -293,6 +317,8 @@ export default function ProductCreateContent({
               <ProductCheckbox
                 checked={noPurchaseDate}
                 onChange={(checked) => {
+                  if (isEditMode) return;
+
                   setNoPurchaseDate(checked);
 
                   if (checked) {
@@ -322,6 +348,8 @@ export default function ProductCreateContent({
               <ProductCheckbox
                 checked={noWarranty}
                 onChange={(checked) => {
+                  if (isEditMode) return;
+
                   setNoWarranty(checked);
 
                   if (checked) {

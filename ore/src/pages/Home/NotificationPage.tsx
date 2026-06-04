@@ -5,74 +5,50 @@ import NotificationCard from "../../components/common/NotificationCard";
 import Header from "../../components/header/Header";
 import CommonButton from "../../components/common/CommonButton";
 import Modal from "../../components/common/Modal";
-import { getProductStatus } from "../../utils/productStatus";
 import { useNotificationStore } from "../../store/notificationStore";
+import { api } from "../../api/api";
+import { readNotification, readAllNotifications } from "../../api/notification";
 
 import checkedIcon from "../../assets/checked.svg";
 import uncheckedIcon from "../../assets/unchecked.svg";
 
-const mockNotifications = [
-  {
-    id: 1,
-    productId: 101,
-    title: "카메라",
-    subtitle: "SONY-RX1R III 컴팩트 카메라",
-    message: "해당 제품의 보증상태가 만료되었습니다.",
-    date: "2026-03-16",
-    isRead: false,
-    remainingDays: -1,
-  },
-  {
-    id: 2,
-    productId: 102,
-    title: "카메라",
-    subtitle: "SONY-RX1R III 컴팩트 카메라",
-    message: "해당 제품의 보증상태가 위험으로 변경되었습니다.",
-    date: "2026-03-15",
-    isRead: true,
-    remainingDays: 3,
-  },
-  {
-    id: 3,
-    productId: 103,
-    title: "카메라",
-    subtitle: "SONY-RX1R III 컴팩트 카메라",
-    message: "해당 제품의 보증상태가 임박으로 변경되었습니다.",
-    date: "2026-03-15",
-    isRead: true,
-    remainingDays: 20,
-  },
-  {
-    id: 4,
-    productId: 104,
-    title: "노트북",
-    subtitle: "MacBook Pro 14",
-    message: "해당 제품의 보증상태가 임박으로 변경되었습니다.",
-    date: "2026-03-14",
-    isRead: false,
-    remainingDays: 10,
-  },
-  {
-    id: 5,
-    productId: 105,
-    title: "휴대폰",
-    subtitle: "iPhone 15",
-    message: "해당 제품의 보증상태가 위험으로 변경되었습니다.",
-    date: "2026-03-13",
-    isRead: false,
-    remainingDays: 2,
-  },
-  {
-    id: 6,
-    productId: 106,
-    title: "냉장고",
-    subtitle: "삼성 냉장고",
-    message: "해당 제품의 보증상태가 만료되었습니다.",
-    date: "2026-03-12",
-    isRead: true,
-    remainingDays: -5,
-  },
-];
+type ApiNotificationStatus = "IMMINENT" | "DANGER" | "EXPIRED";
+
+type ApiNotification = {
+  notificationId: string;
+  productId: string;
+  productName: string;
+  productNickname: string;
+  reminderId: string | null;
+  notificationType: string;
+  status: ApiNotificationStatus;
+  message: string;
+  isRead: boolean;
+  createdAt: string;
+};
+
+type NotificationStatus = "imminent" | "danger" | "expired";
+
+type NotificationItem = {
+  id: string;
+  productId: string;
+  title: string;
+  subtitle: string;
+  message: string;
+  date: string;
+  isRead: boolean;
+  status: NotificationStatus;
+};
+
+const statusMap: Record<ApiNotificationStatus, NotificationStatus> = {
+  IMMINENT: "imminent",
+  DANGER: "danger",
+  EXPIRED: "expired",
+};
+
+const formatNotificationDate = (createdAt: string) => {
+  return createdAt.split("T")[0];
+};
 
 export default function NotificationPage() {
   const navigate = useNavigate();
@@ -86,24 +62,57 @@ export default function NotificationPage() {
   } = useNotificationStore();
 
   const [isSelectMode, setIsSelectMode] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // 최초 데이터 세팅
   useEffect(() => {
-    if (notifications.length === 0) {
-      setNotifications(mockNotifications);
-    }
-  }, []);
+    const fetchNotifications = async () => {
+      try {
+        setIsLoading(true);
+
+        const response = await api.get<ApiNotification[]>("/notifications");
+
+        const mappedNotifications: NotificationItem[] = response.data.map(
+          (item) => ({
+            id: item.notificationId,
+            productId: item.productId,
+            title: item.productName,
+            subtitle: item.productNickname,
+            message: item.message,
+            date: formatNotificationDate(item.createdAt),
+            isRead: item.isRead,
+            status: statusMap[item.status] ?? "imminent",
+          }),
+        );
+
+        setNotifications(mappedNotifications);
+      } catch (error) {
+        console.error("알림 목록 조회 실패:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchNotifications();
+  }, [setNotifications]);
 
   // 읽음 처리
-  const handleRead = (id: number) => {
+  // 읽음 처리
+  const handleRead = async (id: string) => {
     if (isSelectMode) return;
-    markAsRead(id);
+
+    try {
+      await readNotification(id);
+      markAsRead(id);
+    } catch (error) {
+      console.error("알림 읽음 처리 실패:", error);
+    }
   };
 
   // 선택 토글
-  const toggleSelect = (id: number) => {
+  const toggleSelect = (id: string) => {
     setSelectedIds((prev) =>
       prev.includes(id) ? prev.filter((v) => v !== id) : [...prev, id],
     );
@@ -126,8 +135,13 @@ export default function NotificationPage() {
   };
 
   // 전체 읽음
-  const handleAllRead = () => {
-    markAllAsRead();
+  const handleAllRead = async () => {
+    try {
+      await readAllNotifications();
+      markAllAsRead();
+    } catch (error) {
+      console.error("알림 전체 읽음 처리 실패:", error);
+    }
   };
 
   return (
@@ -138,19 +152,16 @@ export default function NotificationPage() {
         {/* 리스트 */}
         <div className="flex-1 flex flex-col overflow-hidden">
           <div className="flex flex-col gap-[20px] px-[20px] overflow-y-auto no-scrollbar">
-            {notifications
-              .map((item) => ({
-                ...item,
-                status: getProductStatus(item.remainingDays),
-              }))
-              .filter(
-                (
-                  item,
-                ): item is typeof item & {
-                  status: Exclude<typeof item.status, "valid" | "empty">;
-                } => item.status !== "valid" && item.status !== "empty",
-              )
-              .map((item) => {
+            {isLoading ? (
+              <div className="flex flex-1 items-center justify-center text-body-m-14 text-neutral-02">
+                알림을 불러오는 중입니다.
+              </div>
+            ) : notifications.length === 0 ? (
+              <div className="flex flex-1 items-center justify-center text-body-m-14 text-neutral-02">
+                등록된 알림이 없습니다.
+              </div>
+            ) : (
+              notifications.map((item) => {
                 const isSelected = selectedIds.includes(item.id);
 
                 return (
@@ -179,19 +190,21 @@ export default function NotificationPage() {
                         date={item.date}
                         isRead={item.isRead}
                         status={item.status}
-                        onClick={() =>
-                          isSelectMode
-                            ? toggleSelect(item.id)
-                            : (() => {
-                                handleRead(item.id);
-                                navigate(`/products/${item.productId}`);
-                              })()
-                        }
+                        onClick={async () => {
+                          if (isSelectMode) {
+                            toggleSelect(item.id);
+                            return;
+                          }
+
+                          await handleRead(item.id);
+                          navigate(`/products/${item.productId}`);
+                        }}
                       />
                     </div>
                   </div>
                 );
-              })}
+              })
+            )}
           </div>
         </div>
 

@@ -30,10 +30,18 @@ type ProductDetail = {
   modelNumber: string;
   purchaseDate?: string;
   puchaseDate?: string;
-  warrantyMonths: number;
+  warrantyMonths?: number;
   isFavorite: boolean;
   hasRepairHistory: boolean;
   createdAt: string;
+};
+
+type WarrantyInfo = {
+  productId: string;
+  purchaseDate: string;
+  warrantyMonths: number;
+  warrantyEndDate: string;
+  remainingDays: number;
 };
 
 type Product = {
@@ -47,6 +55,8 @@ type Product = {
   purchaseDate: string;
   createdAt: string;
   warrantyMonths: number;
+  warrantyEndDate: string | null;
+  remainingDays: number | null;
   warrantyStatus: ProductStatus;
 };
 
@@ -57,45 +67,26 @@ type StatisticsProduct = Omit<Product, "warrantyStatus"> & {
   warrantyStatus: StatisticsStatus;
 };
 
-const getWarrantyStatus = (
-  purchaseDate: string,
-  warrantyMonths: number,
-): ProductStatus => {
-  if (!purchaseDate || !warrantyMonths) return "empty";
-
-  const purchase = new Date(purchaseDate);
-  const expiredDate = new Date(purchase);
-
-  expiredDate.setMonth(expiredDate.getMonth() + warrantyMonths);
-
-  const today = new Date();
-
-  const diffTime = expiredDate.getTime() - today.getTime();
-  const remainingDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-  return getProductStatus(remainingDays);
-};
-
-const getRemainingDays = (
-  purchaseDate: string,
-  warrantyMonths: number,
-): number | null => {
-  if (!purchaseDate || !warrantyMonths) return null;
-
-  const purchase = new Date(purchaseDate);
-  const expiredDate = new Date(purchase);
-
-  expiredDate.setMonth(expiredDate.getMonth() + warrantyMonths);
-
-  const today = new Date();
-
-  const diffTime = expiredDate.getTime() - today.getTime();
-
-  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-};
-
 const convertToStatisticsStatus = (status: ProductStatus): StatisticsStatus => {
   return status === "empty" ? "none" : status;
+};
+
+const getWarrantyStatusText = (status: ProductStatus) => {
+  if (status === "expired") return "보증만료";
+  if (status === "danger") return "보증위험";
+  if (status === "imminent") return "보증임박";
+  if (status === "empty") return "보증없음";
+
+  return "보증유효";
+};
+
+const getWarrantyStatusColor = (status: ProductStatus) => {
+  if (status === "expired") return "bg-gray-01";
+  if (status === "danger") return "bg-point-01";
+  if (status === "imminent") return "bg-point-02";
+  if (status === "empty") return "bg-gray-02";
+
+  return "bg-point-03";
 };
 
 export default function MainPage() {
@@ -111,6 +102,20 @@ export default function MainPage() {
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
 
+  const fetchWarrantyInfo = async (
+    productId: string,
+  ): Promise<WarrantyInfo | null> => {
+    try {
+      const response = await api.get<WarrantyInfo>(
+        `/products/${productId}/warranty`,
+      );
+
+      return response.data;
+    } catch {
+      return null;
+    }
+  };
+
   const fetchProducts = async () => {
     try {
       setIsLoading(true);
@@ -125,8 +130,25 @@ export default function MainPage() {
 
           const detail = detailResponse.data;
 
+          const hasWarranty =
+            typeof detail.warrantyMonths === "number" &&
+            detail.warrantyMonths > 0;
+
+          const warranty = hasWarranty
+            ? await fetchWarrantyInfo(product.productId)
+            : null;
+
           const purchaseDate =
-            detail.purchaseDate ?? detail.puchaseDate ?? product.purchaseDate;
+            warranty?.purchaseDate ??
+            detail.purchaseDate ??
+            detail.puchaseDate ??
+            product.purchaseDate ??
+            "";
+
+          const warrantyMonths =
+            warranty?.warrantyMonths ?? detail.warrantyMonths ?? 0;
+
+          const remainingDays = warranty?.remainingDays ?? null;
 
           return {
             productId: detail.productId,
@@ -138,11 +160,11 @@ export default function MainPage() {
             hasRepairHistory: detail.hasRepairHistory,
             purchaseDate,
             createdAt: detail.createdAt,
-            warrantyMonths: detail.warrantyMonths,
-            warrantyStatus: getWarrantyStatus(
-              purchaseDate,
-              detail.warrantyMonths,
-            ),
+            warrantyMonths,
+            warrantyEndDate: warranty?.warrantyEndDate ?? null,
+            remainingDays,
+            warrantyStatus:
+              remainingDays === null ? "empty" : getProductStatus(remainingDays),
           };
         }),
       );
@@ -301,43 +323,23 @@ export default function MainPage() {
               </h2>
 
               <div className="flex flex-col gap-[10px]">
-                {products.length === 0 ? (
+                {isLoading ? (
+                  <div className="flex h-[120px] items-center justify-center text-gray-02 text-body-r-15">
+                    보증 정보를 불러오는 중입니다.
+                  </div>
+                ) : products.length === 0 ? (
                   <div className="flex h-[120px] items-center justify-center text-gray-02 text-body-r-15">
                     등록된 보증 정보가 없습니다.
                   </div>
                 ) : (
                   products.map((item) => {
-                    const remainingDays = getRemainingDays(
-                      item.purchaseDate,
-                      item.warrantyMonths,
+                    const statusColor = getWarrantyStatusColor(
+                      item.warrantyStatus,
                     );
 
-                    const status =
-                      remainingDays === null
-                        ? "empty"
-                        : getProductStatus(remainingDays);
-
-                    const statusColor =
-                      status === "expired"
-                        ? "bg-gray-01"
-                        : status === "danger"
-                          ? "bg-point-01"
-                          : status === "imminent"
-                            ? "bg-point-02"
-                            : status === "empty"
-                              ? "bg-gray-02"
-                              : "bg-point-03";
-
-                    const statusText =
-                      status === "expired"
-                        ? "보증만료"
-                        : status === "danger"
-                          ? "보증위험"
-                          : status === "imminent"
-                            ? "보증임박"
-                            : status === "empty"
-                              ? "보증없음"
-                              : "보증유효";
+                    const statusText = getWarrantyStatusText(
+                      item.warrantyStatus,
+                    );
 
                     return (
                       <div

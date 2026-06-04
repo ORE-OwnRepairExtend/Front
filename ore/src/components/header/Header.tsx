@@ -1,7 +1,8 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import SearchBar from "./SearchBar";
 import NotificationButton from "./NotificationButton";
-import { useNotificationStore } from "../../store/notificationStore";
+import { api } from "../../api/api";
 
 import closeIcon from "../../assets/icons/close.svg";
 
@@ -21,6 +22,10 @@ type HeaderProps = {
   showCloseButton?: boolean;
 };
 
+type UnreadCountResponse = {
+  unreadCount: number;
+};
+
 export default function Header({
   title,
   subtitle,
@@ -34,11 +39,29 @@ export default function Header({
 }: HeaderProps) {
   const navigate = useNavigate();
 
-  // Zustand 연결
-  const { notifications } = useNotificationStore();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // 안 읽은 알림 개수 조회
+  useEffect(() => {
+    if (!showNotification) return;
+
+    const fetchUnreadCount = async () => {
+      try {
+        const response = await api.get<UnreadCountResponse>(
+          "/notifications/unread-count",
+        );
+
+        setUnreadCount(response.data.unreadCount);
+      } catch (error) {
+        console.error("안 읽은 알림 개수 조회 실패:", error);
+      }
+    };
+
+    fetchUnreadCount();
+  }, [showNotification]);
 
   // 안 읽은 알림 여부 계산
-  const hasUnread = notifications.some((n) => !n.isRead);
+  const hasUnread = unreadCount > 0;
 
   return (
     <header
@@ -82,6 +105,7 @@ export default function Header({
             showNotification && (
               <NotificationButton
                 hasUnread={hasUnread}
+                unreadCount={unreadCount}
                 onClick={() => navigate("/notifications")}
               />
             )

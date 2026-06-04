@@ -1,17 +1,25 @@
-import { type ChangeEvent, useRef, useState } from "react";
+import { type ChangeEvent, useEffect, useRef, useState } from "react";
 import DeleteButton from "../common/DeleteButton";
 
 import plusPrimaryIcon from "../../assets/icons/plus_primary.svg";
 
 type ProductImageButtonProps = {
+  imageUrl?: string | null;
   onFileSelect?: (file: File | null) => void;
+  onImageDelete?: () => void;
 };
 
 export default function ProductImageButton({
+  imageUrl,
   onFileSelect,
+  onImageDelete,
 }: ProductImageButtonProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string>("");
+  const [previewUrl, setPreviewUrl] = useState<string>(imageUrl ?? "");
+
+  useEffect(() => {
+    setPreviewUrl(imageUrl ?? "");
+  }, [imageUrl]);
 
   const handleClick = () => {
     inputRef.current?.click();
@@ -21,8 +29,8 @@ export default function ProductImageButton({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const imageUrl = URL.createObjectURL(file);
-    setPreviewUrl(imageUrl);
+    const nextPreviewUrl = URL.createObjectURL(file);
+    setPreviewUrl(nextPreviewUrl);
 
     onFileSelect?.(file);
   };
@@ -30,6 +38,11 @@ export default function ProductImageButton({
   const handleDelete = () => {
     setPreviewUrl("");
     onFileSelect?.(null);
+    onImageDelete?.();
+
+    if (inputRef.current) {
+      inputRef.current.value = "";
+    }
   };
 
   return (

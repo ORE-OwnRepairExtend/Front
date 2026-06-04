@@ -42,7 +42,12 @@ type ProductCreateLocationState =
 const isEditProductState = (
   state: ProductCreateLocationState,
 ): state is EditProductLocationState => {
-  return state !== null && state !== undefined && "mode" in state && state.mode === "edit";
+  return (
+    state !== null &&
+    state !== undefined &&
+    "mode" in state &&
+    state.mode === "edit"
+  );
 };
 
 export default function ProductCreatePage() {
