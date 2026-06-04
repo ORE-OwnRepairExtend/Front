@@ -344,11 +344,6 @@ export default function RepairDetailPage() {
       setIsAlarmCreateModalOpen(false);
       setAlarmTitle("");
       setAlarmDate("");
-
-      setAlertModal({
-        open: true,
-        message: "알림이 등록되었습니다.",
-      });
     } catch (error) {
       console.error("수리 알림 등록 실패:", error);
 
