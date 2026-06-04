@@ -9,7 +9,7 @@ type NotificationCardProps = {
   message: string;
   date: string;
   isRead?: boolean;
-  status: NotificationStatus;
+  status?: NotificationStatus;
   onClick?: () => void; // 추가
 };
 
@@ -39,7 +39,7 @@ function highlightStatus(text: string) {
         </strong>
       ) : (
         part
-      )
+      ),
     );
 }
 
@@ -49,7 +49,7 @@ export default function NotificationCard({
   message,
   date,
   isRead = false,
-  status,
+  status = "imminent",
   onClick,
 }: NotificationCardProps) {
   const config = statusConfig[status];
@@ -79,9 +79,7 @@ export default function NotificationCard({
       <div className="flex flex-1 flex-col gap-[6px]">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-[8px]">
-            <span className="text-title-b-20 text-primary-01">
-              {title}
-            </span>
+            <span className="text-title-b-20 text-primary-01">{title}</span>
 
             {subtitle && (
               <span className="text-body-r-12 text-gray-500 text-sm">
@@ -91,11 +89,7 @@ export default function NotificationCard({
           </div>
 
           <span className="text-body-r-12 text-sm whitespace-nowrap flex items-center gap-[4px]">
-            <span
-              className={
-                isRead ? "text-gray-400" : "text-black font-bold"
-              }
-            >
+            <span className={isRead ? "text-gray-400" : "text-black font-bold"}>
               {isRead ? "읽음" : "안읽음"}
             </span>
             <span className="text-body-r-12 text-gray-400">· {date}</span>
