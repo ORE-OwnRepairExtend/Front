@@ -3,7 +3,6 @@ import ProductInputBox from "./ProductInputBox";
 import ProductImageButton from "./ProductImageButton";
 import ProductCreateCategory from "./ProductCreateCategory";
 import CommonButton from "../common/CommonButton";
-// import PartInputRow from "./PartInputRow";
 import ProductCheckbox from "./ProductCheckbox";
 import ProductFormRow from "./ProductFormRow";
 import Modal from "../common/Modal";
@@ -14,12 +13,6 @@ import {
 import { useNavigate } from "react-router-dom";
 import { api } from "../../api/api";
 import type { ApiProductCategory } from "../../types/category";
-
-// type PartItem = {
-//   id: number;
-//   name: string;
-//   cycle: string;
-// };
 
 type ExtractedProductData = {
   sourceId: string;
@@ -89,15 +82,15 @@ export default function ProductCreateContent({
   );
 
   const [warrantyPeriod, setWarrantyPeriod] = useState(
-    editProductData?.warrantyMonths ? String(editProductData.warrantyMonths) : "",
+    editProductData?.warrantyMonths
+      ? String(editProductData.warrantyMonths)
+      : "",
   );
   const [noWarranty, setNoWarranty] = useState(
     editProductData?.warrantyMonths === null,
   );
 
   const [productImage, setProductImage] = useState<File | null>(null);
-
-  // const [parts, setParts] = useState<PartItem[]>([]);
 
   const [alertMessage, setAlertMessage] = useState("");
 
@@ -110,24 +103,6 @@ export default function ProductCreateContent({
     productName.trim() !== "" &&
     selectedCategory !== "" &&
     (isEditMode || manual.trim() !== "");
-
-  // const handlePartChange = (
-  //   id: number,
-  //   field: "name" | "cycle",
-  //   value: string,
-  // ) => {
-  //   setParts((prev) =>
-  //     prev.map((part) => (part.id === id ? { ...part, [field]: value } : part)),
-  //   );
-  // };
-
-  // const handleAddPart = () => {
-  //   setParts((prev) => [...prev, { id: Date.now(), name: "", cycle: "" }]);
-  // };
-
-  // const handleDeletePart = (id: number) => {
-  //   setParts((prev) => prev.filter((part) => part.id !== id));
-  // };
 
   const handleSubmit = async () => {
     let createdProductId: string | null = null;
@@ -145,8 +120,6 @@ export default function ProductCreateContent({
         manual: {
           manualContent: manual.trim(),
         },
-        // part
-        // image
       };
 
       if (isEditMode && editProductId) {
@@ -332,28 +305,6 @@ export default function ProductCreateContent({
               />
             </div>
           </ProductFormRow>
-
-          {/* 부품 관리
-          <ProductFormRow label="부품관리">
-            <div className="flex flex-col w-[390px] gap-[10px]">
-              {parts.map((part) => (
-                <PartInputRow
-                  key={part.id}
-                  name={part.name}
-                  cycle={part.cycle}
-                  onNameChange={(value) =>
-                    handlePartChange(part.id, "name", value)
-                  }
-                  onCycleChange={(value) =>
-                    handlePartChange(part.id, "cycle", value)
-                  }
-                  onDelete={() => handleDeletePart(part.id)}
-                />
-              ))}
-
-              <CommonButton onClick={handleAddPart}>추가하기</CommonButton>
-            </div>
-          </ProductFormRow> */}
         </div>
       </div>
 
