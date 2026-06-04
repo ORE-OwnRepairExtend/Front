@@ -7,6 +7,7 @@ import CommonButton from "../../components/common/CommonButton";
 import Modal from "../../components/common/Modal";
 import { useNotificationStore } from "../../store/notificationStore";
 import { api } from "../../api/api";
+import { readNotification } from "../../api/notification";
 
 import checkedIcon from "../../assets/checked.svg";
 import uncheckedIcon from "../../assets/unchecked.svg";
@@ -98,9 +99,16 @@ export default function NotificationPage() {
   }, [setNotifications]);
 
   // 읽음 처리
-  const handleRead = (id: string) => {
+  // 읽음 처리
+  const handleRead = async (id: string) => {
     if (isSelectMode) return;
-    markAsRead(id);
+
+    try {
+      await readNotification(id);
+      markAsRead(id);
+    } catch (error) {
+      console.error("알림 읽음 처리 실패:", error);
+    }
   };
 
   // 선택 토글
@@ -177,14 +185,15 @@ export default function NotificationPage() {
                         date={item.date}
                         isRead={item.isRead}
                         status={item.status}
-                        onClick={() =>
-                          isSelectMode
-                            ? toggleSelect(item.id)
-                            : (() => {
-                                handleRead(item.id);
-                                navigate(`/products/${item.productId}`);
-                              })()
-                        }
+                        onClick={async () => {
+                          if (isSelectMode) {
+                            toggleSelect(item.id);
+                            return;
+                          }
+
+                          await handleRead(item.id);
+                          navigate(`/products/${item.productId}`);
+                        }}
                       />
                     </div>
                   </div>
