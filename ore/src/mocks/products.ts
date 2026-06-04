@@ -10,7 +10,7 @@ export const mockProductListResponse: ProductSummary[] = [
     hasRepairHistory: true,
     purchaseDate: "2026-03-20",
     createdAt: "2026-03-24T12:00:00+09:00",
-    category: "영상·음향",
+    category: "VIDEO_AUDIO",
   },
   {
     productId: "2",
@@ -21,7 +21,7 @@ export const mockProductListResponse: ProductSummary[] = [
     hasRepairHistory: true,
     purchaseDate: "2025-11-14",
     createdAt: "2026-03-24T12:00:00+09:00",
-    category: "주방 가전",
+    category: "KITCHEN",
   },
   {
     productId: "3",
@@ -32,7 +32,7 @@ export const mockProductListResponse: ProductSummary[] = [
     hasRepairHistory: true,
     purchaseDate: "2024-08-01",
     createdAt: "2026-03-24T12:00:00+09:00",
-    category: "모바일 기기",
+    category: "MOBILE",
   },
   {
     productId: "4",
@@ -43,7 +43,7 @@ export const mockProductListResponse: ProductSummary[] = [
     hasRepairHistory: true,
     purchaseDate: "2023-05-10",
     createdAt: "2026-03-24T12:00:00+09:00",
-    category: "영상·음향",
+    category: "VIDEO_AUDIO",
   },
   {
     productId: "5",
@@ -54,7 +54,7 @@ export const mockProductListResponse: ProductSummary[] = [
     hasRepairHistory: true,
     purchaseDate: "2023-05-10",
     createdAt: "2026-03-24T12:00:00+09:00",
-    category: "영상·음향",
+    category: "VIDEO_AUDIO",
   },
   {
     productId: "6",
@@ -65,6 +65,6 @@ export const mockProductListResponse: ProductSummary[] = [
     hasRepairHistory: true,
     purchaseDate: "2023-05-10",
     createdAt: "2026-03-24T12:00:00+09:00",
-    category: "영상·음향",
+    category: "VIDEO_AUDIO",
   },
 ];
