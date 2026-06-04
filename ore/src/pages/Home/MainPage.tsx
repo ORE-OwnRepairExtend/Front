@@ -111,9 +111,7 @@ export default function MainPage() {
       );
 
       return response.data;
-    } catch (error) {
-      console.error("보증 정보 조회 실패:", error);
-
+    } catch {
       return null;
     }
   };
@@ -131,7 +129,14 @@ export default function MainPage() {
           );
 
           const detail = detailResponse.data;
-          const warranty = await fetchWarrantyInfo(product.productId);
+
+          const hasWarranty =
+            typeof detail.warrantyMonths === "number" &&
+            detail.warrantyMonths > 0;
+
+          const warranty = hasWarranty
+            ? await fetchWarrantyInfo(product.productId)
+            : null;
 
           const purchaseDate =
             warranty?.purchaseDate ??
