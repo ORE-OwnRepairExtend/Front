@@ -149,7 +149,11 @@ export default function RepairCreatePage() {
 
       setIsSubmitModalOpen(false);
 
-      navigate(`/products/${currentProduct.productId}/repairs/${repairId}`);
+      navigate(`/products/${currentProduct.productId}/repairs/${repairId}`, {
+        state: {
+          showAlarmConfirmModal: true,
+        },
+      });
     } catch (error) {
       console.error("수리 이력 등록 실패:", error);
 

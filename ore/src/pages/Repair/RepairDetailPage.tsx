@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import ProductCard from "../../components/common/ProductCard";
 import Header from "../../components/header/Header";
 import RepairDetailContent from "../../components/repair/RepairDetailContent";
@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import Modal from "../../components/common/Modal";
 import { api } from "../../api/api";
 import axios from "axios";
+import RepairAlarmCreateModal from "../../components/repair/RepairAlarmCreateModal";
 
 type RepairDetailResponse = {
   repairId: string;
@@ -61,9 +62,16 @@ type RepairDetailState = {
 export default function RepairDetailPage() {
   const navigate = useNavigate();
   const { productId, repairId } = useParams();
+  const location = useLocation();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+
+  const [isAlarmConfirmModalOpen, setIsAlarmConfirmModalOpen] = useState(false);
+  const [isAlarmCreateModalOpen, setIsAlarmCreateModalOpen] = useState(false);
+
+  const [alarmTitle, setAlarmTitle] = useState("");
+  const [alarmDate, setAlarmDate] = useState("");
 
   const [product, setProduct] = useState<ProductDetailResponse | null>(null);
 
@@ -131,6 +139,17 @@ export default function RepairDetailPage() {
 
     fetchRepairDetail();
   }, [productId, repairId]);
+
+  useEffect(() => {
+    if (location.state?.showAlarmConfirmModal) {
+      setIsAlarmConfirmModalOpen(true);
+
+      navigate(location.pathname, {
+        replace: true,
+        state: {},
+      });
+    }
+  }, [location.state, location.pathname, navigate]);
 
   const [editForm, setEditForm] = useState<RepairEditForm>({
     title: "",
@@ -409,6 +428,37 @@ export default function RepairDetailPage() {
         onConfirm={handleDelete}
         cancelText="취소"
         confirmText="삭제"
+      />
+      <Modal
+        open={isAlarmConfirmModalOpen}
+        title={"해당 제품에 대한\n추가 알림을등록 하시겠습니까?"}
+        onClose={() => setIsAlarmConfirmModalOpen(false)}
+        onCancel={() => setIsAlarmConfirmModalOpen(false)}
+        onConfirm={() => {
+          setIsAlarmConfirmModalOpen(false);
+          setIsAlarmCreateModalOpen(true);
+        }}
+        cancelText="아니오"
+        confirmText="등록"
+      />
+
+      <RepairAlarmCreateModal
+        open={isAlarmCreateModalOpen}
+        alarmTitle={alarmTitle}
+        alarmDate={alarmDate}
+        onChangeAlarmTitle={setAlarmTitle}
+        onChangeAlarmDate={setAlarmDate}
+        onClose={() => setIsAlarmCreateModalOpen(false)}
+        onSubmit={() => {
+          console.log("알림 등록", {
+            productId,
+            repairId,
+            alarmTitle,
+            alarmDate,
+          });
+
+          setIsAlarmCreateModalOpen(false);
+        }}
       />
     </SecondLayout>
   );
