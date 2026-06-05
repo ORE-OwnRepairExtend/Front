@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import SecondLayout from "../../layout/SecondLayout";
 import Header from "../../components/header/Header";
 import ProductDetailContent from "../../components/product/ProductDetailContent";
+import ProductNotificationInfo from "../../components/product/ProductNotificationInfo";
 import { formatPrice } from "../../utils/formatPrice";
 import { api } from "../../api/api";
 import { CATEGORY_LABEL_MAP } from "../../constants/productCategories";
@@ -51,6 +52,30 @@ type RepairHistoryResponse = {
   createdAt: string;
 };
 
+type NotificationStatus = "진행중" | "완료";
+
+type ProductNotificationApiResponse = {
+  notificationId: string;
+  title: string;
+  date: string;
+  status: string;
+};
+
+type ProductNotificationResponse = {
+  notificationId: string;
+  title: string;
+  date: string;
+  status: NotificationStatus;
+};
+
+function getNotificationStatus(status: string): NotificationStatus {
+  if (status === "완료") {
+    return "완료";
+  }
+
+  return "진행중";
+}
+
 export default function ProductDetailPage() {
   const navigate = useNavigate();
   const { productId } = useParams();
@@ -64,6 +89,9 @@ export default function ProductDetailPage() {
     useState<ProductOfficialManualResponse | null>(null);
   const [repairHistories, setRepairHistories] = useState<
     RepairHistoryResponse[]
+  >([]);
+  const [notifications, setNotifications] = useState<
+    ProductNotificationResponse[]
   >([]);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -104,15 +132,39 @@ export default function ProductDetailPage() {
         }
 
         // 보증 정보
+        if (productData.warrantyMonths > 0) {
+          try {
+            const warrantyResponse = await api.get<ProductWarrantyResponse>(
+              `/products/${productId}/warranty`,
+            );
+
+            setWarranty(warrantyResponse.data);
+          } catch {
+            setWarranty(null);
+          }
+        } else {
+          setWarranty(null);
+        }
+
+        // 알림 정보
         try {
-          const warrantyResponse = await api.get<ProductWarrantyResponse>(
-            `/products/${productId}/warranty`,
+          const notificationResponse = await api.get<
+            ProductNotificationApiResponse[]
+          >(`/products/${productId}/notifications`);
+
+          const mappedNotifications = notificationResponse.data.map(
+            (notification) => ({
+              notificationId: notification.notificationId,
+              title: notification.title,
+              date: notification.date,
+              status: getNotificationStatus(notification.status),
+            }),
           );
 
-          setWarranty(warrantyResponse.data);
-        } catch (warrantyError) {
-          console.error("보증 정보 조회 실패:", warrantyError);
-          setWarranty(null);
+          setNotifications(mappedNotifications);
+        } catch (notificationError) {
+          console.error("알림 정보 조회 실패:", notificationError);
+          setNotifications([]);
         }
 
         // 공식 매뉴얼
@@ -201,6 +253,12 @@ export default function ProductDetailPage() {
     }
   };
 
+  const handleNotificationPageClick = () => {
+    if (!productId) return;
+
+    navigate(`/products/${productId}/notifications`);
+  };
+
   if (isLoading) {
     return (
       <SecondLayout>
@@ -268,6 +326,12 @@ export default function ProductDetailPage() {
               warrantyEndDate={warranty?.warrantyEndDate}
               remainingDays={warranty?.remainingDays}
               maintenanceCategories={maintenanceCategories}
+              notificationInfo={
+                <ProductNotificationInfo
+                  notifications={notifications}
+                  onRegisterClick={handleNotificationPageClick}
+                />
+              }
               repairHistories={repairInfoes}
               officialUrl="https://example.com"
               customerServiceUrl={undefined}

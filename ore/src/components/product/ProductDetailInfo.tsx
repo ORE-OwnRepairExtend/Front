@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import CommonButton from "../common/CommonButton";
 import ProductManual from "./ProductManual";
 import ProductWarrantyInfo from "./ProductWarrantyInfo";
@@ -35,6 +36,8 @@ type ProductDetailInfoProps = {
 
   maintenanceCategories: MaintenanceCategory[];
 
+  notificationInfo?: ReactNode;
+
   repairinfos: RepairInfoItem[];
 
   officialUrl?: string;
@@ -54,6 +57,7 @@ export default function ProductDetailInfo({
   remainingDays,
   status,
   // maintenanceCategories,
+  notificationInfo,
   repairinfos,
   officialUrl,
   customerServiceUrl,
@@ -97,6 +101,14 @@ export default function ProductDetailInfo({
               <div className="h-[2px] w-full bg-gray-02/50" />
             </>
           )}
+
+        {notificationInfo && (
+          <>
+            {notificationInfo}
+
+            <div className="h-[2px] w-full bg-gray-02/50" />
+          </>
+        )}
 
         {/* <ProductMaintenanceInfo
           purchaseDate={purchaseDate}

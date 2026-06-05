@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { ReactNode } from "react";
 
 import type { ProductStatus } from "../../types/product";
 import CommonButton from "../common/CommonButton";
@@ -6,6 +7,7 @@ import ProductDetailCard from "./ProductDetailCard";
 import ProductDetailInfo from "./ProductDetailInfo";
 import type { MaintenanceHistoryItem } from "../../utils/maintenanceDate";
 import Modal from "../common/Modal";
+
 
 type MaintenanceCategory = {
   id: string;
@@ -38,6 +40,7 @@ type ProductDetailContentProps = {
   warrantyEndDate?: string;
   remainingDays?: number;
   maintenanceCategories: MaintenanceCategory[];
+  notificationInfo?: ReactNode;
   repairHistories: RepairInfoItem[];
   officialUrl?: string;
   customerServiceUrl?: string;
@@ -62,6 +65,7 @@ export default function ProductDetailContent({
   warrantyEndDate,
   remainingDays,
   maintenanceCategories,
+  notificationInfo,
   repairHistories,
   officialUrl,
   customerServiceUrl,
@@ -103,6 +107,7 @@ export default function ProductDetailContent({
         warrantyEndDate={warrantyEndDate}
         remainingDays={remainingDays}
         maintenanceCategories={maintenanceCategories}
+        notificationInfo={notificationInfo}
         repairinfos={repairHistories}
         officialUrl={officialUrl}
         customerServiceUrl={customerServiceUrl}
