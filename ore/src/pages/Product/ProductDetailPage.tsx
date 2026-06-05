@@ -4,6 +4,9 @@ import SecondLayout from "../../layout/SecondLayout";
 import Header from "../../components/header/Header";
 import ProductDetailContent from "../../components/product/ProductDetailContent";
 import ProductNotificationInfo from "../../components/product/ProductNotificationInfo";
+import ProductNotificationModal from "../../components/product/ProductNotificationModal";
+import ProductNotificationEditModal from "../../components/product/ProductNotificationEditModal";
+import ProductNotificationCompleteModal from "../../components/product/ProductNotificationCompleteModal";
 import { formatPrice } from "../../utils/formatPrice";
 import { api } from "../../api/api";
 import { CATEGORY_LABEL_MAP } from "../../constants/productCategories";
@@ -76,6 +79,10 @@ function getNotificationStatus(status: string): NotificationStatus {
   return "진행중";
 }
 
+function toDateInputValue(date: string) {
+  return date.replaceAll(".", "-");
+}
+
 export default function ProductDetailPage() {
   const navigate = useNavigate();
   const { productId } = useParams();
@@ -93,6 +100,16 @@ export default function ProductDetailPage() {
   const [notifications, setNotifications] = useState<
     ProductNotificationResponse[]
   >([]);
+
+  const [selectedNotification, setSelectedNotification] =
+    useState<ProductNotificationResponse | null>(null);
+
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editAlarmTitle, setEditAlarmTitle] = useState("");
+  const [editAlarmDate, setEditAlarmDate] = useState("");
+
+  const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
+  const [completeDate, setCompleteDate] = useState("");
 
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
@@ -259,6 +276,143 @@ export default function ProductDetailPage() {
     navigate(`/products/${productId}/notifications`);
   };
 
+  const handleNotificationClick = (
+    notification: ProductNotificationResponse,
+  ) => {
+    setSelectedNotification(notification);
+  };
+
+  const handleCloseDetailModal = () => {
+    setSelectedNotification(null);
+    setIsCompleteModalOpen(false);
+    setIsEditModalOpen(false);
+    setCompleteDate("");
+  };
+
+  const handleOpenCompleteModal = () => {
+    setIsCompleteModalOpen(true);
+  };
+
+  const handleCloseCompleteModal = () => {
+    setIsCompleteModalOpen(false);
+    setCompleteDate("");
+  };
+
+  const handleCompleteOnlyNotification = () => {
+    if (!selectedNotification) return;
+
+    if (!completeDate.trim()) {
+      alert("완료 날짜를 입력해주세요.");
+      return;
+    }
+
+    const completedNotification: ProductNotificationResponse = {
+      ...selectedNotification,
+      status: "완료",
+    };
+
+    setNotifications((prev) =>
+      prev.map((notification) =>
+        notification.notificationId === selectedNotification.notificationId
+          ? completedNotification
+          : notification,
+      ),
+    );
+
+    setSelectedNotification(completedNotification);
+    handleCloseCompleteModal();
+  };
+
+  const handleRepairHistoryRegister = () => {
+    if (!selectedNotification) return;
+
+    if (!completeDate.trim()) {
+      alert("완료 날짜를 입력해주세요.");
+      return;
+    }
+
+    const completedNotification: ProductNotificationResponse = {
+      ...selectedNotification,
+      status: "완료",
+    };
+
+    setNotifications((prev) =>
+      prev.map((notification) =>
+        notification.notificationId === selectedNotification.notificationId
+          ? completedNotification
+          : notification,
+      ),
+    );
+
+    setSelectedNotification(completedNotification);
+    handleCloseCompleteModal();
+
+    navigate(`/products/${productId}/repairs/new`, {
+      state: {
+        notificationId: selectedNotification.notificationId,
+        title: selectedNotification.title,
+        date: completeDate,
+      },
+    });
+  };
+
+  const handleEditNotification = () => {
+    if (!selectedNotification) return;
+
+    setEditAlarmTitle("");
+    setEditAlarmDate("");
+    setIsEditModalOpen(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
+    setEditAlarmTitle("");
+    setEditAlarmDate("");
+  };
+
+  const handleSubmitEditNotification = () => {
+    if (!selectedNotification) return;
+
+    if (!editAlarmTitle.trim() || !editAlarmDate) {
+      alert("알림 이름과 알림 날짜를 입력해주세요.");
+      return;
+    }
+
+    const editedNotification: ProductNotificationResponse = {
+      ...selectedNotification,
+      title: editAlarmTitle,
+      date: editAlarmDate,
+    };
+
+    setNotifications((prev) =>
+      prev.map((notification) =>
+        notification.notificationId === selectedNotification.notificationId
+          ? editedNotification
+          : notification,
+      ),
+    );
+
+    setSelectedNotification(editedNotification);
+    handleCloseEditModal();
+  };
+
+  const handleDeleteNotification = () => {
+    if (!selectedNotification) return;
+
+    setNotifications((prev) =>
+      prev.filter(
+        (notification) =>
+          notification.notificationId !== selectedNotification.notificationId,
+      ),
+    );
+
+    setSelectedNotification(null);
+  };
+
+  const scheduledNotifications = notifications.filter(
+    (notification) => notification.status === "진행중",
+  );
+
   if (isLoading) {
     return (
       <SecondLayout>
@@ -328,8 +482,9 @@ export default function ProductDetailPage() {
               maintenanceCategories={maintenanceCategories}
               notificationInfo={
                 <ProductNotificationInfo
-                  notifications={notifications}
+                  notifications={scheduledNotifications}
                   onRegisterClick={handleNotificationPageClick}
+                  onNotificationClick={handleNotificationClick}
                 />
               }
               repairHistories={repairInfoes}
@@ -341,6 +496,38 @@ export default function ProductDetailPage() {
             />
           </div>
         </div>
+
+        <ProductNotificationModal
+          open={!!selectedNotification}
+          title={selectedNotification?.title ?? ""}
+          date={selectedNotification?.date ?? ""}
+          status={selectedNotification?.status ?? "진행중"}
+          onClose={handleCloseDetailModal}
+          onComplete={handleOpenCompleteModal}
+          onEdit={handleEditNotification}
+          onDelete={handleDeleteNotification}
+        />
+
+        <ProductNotificationEditModal
+          open={isEditModalOpen}
+          alarmTitle={editAlarmTitle}
+          alarmDate={editAlarmDate}
+          onChangeAlarmTitle={setEditAlarmTitle}
+          onChangeAlarmDate={setEditAlarmDate}
+          onClose={handleCloseEditModal}
+          onSubmit={handleSubmitEditNotification}
+        />
+
+        <ProductNotificationCompleteModal
+          open={isCompleteModalOpen}
+          title={selectedNotification?.title ?? ""}
+          date={selectedNotification?.date ?? ""}
+          completeDate={completeDate}
+          onChangeCompleteDate={setCompleteDate}
+          onClose={handleCloseCompleteModal}
+          onCompleteOnly={handleCompleteOnlyNotification}
+          onRepairHistoryRegister={handleRepairHistoryRegister}
+        />
       </div>
     </SecondLayout>
   );
