@@ -13,6 +13,7 @@ import ChatbotPage from "../pages/Home/ChatbotPage";
 import ProductListPage from "../pages/Product/ProductListPage";
 import ProductDetailPage from "../pages/Product/ProductDetailPage";
 import ProductCreatePage from "../pages/Product/ProductCreatePage";
+import ProductNotificationPage from "../pages/Product/ProductNotificationPage";
 
 // Repair
 import RepairListPage from "../pages/Repair/RepairListPage";
@@ -34,7 +35,7 @@ export default function Router() {
       <Route path="/products" element={<ProductListPage />} />
       <Route path="/products/new" element={<ProductCreatePage />} />
       <Route path="/products/:productId" element={<ProductDetailPage />} />
-
+      <Route path="/products/:productId/notifications" element={<ProductNotificationPage />} />
       {/* Repair */}
       <Route path="/repairs" element={<RepairListPage />} />
       <Route
