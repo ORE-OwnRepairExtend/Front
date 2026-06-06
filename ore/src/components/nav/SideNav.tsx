@@ -2,6 +2,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import NavButton from "./NavButton";
 import { api } from "../../api/api";
 
+import logoName from "../../assets/icons/logo_name.svg";
+
 import dashboardGrayIcon from "../../assets/icons/nav/dashbord_gray.svg";
 import dashboardWhiteIcon from "../../assets/icons/nav/dashbord_white.svg";
 import productGrayIcon from "../../assets/icons/nav/product_gray.svg";
@@ -21,14 +23,13 @@ export default function SideNav() {
   const handleLogout = async () => {
     try {
       await api.post("/auth/logout");
-
+    } catch (error) {
+      console.error("로그아웃 API 실패:", error);
+    } finally {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("user");
 
       navigate("/login", { replace: true });
-    } catch (error) {
-      console.error("로그아웃 실패:", error);
-      alert("로그아웃에 실패했습니다. 다시 시도해주세요.");
     }
   };
 
@@ -88,8 +89,12 @@ export default function SideNav() {
       {/* 로고 + 메뉴 */}
       <div className="flex w-[140px] flex-col gap-[20px]">
         {/* 로고 */}
-        <div className="flex h-[80px] items-center justify-center rounded-[10px] bg-gray-02">
-          로고
+        <div className="flex w-full justify-center">
+          <img
+            src={logoName}
+            alt="ORE 로고"
+            className="h-auto w-[95px] object-contain"
+          />
         </div>
 
         {/* 메뉴 */}

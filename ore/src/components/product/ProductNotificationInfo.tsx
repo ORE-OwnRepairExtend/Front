@@ -2,10 +2,14 @@ import { useRef, useState, type MouseEvent } from "react";
 import { formatDate } from "../../utils/formatDate";
 import ProductNotificationCard from "./ProductNotificationCard";
 
+import forwardBlackIcon from "../../assets/icons/forword_black.svg";
+
 type NotificationStatus = "진행중" | "완료";
 
 type ProductNotification = {
   notificationId: string;
+  productId: string;
+  productName: string;
   title: string;
   date: string;
   status: NotificationStatus;
@@ -88,9 +92,10 @@ export default function ProductNotificationInfo({
         <button
           type="button"
           onClick={onRegisterClick}
-          className="rounded-[10px] bg-secondary-01 px-[14px] py-[8px] text-button-main text-primary-01"
+          className="flex cursor-pointer items-center gap-[15px] text-body-m-16"
         >
-          알림 등록하기
+          등록하기
+          <img src={forwardBlackIcon} alt="알림 등록하기" height={24} />
         </button>
       </div>
 

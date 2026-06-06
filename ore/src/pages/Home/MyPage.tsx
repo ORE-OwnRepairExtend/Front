@@ -115,14 +115,13 @@ export default function MyPage() {
   const handleLogout = async () => {
     try {
       await api.post("/auth/logout");
-
+    } catch (error) {
+      console.error("로그아웃 API 실패:", error);
+    } finally {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("user");
 
       navigate("/login", { replace: true });
-    } catch (error) {
-      console.error("로그아웃 실패:", error);
-      alert("로그아웃에 실패했습니다. 다시 시도해주세요.");
     }
   };
 

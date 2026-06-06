@@ -103,7 +103,7 @@ export default function RepairHistoryPage() {
           <div className="mt-[11px] flex min-h-0 flex-1 flex-col gap-[20px] px-[10px]">
             <div className="no-scrollbar flex flex-1 flex-col gap-[10px] overflow-y-auto">
               {repairHistoryList.length === 0 ? (
-                <div className="text-gray-02 text-center">
+                <div className="text-center text-gray-02">
                   등록된 수리 이력이 없습니다.
                 </div>
               ) : (
@@ -125,7 +125,16 @@ export default function RepairHistoryPage() {
 
             <AddButton
               title="수리 이력 등록하기"
-              onClick={() => navigate(`/products/${productId}/repairs/new`)}
+              onClick={() =>
+                navigate(`/products/${productId}/repairs/new`, {
+                  state: {
+                    productId: product.productId,
+                    productName: product.productName,
+                    nickname: product.nickname,
+                    imageUrl: product.imageUrl,
+                  },
+                })
+              }
             />
           </div>
         </div>

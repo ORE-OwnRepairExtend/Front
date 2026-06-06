@@ -23,6 +23,15 @@ export default function ProductNotificationCompleteModal({
 }: ProductNotificationCompleteModalProps) {
   if (!open) return null;
 
+  const handleCompleteOnlyClick = () => {
+    if (!completeDate.trim()) {
+      alert("완료 날짜를 입력해주세요.");
+      return;
+    }
+
+    onCompleteOnly();
+  };
+
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-gray-01/80">
       <div className="relative flex h-[330px] w-[360px] flex-col items-center rounded-[12px] bg-secondary-01 px-[45px] py-[35px]">
@@ -57,7 +66,7 @@ export default function ProductNotificationCompleteModal({
 
         <button
           type="button"
-          onClick={onCompleteOnly}
+          onClick={handleCompleteOnlyClick}
           className="mt-[30px] flex h-[50px] w-[200px] cursor-pointer items-center justify-center rounded-[20px] bg-primary-01 text-button-main text-white"
         >
           완료만 처리

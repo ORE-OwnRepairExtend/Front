@@ -57,26 +57,66 @@ type RepairHistoryResponse = {
 
 type NotificationStatus = "진행중" | "완료";
 
-type ProductNotificationApiResponse = {
-  notificationId: string;
+type ProductRepairReminderResponse = {
+  reminderId: string;
   title: string;
-  date: string;
-  status: string;
+  remindAt: string;
+  isDone: boolean;
+  completedAt: string | null;
+  createdAt: string;
+};
+
+type ProductRepairReminderUpdateResponse = {
+  reminderId: string;
+  title: string;
+  remindAt: string;
+  isDone: boolean;
+  completedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type ProductRepairReminderDoneResponse = {
+  reminderId: string;
+  isDone: boolean;
+  completedAt: string | null;
+  updatedAt: string;
 };
 
 type ProductNotificationResponse = {
   notificationId: string;
+  productId: string;
+  productName: string;
   title: string;
   date: string;
   status: NotificationStatus;
 };
 
-function getNotificationStatus(status: string): NotificationStatus {
-  if (status === "완료") {
-    return "완료";
-  }
+function toDateInputValue(date: string) {
+  return date.replaceAll(".", "-");
+}
 
-  return "진행중";
+function sortNotificationsByDate<T extends { date: string }>(items: T[]) {
+  return [...items].sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+  );
+}
+
+function mapProductRepairReminderToNotification(
+  reminder: ProductRepairReminderResponse,
+  productId: string,
+  productName: string,
+): ProductNotificationResponse {
+  return {
+    notificationId: reminder.reminderId,
+    productId,
+    productName,
+    title: reminder.title,
+    date: reminder.isDone
+      ? reminder.completedAt ?? reminder.remindAt
+      : reminder.remindAt,
+    status: reminder.isDone ? "완료" : "진행중",
+  };
 }
 
 export default function ProductDetailPage() {
@@ -103,9 +143,12 @@ export default function ProductDetailPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editAlarmTitle, setEditAlarmTitle] = useState("");
   const [editAlarmDate, setEditAlarmDate] = useState("");
+  const [isEditSubmitting, setIsEditSubmitting] = useState(false);
 
   const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
   const [completeDate, setCompleteDate] = useState("");
+  const [isCompleteSubmitting, setIsCompleteSubmitting] = useState(false);
+  const [isDeleteSubmitting, setIsDeleteSubmitting] = useState(false);
 
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
@@ -118,7 +161,6 @@ export default function ProductDetailPage() {
         setIsLoading(true);
         setErrorMessage("");
 
-        // 제품 상세
         const productResponse = await api.get<ProductDetailResponse>(
           `/products/${productId}`,
         );
@@ -128,7 +170,6 @@ export default function ProductDetailPage() {
         setProduct(productData);
         setIsFavorite(productData.isFavorite);
 
-        // 수리 이력
         if (productData.hasRepairHistory) {
           try {
             const repairResponse = await api.get<RepairHistoryResponse[]>(
@@ -144,7 +185,6 @@ export default function ProductDetailPage() {
           setRepairHistories([]);
         }
 
-        // 보증 정보
         if (productData.warrantyMonths > 0) {
           try {
             const warrantyResponse = await api.get<ProductWarrantyResponse>(
@@ -159,28 +199,25 @@ export default function ProductDetailPage() {
           setWarranty(null);
         }
 
-        // 알림 정보
         try {
-          const notificationResponse = await api.get<
-            ProductNotificationApiResponse[]
-          >(`/products/${productId}/notifications`);
+          const reminderResponse = await api.get<
+            ProductRepairReminderResponse[]
+          >(`/products/${productId}/repair-reminders`);
 
-          const mappedNotifications = notificationResponse.data.map(
-            (notification) => ({
-              notificationId: notification.notificationId,
-              title: notification.title,
-              date: notification.date,
-              status: getNotificationStatus(notification.status),
-            }),
+          const mappedNotifications = reminderResponse.data.map((reminder) =>
+            mapProductRepairReminderToNotification(
+              reminder,
+              productId,
+              productData.productName,
+            ),
           );
 
-          setNotifications(mappedNotifications);
-        } catch (notificationError) {
-          console.error("알림 정보 조회 실패:", notificationError);
+          setNotifications(sortNotificationsByDate(mappedNotifications));
+        } catch (reminderError) {
+          console.error("특정 제품 수리 예정 목록 조회 실패:", reminderError);
           setNotifications([]);
         }
 
-        // 공식 매뉴얼
         try {
           const manualResponse = await api.get<ProductOfficialManualResponse>(
             `/products/${productId}/manual`,
@@ -290,123 +327,218 @@ export default function ProductDetailPage() {
   };
 
   const handleCloseCompleteModal = () => {
+    if (isCompleteSubmitting) return;
+
     setIsCompleteModalOpen(false);
     setCompleteDate("");
   };
 
-  const handleCompleteOnlyNotification = () => {
-    if (!selectedNotification) return;
+  const handleCompleteOnlyNotification = async () => {
+    if (!productId || !selectedNotification) return;
 
     if (!completeDate.trim()) {
       alert("완료 날짜를 입력해주세요.");
       return;
     }
 
-    const completedNotification: ProductNotificationResponse = {
-      ...selectedNotification,
-      status: "완료",
-    };
+    try {
+      setIsCompleteSubmitting(true);
 
-    setNotifications((prev) =>
-      prev.map((notification) =>
-        notification.notificationId === selectedNotification.notificationId
-          ? completedNotification
-          : notification,
-      ),
-    );
+      const response = await api.patch<ProductRepairReminderDoneResponse>(
+        `/products/${productId}/repair-reminders/${selectedNotification.notificationId}/done`,
+        {
+          isDone: true,
+          completedDate: completeDate,
+        },
+      );
 
-    setSelectedNotification(completedNotification);
-    handleCloseCompleteModal();
+      const completedNotification: ProductNotificationResponse = {
+        ...selectedNotification,
+        date: response.data.completedAt ?? completeDate,
+        status: response.data.isDone ? "완료" : "진행중",
+      };
+
+      setNotifications((prev) =>
+        sortNotificationsByDate(
+          prev.map((notification) =>
+            notification.notificationId === selectedNotification.notificationId
+              ? completedNotification
+              : notification,
+          ),
+        ),
+      );
+
+      setSelectedNotification(completedNotification);
+      setIsCompleteModalOpen(false);
+      setCompleteDate("");
+    } catch (error) {
+      console.error("수리 예정 완료 처리 실패:", error);
+      alert("수리 예정 완료 처리에 실패했습니다.");
+    } finally {
+      setIsCompleteSubmitting(false);
+    }
   };
 
-  const handleRepairHistoryRegister = () => {
-    if (!selectedNotification) return;
+  const handleRepairHistoryRegister = async () => {
+    if (!productId || !selectedNotification) return;
+
+    const repairState = {
+      productId,
+      notificationId: selectedNotification.notificationId,
+      title: selectedNotification.title,
+      date: completeDate.trim() ? completeDate : "",
+    };
 
     if (!completeDate.trim()) {
-      alert("완료 날짜를 입력해주세요.");
+      setSelectedNotification(null);
+      setIsCompleteModalOpen(false);
+      setCompleteDate("");
+
+      navigate(`/products/${productId}/repairs/new`, {
+        state: repairState,
+      });
+
       return;
     }
 
-    const completedNotification: ProductNotificationResponse = {
-      ...selectedNotification,
-      status: "완료",
-    };
+    try {
+      setIsCompleteSubmitting(true);
 
-    setNotifications((prev) =>
-      prev.map((notification) =>
-        notification.notificationId === selectedNotification.notificationId
-          ? completedNotification
-          : notification,
-      ),
-    );
+      const response = await api.patch<ProductRepairReminderDoneResponse>(
+        `/products/${productId}/repair-reminders/${selectedNotification.notificationId}/done`,
+        {
+          isDone: true,
+          completedDate: completeDate,
+        },
+      );
 
-    setSelectedNotification(completedNotification);
-    handleCloseCompleteModal();
+      const completedNotification: ProductNotificationResponse = {
+        ...selectedNotification,
+        date: response.data.completedAt ?? completeDate,
+        status: response.data.isDone ? "완료" : "진행중",
+      };
 
-    navigate(`/products/${productId}/repairs/new`, {
-      state: {
-        notificationId: selectedNotification.notificationId,
-        title: selectedNotification.title,
-        date: completeDate,
-      },
-    });
+      setNotifications((prev) =>
+        sortNotificationsByDate(
+          prev.map((notification) =>
+            notification.notificationId === selectedNotification.notificationId
+              ? completedNotification
+              : notification,
+          ),
+        ),
+      );
+
+      setSelectedNotification(completedNotification);
+      setIsCompleteModalOpen(false);
+      setCompleteDate("");
+
+      navigate(`/products/${productId}/repairs/new`, {
+        state: repairState,
+      });
+    } catch (error) {
+      console.error("수리 예정 완료 처리 실패:", error);
+      alert("수리 예정 완료 처리에 실패했습니다.");
+    } finally {
+      setIsCompleteSubmitting(false);
+    }
   };
 
   const handleEditNotification = () => {
     if (!selectedNotification) return;
 
-    setEditAlarmTitle("");
-    setEditAlarmDate("");
+    setEditAlarmTitle(selectedNotification.title);
+    setEditAlarmDate(toDateInputValue(selectedNotification.date));
     setIsEditModalOpen(true);
   };
 
   const handleCloseEditModal = () => {
+    if (isEditSubmitting) return;
+
     setIsEditModalOpen(false);
     setEditAlarmTitle("");
     setEditAlarmDate("");
   };
 
-  const handleSubmitEditNotification = () => {
-    if (!selectedNotification) return;
+  const handleSubmitEditNotification = async () => {
+    if (!productId || !selectedNotification) return;
 
     if (!editAlarmTitle.trim() || !editAlarmDate) {
       alert("알림 이름과 알림 날짜를 입력해주세요.");
       return;
     }
 
-    const editedNotification: ProductNotificationResponse = {
-      ...selectedNotification,
-      title: editAlarmTitle,
-      date: editAlarmDate,
-    };
+    try {
+      setIsEditSubmitting(true);
 
-    setNotifications((prev) =>
-      prev.map((notification) =>
-        notification.notificationId === selectedNotification.notificationId
-          ? editedNotification
-          : notification,
-      ),
-    );
+      const response = await api.patch<ProductRepairReminderUpdateResponse>(
+        `/products/${productId}/repair-reminders/${selectedNotification.notificationId}`,
+        {
+          title: editAlarmTitle.trim(),
+          remindAt: editAlarmDate,
+        },
+      );
 
-    setSelectedNotification(editedNotification);
-    handleCloseEditModal();
+      const editedNotification: ProductNotificationResponse = {
+        ...selectedNotification,
+        notificationId: response.data.reminderId,
+        title: response.data.title,
+        date: response.data.isDone
+          ? response.data.completedAt ?? response.data.remindAt
+          : response.data.remindAt,
+        status: response.data.isDone ? "완료" : "진행중",
+      };
+
+      setNotifications((prev) =>
+        sortNotificationsByDate(
+          prev.map((notification) =>
+            notification.notificationId === selectedNotification.notificationId
+              ? editedNotification
+              : notification,
+          ),
+        ),
+      );
+
+      setSelectedNotification(editedNotification);
+      handleCloseEditModal();
+    } catch (error) {
+      console.error("수리 예정 정보 수정 실패:", error);
+      alert("수리 예정 정보 수정에 실패했습니다.");
+    } finally {
+      setIsEditSubmitting(false);
+    }
   };
 
-  const handleDeleteNotification = () => {
-    if (!selectedNotification) return;
+  const handleDeleteNotification = async () => {
+    if (!productId || !selectedNotification) return;
 
-    setNotifications((prev) =>
-      prev.filter(
-        (notification) =>
-          notification.notificationId !== selectedNotification.notificationId,
-      ),
-    );
+    try {
+      setIsDeleteSubmitting(true);
 
-    setSelectedNotification(null);
+      await api.delete(
+        `/products/${productId}/repair-reminders/${selectedNotification.notificationId}`,
+      );
+
+      setNotifications((prev) =>
+        sortNotificationsByDate(
+          prev.filter(
+            (notification) =>
+              notification.notificationId !==
+              selectedNotification.notificationId,
+          ),
+        ),
+      );
+
+      setSelectedNotification(null);
+    } catch (error) {
+      console.error("수리 예정 삭제 실패:", error);
+      alert("수리 예정 삭제에 실패했습니다.");
+    } finally {
+      setIsDeleteSubmitting(false);
+    }
   };
 
-  const scheduledNotifications = notifications.filter(
-    (notification) => notification.status === "진행중",
+  const scheduledNotifications = sortNotificationsByDate(
+    notifications.filter((notification) => notification.status === "진행중"),
   );
 
   if (isLoading) {
@@ -500,13 +632,14 @@ export default function ProductDetailPage() {
           onClose={handleCloseDetailModal}
           onComplete={handleOpenCompleteModal}
           onEdit={handleEditNotification}
-          onDelete={handleDeleteNotification}
+          onDelete={isDeleteSubmitting ? undefined : handleDeleteNotification}
         />
 
         <ProductNotificationEditModal
           open={isEditModalOpen}
           alarmTitle={editAlarmTitle}
           alarmDate={editAlarmDate}
+          isSubmitting={isEditSubmitting}
           onChangeAlarmTitle={setEditAlarmTitle}
           onChangeAlarmDate={setEditAlarmDate}
           onClose={handleCloseEditModal}

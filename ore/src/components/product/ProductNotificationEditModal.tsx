@@ -4,6 +4,7 @@ type ProductNotificationEditModalProps = {
   open: boolean;
   alarmTitle: string;
   alarmDate: string;
+  isSubmitting?: boolean;
   onChangeAlarmTitle: (value: string) => void;
   onChangeAlarmDate: (value: string) => void;
   onClose: () => void;
@@ -14,6 +15,7 @@ export default function ProductNotificationEditModal({
   open,
   alarmTitle,
   alarmDate,
+  isSubmitting = false,
   onChangeAlarmTitle,
   onChangeAlarmDate,
   onClose,
@@ -27,7 +29,8 @@ export default function ProductNotificationEditModal({
         <button
           type="button"
           onClick={onClose}
-          className="absolute right-[25px] top-[25px] cursor-pointer"
+          disabled={isSubmitting}
+          className="absolute right-[25px] top-[25px] cursor-pointer disabled:cursor-default"
         >
           <img src={closeIcon} alt="닫기" width={16} height={16} />
         </button>
@@ -43,7 +46,8 @@ export default function ProductNotificationEditModal({
               value={alarmTitle}
               onChange={(e) => onChangeAlarmTitle(e.target.value)}
               placeholder="알림 이름"
-              className="h-[31px] w-[135px] rounded-[5px] border border-primary-01 bg-transparent px-[12px] text-body-m-16 text-gray-01 outline-none placeholder:text-gray-01"
+              disabled={isSubmitting}
+              className="h-[31px] w-[135px] rounded-[5px] border border-primary-01 bg-transparent px-[12px] text-body-m-16 text-gray-01 outline-none placeholder:text-gray-01 disabled:cursor-default"
             />
           </div>
 
@@ -56,7 +60,8 @@ export default function ProductNotificationEditModal({
               type="date"
               value={alarmDate}
               onChange={(e) => onChangeAlarmDate(e.target.value)}
-              className="h-[31px] w-[135px] rounded-[5px] border border-primary-01 bg-transparent px-[12px] text-body-m-16 text-gray-01 outline-none"
+              disabled={isSubmitting}
+              className="h-[31px] w-[135px] rounded-[5px] border border-primary-01 bg-transparent px-[12px] text-body-m-16 text-gray-01 outline-none disabled:cursor-default"
             />
           </div>
         </div>
@@ -64,9 +69,10 @@ export default function ProductNotificationEditModal({
         <button
           type="button"
           onClick={onSubmit}
-          className="mt-[35px] flex h-[31px] w-[220px] cursor-pointer items-center justify-center rounded-[20px] bg-secondary-03 text-button-main text-white"
+          disabled={isSubmitting}
+          className="mt-[35px] flex h-[31px] w-[220px] cursor-pointer items-center justify-center rounded-[20px] bg-secondary-03 text-button-main text-white disabled:cursor-default disabled:opacity-60"
         >
-          저장
+          {isSubmitting ? "저장 중..." : "저장"}
         </button>
       </div>
     </div>

@@ -1,4 +1,11 @@
-import axios from "axios";
+import axios, {
+  type AxiosError,
+  type InternalAxiosRequestConfig,
+} from "axios";
+
+type RetryRequestConfig = InternalAxiosRequestConfig & {
+  _retry?: boolean;
+};
 
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
@@ -7,6 +14,12 @@ export const api = axios.create({
 
 // accessToken 재발급 API 경로
 const REISSUE_URL = "/auth/refresh";
+const LOGOUT_URL = "/auth/logout";
+
+const clearAuthStorage = () => {
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("user");
+};
 
 api.interceptors.request.use((config) => {
   const accessToken = localStorage.getItem("accessToken");
@@ -21,13 +34,18 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
 
-  async (error) => {
-    const originalRequest = error.config;
+  async (error: AxiosError) => {
+    const originalRequest = error.config as RetryRequestConfig | undefined;
+
+    if (!originalRequest) {
+      return Promise.reject(error);
+    }
 
     if (
       error.response?.status === 401 &&
       !originalRequest._retry &&
-      originalRequest.url !== REISSUE_URL
+      originalRequest.url !== REISSUE_URL &&
+      originalRequest.url !== LOGOUT_URL
     ) {
       originalRequest._retry = true;
 
@@ -42,8 +60,7 @@ api.interceptors.response.use(
 
         return api(originalRequest);
       } catch (reissueError) {
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("user");
+        clearAuthStorage();
 
         window.location.href = "/login";
 
