@@ -1,5 +1,11 @@
 import { useParams } from "react-router-dom";
-import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type MouseEvent,
+} from "react";
 import SecondLayout from "../../layout/SecondLayout";
 import Header from "../../components/header/Header";
 import ProductNotificationCard from "../../components/product/ProductNotificationCard";
@@ -27,6 +33,16 @@ type ProductRepairReminderResponse = {
   remindAt: string;
   isDone: boolean;
   createdAt: string;
+};
+
+type ProductRepairReminderUpdateResponse = {
+  reminderId: string;
+  title: string;
+  remindAt: string;
+  isDone: boolean;
+  completedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
 };
 
 function formatNotificationDate(date: string) {
@@ -79,6 +95,7 @@ export default function ProductNotificationPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editAlarmTitle, setEditAlarmTitle] = useState("");
   const [editAlarmDate, setEditAlarmDate] = useState("");
+  const [isEditSubmitting, setIsEditSubmitting] = useState(false);
 
   const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
   const [completeDate, setCompleteDate] = useState("");
@@ -289,35 +306,56 @@ export default function ProductNotificationPage() {
   };
 
   const handleCloseEditModal = () => {
+    if (isEditSubmitting) return;
+
     setIsEditModalOpen(false);
     setEditAlarmTitle("");
     setEditAlarmDate("");
   };
 
-  const handleSubmitEditNotification = () => {
-    if (!selectedNotification) return;
+  const handleSubmitEditNotification = async () => {
+    if (!productId || !selectedNotification) return;
 
     if (!editAlarmTitle.trim() || !editAlarmDate) {
       alert("알림 이름과 알림 날짜를 입력해주세요.");
       return;
     }
 
-    const editedNotification: ProductNotification = {
-      ...selectedNotification,
-      title: editAlarmTitle,
-      date: editAlarmDate,
-    };
+    try {
+      setIsEditSubmitting(true);
 
-    setNotifications((prev) =>
-      prev.map((notification) =>
-        notification.notificationId === selectedNotification.notificationId
-          ? editedNotification
-          : notification,
-      ),
-    );
+      const response = await api.patch<ProductRepairReminderUpdateResponse>(
+        `/products/${productId}/repair-reminders/${selectedNotification.notificationId}`,
+        {
+          title: editAlarmTitle.trim(),
+          remindAt: editAlarmDate,
+        },
+      );
 
-    setSelectedNotification(editedNotification);
-    handleCloseEditModal();
+      const editedNotification: ProductNotification = {
+        ...selectedNotification,
+        notificationId: response.data.reminderId,
+        title: response.data.title,
+        date: response.data.remindAt,
+        status: response.data.isDone ? "완료" : "진행중",
+      };
+
+      setNotifications((prev) =>
+        prev.map((notification) =>
+          notification.notificationId === selectedNotification.notificationId
+            ? editedNotification
+            : notification,
+        ),
+      );
+
+      setSelectedNotification(editedNotification);
+      handleCloseEditModal();
+    } catch (error) {
+      console.error("수리 예정 정보 수정 실패:", error);
+      alert("수리 예정 정보 수정에 실패했습니다.");
+    } finally {
+      setIsEditSubmitting(false);
+    }
   };
 
   const handleDeleteNotification = () => {
@@ -476,6 +514,7 @@ export default function ProductNotificationPage() {
           open={isEditModalOpen}
           alarmTitle={editAlarmTitle}
           alarmDate={editAlarmDate}
+          isSubmitting={isEditSubmitting}
           onChangeAlarmTitle={setEditAlarmTitle}
           onChangeAlarmDate={setEditAlarmDate}
           onClose={handleCloseEditModal}
