@@ -7,7 +7,7 @@ import ProductCard from "../../components/common/ProductCard";
 import ProductSelectModal from "../../components/repair/ProductSelectModal";
 import RepairDetailContent from "../../components/repair/RepairDetailContent";
 import Modal from "../../components/common/Modal";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { api } from "../../api/api";
 import type { ApiProductCategory } from "../../types/category";
 
@@ -23,13 +23,43 @@ type ProductListResponse = {
   createdAt: string;
 };
 
+type RepairCreateLocationState = {
+  productId?: string;
+  notificationId?: string;
+  title?: string;
+  date?: string;
+};
+
 export default function RepairCreatePage() {
   const navigate = useNavigate();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
+  const location = useLocation();
   const { productId } = useParams();
 
+  const repairState = location.state as RepairCreateLocationState | null;
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [products, setProducts] = useState<ProductSummary[]>([]);
+
+  const [selectedProduct, setSelectedProduct] = useState<ProductSummary | null>(
+    null,
+  );
+
+  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+  const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
+
+  const [alertModal, setAlertModal] = useState({
+    open: false,
+    message: "",
+  });
+
+  const [form, setForm] = useState({
+    title: repairState?.title ?? "",
+    repairDate: repairState?.date ?? "",
+    content: "",
+    price: "",
+    shopName: "",
+    receiptImage: null as File | null,
+  });
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -67,29 +97,8 @@ export default function RepairCreatePage() {
   const defaultProduct =
     products.find((p) => p.productId === productId) ?? null;
 
-  const [selectedProduct, setSelectedProduct] = useState<ProductSummary | null>(
-    null,
-  );
-
   const isFixedProduct = Boolean(productId);
   const currentProduct = selectedProduct ?? defaultProduct;
-
-  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
-  const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
-
-  const [alertModal, setAlertModal] = useState({
-    open: false,
-    message: "",
-  });
-
-  const [form, setForm] = useState({
-    title: "",
-    repairDate: "",
-    content: "",
-    price: "",
-    shopName: "",
-    receiptImage: null as File | null,
-  });
 
   const handleRegisterClick = () => {
     if (!currentProduct) {
@@ -173,18 +182,18 @@ export default function RepairCreatePage() {
       <div className="flex h-full min-h-0 flex-col">
         <Header title="Repair" />
 
-        <div className="flex flex-1 min-h-0 flex-col mt-[14px]">
-          <div className="flex flex-col gap-[20px] flex-1 overflow-y-auto no-scrollbar">
+        <div className="mt-[14px] flex min-h-0 flex-1 flex-col">
+          <div className="flex flex-1 flex-col gap-[20px] overflow-y-auto no-scrollbar">
             <div>
               {/* 제품 선택 영역 */}
               <section className="flex min-h-[120px] items-center justify-center rounded-[20px] bg-primary-04">
                 {currentProduct === null ? (
                   <div
                     className="
-      flex h-[140px] w-full items-center justify-center gap-[30px]
-      rounded-[20px] bg-neutral-01
-      px-[30px] py-[20px]
-    "
+                      flex h-[140px] w-full items-center justify-center gap-[30px]
+                      rounded-[20px] bg-neutral-01
+                      px-[30px] py-[20px]
+                    "
                   >
                     <CommonButton
                       variant="secondary"
@@ -222,6 +231,7 @@ export default function RepairCreatePage() {
                 }}
               />
             </div>
+
             <div className="min-h-0 px-[10px]">
               {/* 수리 이력 입력폼 */}
               <RepairDetailContent
@@ -276,9 +286,7 @@ export default function RepairCreatePage() {
         title="수리 이력을 등록하시겠습니까?"
         onClose={() => setIsSubmitModalOpen(false)}
         onCancel={() => setIsSubmitModalOpen(false)}
-        onConfirm={() => {
-          handleSubmit();
-        }}
+        onConfirm={handleSubmit}
         cancelText="취소"
         confirmText="등록"
       />
