@@ -125,6 +125,9 @@ export default function MainPage() {
     modelNumber: "",
   });
 
+  const [isUploadingSource, setIsUploadingSource] = useState(false);
+  const [isConfirmingOcr, setIsConfirmingOcr] = useState(false);
+
   const [isDown, setIsDown] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
@@ -192,7 +195,9 @@ export default function MainPage() {
             warrantyEndDate: warranty?.warrantyEndDate ?? null,
             remainingDays,
             warrantyStatus:
-              remainingDays === null ? "empty" : getProductStatus(remainingDays),
+              remainingDays === null
+                ? "empty"
+                : getProductStatus(remainingDays),
           };
         }),
       );
@@ -421,6 +426,8 @@ export default function MainPage() {
         onClose={() => setIsModalOpen(false)}
         onUploadSubmit={async (file, sourceType) => {
           try {
+            setIsUploadingSource(true);
+
             const formData = new FormData();
 
             formData.append("image", file);
@@ -429,11 +436,6 @@ export default function MainPage() {
             const uploadResponse = await api.post<ProductSourceResponse>(
               "/product-sources",
               formData,
-              {
-                headers: {
-                  "Content-Type": "multipart/form-data",
-                },
-              },
             );
 
             const uploadedData = uploadResponse.data;
@@ -449,6 +451,8 @@ export default function MainPage() {
           } catch (error) {
             console.error("이미지 업로드 실패:", error);
             alert("이미지 업로드에 실패했습니다.");
+          } finally {
+            setIsUploadingSource(false);
           }
         }}
         onManualClick={() => {
@@ -473,6 +477,8 @@ export default function MainPage() {
           if (!ocrResult) return;
 
           try {
+            setIsConfirmingOcr(true);
+
             const response = await api.patch<ProductSourceResponse>(
               `/product-sources/${ocrResult.sourceId}`,
               {
@@ -490,9 +496,38 @@ export default function MainPage() {
           } catch (error) {
             console.error("OCR 분석 제품 정보 수정 실패:", error);
             alert("제품 정보 확인에 실패했습니다.");
+          } finally {
+            setIsConfirmingOcr(false);
           }
         }}
       />
+      {isUploadingSource && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-gray-01/80">
+          <div className="flex h-[180px] w-[320px] flex-col items-center justify-center gap-[20px] rounded-[20px] bg-secondary-01">
+            <div className="h-[40px] w-[40px] animate-spin rounded-full border-4 border-primary-01 border-t-transparent" />
+            <p className="text-center text-title-sb-20 text-primary-01">
+              이미지를 분석하고 있어요
+            </p>
+            <p className="text-center text-body-m-16 text-gray-01">
+              제품 정보를 추출하는 중입니다.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {isConfirmingOcr && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-gray-01/80">
+          <div className="flex h-[180px] w-[320px] flex-col items-center justify-center gap-[20px] rounded-[20px] bg-secondary-01">
+            <div className="h-[40px] w-[40px] animate-spin rounded-full border-4 border-primary-01 border-t-transparent" />
+            <p className="text-center text-title-sb-20 text-primary-01">
+              제품 정보를 저장하고 있어요
+            </p>
+            <p className="text-center text-body-m-16 text-gray-01">
+              매뉴얼 검색을 준비하는 중입니다.
+            </p>
+          </div>
+        </div>
+      )}
     </MainLayout>
   );
 }
