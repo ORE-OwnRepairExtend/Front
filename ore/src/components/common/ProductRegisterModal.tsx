@@ -37,6 +37,12 @@ export default function ProductRegisterModal({
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (file.size > 5 * 1024 * 1024) {
+      alert("이미지는 5MB 이하만 업로드할 수 있습니다.");
+      e.target.value = "";
+      return;
+    }
+
     const nextPreviewUrl = URL.createObjectURL(file);
 
     setSelectedFile(file);

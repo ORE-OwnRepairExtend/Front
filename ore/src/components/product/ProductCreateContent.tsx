@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ProductInputBox from "./ProductInputBox";
 import ProductImageButton from "./ProductImageButton";
 import ProductCreateCategory from "./ProductCreateCategory";
@@ -13,14 +13,18 @@ import {
 import { useNavigate } from "react-router-dom";
 import { api } from "../../api/api";
 import type { ApiProductCategory } from "../../types/category";
+import { parseManualSummary } from "../../utils/parseManualSummary";
 
 type ExtractedProductData = {
   sourceId: string;
-  imageUrl: string;
-  ocrText: string;
-  modelNumber: string;
-  sourceType: "RECEIPT" | "SMS" | "STICKER" | "MANUAL";
-  createdAt: string;
+  productName: string;
+};
+
+type ManualSearchResponse = {
+  manualId: string;
+  manualUrl: string;
+  manualSummary: string;
+  customerCenter: string;
 };
 
 type EditProductData = {
@@ -65,14 +69,13 @@ export default function ProductCreateContent({
 
   const [nickname, setNickname] = useState(editProductData?.nickname ?? "");
   const [productName, setProductName] = useState(
-    editProductData?.productName ?? extractedData?.modelNumber ?? "",
+    editProductData?.productName ?? extractedData?.productName ?? "",
   );
   const [selectedCategory, setSelectedCategory] = useState(
     getCategoryLabel(editProductData?.category),
   );
-  const [manual, setManual] = useState(
-    editProductData?.manualContent ?? extractedData?.ocrText ?? "",
-  );
+  const [manual, setManual] = useState(editProductData?.manualContent ?? "");
+  const [isManualSearching, setIsManualSearching] = useState(false);
 
   const [purchaseDate, setPurchaseDate] = useState(
     editProductData?.purchaseDate ?? "",
@@ -92,7 +95,6 @@ export default function ProductCreateContent({
 
   const [productImage, setProductImage] = useState<File | null>(null);
   const [isImageDeleted, setIsImageDeleted] = useState(false);
-  
 
   const [alertMessage, setAlertMessage] = useState("");
 
@@ -191,6 +193,36 @@ export default function ProductCreateContent({
     }
   };
 
+  useEffect(() => {
+    const searchManual = async () => {
+      if (isEditMode) return;
+      if (!extractedData?.sourceId) return;
+
+      try {
+        setIsManualSearching(true);
+
+        const response = await api.post<ManualSearchResponse>(
+          "/products/manual/search",
+          {
+            sourceId: extractedData.sourceId,
+          },
+        );
+
+        const parsedManual = parseManualSummary(response.data.manualSummary);
+
+        setManual(
+          `사용방법\n${parsedManual.usage}\n\n관리방법\n${parsedManual.maintenance}\n\n고장/수리 안내\n${parsedManual.repair}`,
+        );
+      } catch (error) {
+        console.error("공식 매뉴얼 자동 검색 실패:", error);
+      } finally {
+        setIsManualSearching(false);
+      }
+    };
+
+    searchManual();
+  }, [extractedData?.sourceId, isEditMode]);
+
   return (
     <section className="w-full">
       <div className="flex flex-col gap-[3px] ">
@@ -240,7 +272,7 @@ export default function ProductCreateContent({
           {/* 제품 대표 이미지 */}
           <ProductFormRow label="제품 대표 이미지">
             <ProductImageButton
-              imageUrl={editProductData?.imageUrl ?? extractedData?.imageUrl ?? ""}
+              imageUrl={editProductData?.imageUrl ?? ""}
               onFileSelect={(file) => {
                 setProductImage(file);
 
@@ -260,11 +292,17 @@ export default function ProductCreateContent({
               multiline
               value={manual}
               onChange={(e) => setManual(e.target.value)}
-              placeholder="사용 방법을 입력해주세요"
+              placeholder={
+                isManualSearching
+                  ? "공식 매뉴얼을 검색하는 중입니다..."
+                  : "사용 방법을 입력해주세요"
+              }
               className="w-full"
-              disabled={isEditMode}
+              disabled={isEditMode || isManualSearching}
               inputClassName={
-                isEditMode ? "cursor-not-allowed text-gray-02" : ""
+                isEditMode || isManualSearching
+                  ? "cursor-not-allowed text-gray-02"
+                  : ""
               }
             />
           </ProductFormRow>

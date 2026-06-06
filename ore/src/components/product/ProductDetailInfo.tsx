@@ -41,15 +41,13 @@ type ProductDetailInfoProps = {
   repairinfos: RepairInfoItem[];
 
   officialUrl?: string;
-  customerServiceUrl?: string;
-
+  customerCenter?: string;
   onMaintenanceEditingChange?: (isEditing: boolean) => void;
 };
 
 export default function ProductDetailInfo({
   productId,
   manualContent,
-  manualPdfUrl,
   purchaseDate,
   showWarrantyInfo,
   warrantyMonths,
@@ -60,7 +58,7 @@ export default function ProductDetailInfo({
   notificationInfo,
   repairinfos,
   officialUrl,
-  customerServiceUrl,
+  customerCenter,
   // onMaintenanceEditingChange,
 }: ProductDetailInfoProps) {
   return (
@@ -75,12 +73,7 @@ export default function ProductDetailInfo({
 
       {/* 정보 영역 */}
       <div className="flex w-full flex-col items-center gap-[20px] px-[10px] pt-[15px]">
-        <ProductManual
-          content={manualContent}
-          onPdfClick={
-            manualPdfUrl ? () => window.open(manualPdfUrl, "_blank") : undefined
-          }
-        />
+        <ProductManual content={manualContent} />
 
         <div className="h-[2px] w-full bg-gray-02/50" />
 
@@ -126,29 +119,29 @@ export default function ProductDetailInfo({
         <div className="h-[2px] w-full bg-gray-02/50" />
 
         {/* 하단 버튼 영역 */}
-        {(officialUrl || customerServiceUrl) && (
+        {(officialUrl || customerCenter) && (
           <div className="flex w-full flex-col gap-[10px]">
             {officialUrl && (
               <CommonButton
                 className="w-full"
                 onClick={() => window.open(officialUrl, "_blank")}
               >
-                공식 홈페이지
+                공식 정보
               </CommonButton>
             )}
 
-            {customerServiceUrl && (
+            {customerCenter && (
               <CommonButton
-                className="w-full"
-                onClick={() => window.open(customerServiceUrl, "_blank")}
+                className="w-full !cursor-default"
+                onClick={undefined}
               >
-                고객 센터 연결
+                고객센터 : {customerCenter}
               </CommonButton>
             )}
           </div>
         )}
 
-        {(officialUrl || customerServiceUrl) && (
+        {(officialUrl || customerCenter) && (
           <div className="h-[2px] w-full bg-gray-02/50" />
         )}
       </div>

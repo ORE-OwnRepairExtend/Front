@@ -11,6 +11,7 @@ import { productCategories as categories } from "../../constants/productCategori
 import OcrConfirmModal, {
   type OcrConfirmForm,
 } from "../../components/product/OcrConfirmModal";
+import axios from "axios";
 
 type Product = {
   productId: string;
@@ -58,6 +59,9 @@ export default function ProductListPage() {
   const [registerModalKey, setRegisterModalKey] = useState(0);
 
   const navigate = useNavigate();
+
+  const [isUploadingSource, setIsUploadingSource] = useState(false);
+  const [isConfirmingOcr, setIsConfirmingOcr] = useState(false);
 
   // 드래그 스크롤
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -236,10 +240,11 @@ export default function ProductListPage() {
         onClose={() => setIsModalOpen(false)}
         onUploadSubmit={async (file, sourceType) => {
           try {
+            setIsUploadingSource(true);
+
             const accessToken = localStorage.getItem("accessToken");
 
             const formData = new FormData();
-
             formData.append("image", file);
             formData.append("sourceType", sourceType);
 
@@ -249,7 +254,6 @@ export default function ProductListPage() {
               {
                 headers: {
                   Authorization: `Bearer ${accessToken}`,
-                  "Content-Type": "multipart/form-data",
                 },
               },
             );
@@ -264,14 +268,20 @@ export default function ProductListPage() {
             });
 
             setIsModalOpen(false);
-          } catch (error) {
+          } catch (error: unknown) {
             console.error("이미지 업로드 실패:", error);
-            alert("이미지 업로드에 실패했습니다.");
+
+            if (axios.isAxiosError(error)) {
+              alert(
+                error.response?.data?.message ??
+                  "이미지 업로드에 실패했습니다.",
+              );
+            } else {
+              alert("이미지 업로드에 실패했습니다.");
+            }
+          } finally {
+            setIsUploadingSource(false);
           }
-        }}
-        onManualClick={() => {
-          navigate("/products/new");
-          setIsModalOpen(false);
         }}
       />
       <OcrConfirmModal
@@ -290,6 +300,8 @@ export default function ProductListPage() {
           if (!ocrResult) return;
 
           try {
+            setIsConfirmingOcr(true);
+
             const accessToken = localStorage.getItem("accessToken");
 
             const response = await api.patch<ProductSourceResponse>(
@@ -307,16 +319,56 @@ export default function ProductListPage() {
             );
 
             navigate("/products/new", {
-              state: response.data,
+              state: {
+                sourceId: response.data.sourceId,
+                productName: response.data.productName,
+              },
             });
 
             setOcrResult(null);
-          } catch (error) {
+          } catch (error: unknown) {
             console.error("OCR 분석 제품 정보 수정 실패:", error);
-            alert("제품 정보 확인에 실패했습니다.");
+
+            if (axios.isAxiosError(error)) {
+              alert(
+                error.response?.data?.message ??
+                  "제품 정보 확인에 실패했습니다.",
+              );
+            } else {
+              alert("제품 정보 확인에 실패했습니다.");
+            }
+          } finally {
+            setIsConfirmingOcr(false);
           }
         }}
       />
+
+      {isUploadingSource && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-gray-01/80">
+          <div className="flex h-[180px] w-[320px] flex-col items-center justify-center gap-[20px] rounded-[20px] bg-secondary-01">
+            <div className="h-[40px] w-[40px] animate-spin rounded-full border-4 border-primary-01 border-t-transparent" />
+            <p className="text-center text-title-sb-20 text-primary-01">
+              이미지를 분석하고 있어요
+            </p>
+            <p className="text-center text-body-m-16 text-gray-01">
+              제품 정보를 추출하는 중입니다.
+            </p>
+          </div>
+        </div>
+      )}
+      {isConfirmingOcr && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-gray-01/80">
+          <div className="flex h-[180px] w-[320px] flex-col items-center justify-center gap-[20px] rounded-[20px] bg-secondary-01">
+            <div className="h-[40px] w-[40px] animate-spin rounded-full border-4 border-primary-01 border-t-transparent" />
+            <p className="text-center text-title-sb-20 text-primary-01">
+              제품 정보를 저장하고 있어요
+            </p>
+            <p className="text-center text-body-m-16 text-gray-01">
+              매뉴얼 검색을 준비하는 중입니다.
+            </p>
+          </div>
+        </div>
+      )}
     </SecondLayout>
   );
 }

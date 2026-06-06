@@ -603,7 +603,6 @@ export default function ProductDetailPage() {
               }
               isFavorite={isFavorite}
               manualContent={product.manual?.manualContent ?? null}
-              manualPdfUrl={officialManual?.manualUrl}
               warrantyMonths={warranty?.warrantyMonths ?? null}
               warrantyEndDate={warranty?.warrantyEndDate}
               remainingDays={warranty?.remainingDays}
@@ -616,8 +615,8 @@ export default function ProductDetailPage() {
                 />
               }
               repairHistories={repairInfoes}
-              officialUrl="https://example.com"
-              customerServiceUrl={undefined}
+              officialUrl={officialManual?.manualUrl}
+              customerCenter={officialManual?.customerCenter}
               onFavoriteClick={handleFavoriteClick}
               onEditClick={handleEditProduct}
               onDeleteClick={handleDeleteProduct}
