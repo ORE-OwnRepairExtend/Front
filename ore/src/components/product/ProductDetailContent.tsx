@@ -8,7 +8,6 @@ import ProductDetailInfo from "./ProductDetailInfo";
 import type { MaintenanceHistoryItem } from "../../utils/maintenanceDate";
 import Modal from "../common/Modal";
 
-
 type MaintenanceCategory = {
   id: string;
   label: string;
@@ -43,7 +42,7 @@ type ProductDetailContentProps = {
   notificationInfo?: ReactNode;
   repairHistories: RepairInfoItem[];
   officialUrl?: string;
-  customerServiceUrl?: string;
+  customerCenter?: string;
 
   onEditClick?: () => void;
   onDeleteClick?: () => void;
@@ -68,7 +67,7 @@ export default function ProductDetailContent({
   notificationInfo,
   repairHistories,
   officialUrl,
-  customerServiceUrl,
+  customerCenter,
   onEditClick,
   onDeleteClick,
   onFavoriteClick,
@@ -110,7 +109,7 @@ export default function ProductDetailContent({
         notificationInfo={notificationInfo}
         repairinfos={repairHistories}
         officialUrl={officialUrl}
-        customerServiceUrl={customerServiceUrl}
+        customerCenter={customerCenter}
         onMaintenanceEditingChange={setIsMaintenanceEditing}
       />
 

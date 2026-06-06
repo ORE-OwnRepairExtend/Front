@@ -1,15 +1,10 @@
 import { parseManualSummary } from "../../utils/parseManualSummary";
-import CommonButton from "../common/CommonButton";
 
 type ProductManualProps = {
   content?: string | null;
-  onPdfClick?: () => void;
 };
 
-export default function ProductManual({
-  content = "",
-  onPdfClick,
-}: ProductManualProps) {
+export default function ProductManual({ content = "" }: ProductManualProps) {
   const parsedManual = content ? parseManualSummary(content) : null;
 
   const hasParsedManual =
@@ -21,16 +16,6 @@ export default function ProductManual({
       {/* 제목 + 버튼 */}
       <div className="flex items-center justify-between">
         <h3 className="text-body-sb-20 text-primary-01">매뉴얼</h3>
-
-        {onPdfClick && (
-          <CommonButton
-            variant="secondary"
-            className="py-[10px]"
-            onClick={onPdfClick}
-          >
-            PDF 원문
-          </CommonButton>
-        )}
       </div>
 
       {/* 내용 */}
