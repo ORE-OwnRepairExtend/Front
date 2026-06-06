@@ -79,10 +79,6 @@ function getNotificationStatus(status: string): NotificationStatus {
   return "진행중";
 }
 
-function toDateInputValue(date: string) {
-  return date.replaceAll(".", "-");
-}
-
 export default function ProductDetailPage() {
   const navigate = useNavigate();
   const { productId } = useParams();

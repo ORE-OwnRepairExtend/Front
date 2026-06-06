@@ -97,10 +97,6 @@ function formatNotificationDate(date: string) {
   return formatDate(parsedDate);
 }
 
-function toDateInputValue(date: string) {
-  return date.replaceAll(".", "-");
-}
-
 export default function ProductNotificationPage() {
   const { productId } = useParams();
 
@@ -128,12 +124,6 @@ export default function ProductNotificationPage() {
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
-
-  useEffect(() => {
-    setIsLoading(true);
-    setNotifications(mockNotifications);
-    setIsLoading(false);
-  }, []);
 
   const handleMouseDown = (e: MouseEvent<HTMLDivElement>) => {
     if (!scrollRef.current) return;
@@ -366,9 +356,7 @@ export default function ProductNotificationPage() {
           <div className="my-[10px] flex flex-1 flex-col items-center overflow-y-auto no-scrollbar">
             <section className="flex w-full flex-col gap-[20px] rounded-[30px] bg-white/50 px-[40px] py-[30px]">
               <div className="flex w-full items-center justify-between">
-                <h2 className="text-title-main text-primary-02">
-                  예정된 알림
-                </h2>
+                <h2 className="text-title-main text-primary-02">예정된 알림</h2>
 
                 <button
                   type="button"
@@ -411,9 +399,7 @@ export default function ProductNotificationPage() {
               <div className="h-[2px] w-full bg-gray-02/50" />
 
               <div className="flex w-full items-center justify-between">
-                <h2 className="text-title-main text-primary-02">
-                  완료된 알림
-                </h2>
+                <h2 className="text-title-main text-primary-02">완료된 알림</h2>
               </div>
 
               {completedNotifications.length > 0 ? (
