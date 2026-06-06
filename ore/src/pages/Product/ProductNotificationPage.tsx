@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   useCallback,
   useEffect,
@@ -91,6 +91,7 @@ function mapProductRepairReminderToNotification(
 }
 
 export default function ProductNotificationPage() {
+  const navigate = useNavigate();
   const { productId } = useParams();
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -317,8 +318,22 @@ export default function ProductNotificationPage() {
   const handleRepairHistoryRegister = async () => {
     if (!productId || !selectedNotification) return;
 
+    const repairState = {
+      productId,
+      notificationId: selectedNotification.notificationId,
+      title: selectedNotification.title,
+      date: completeDate.trim() ? completeDate : "",
+    };
+
     if (!completeDate.trim()) {
-      alert("완료 날짜를 입력해주세요.");
+      setSelectedNotification(null);
+      setIsCompleteModalOpen(false);
+      setCompleteDate("");
+
+      navigate(`/products/${productId}/repairs/new`, {
+        state: repairState,
+      });
+
       return;
     }
 
@@ -353,7 +368,9 @@ export default function ProductNotificationPage() {
       setIsCompleteModalOpen(false);
       setCompleteDate("");
 
-      console.log("수리 이력 등록하기");
+      navigate(`/products/${productId}/repairs/new`, {
+        state: repairState,
+      });
     } catch (error) {
       console.error("수리 예정 완료 처리 실패:", error);
       alert("수리 예정 완료 처리에 실패했습니다.");
@@ -441,7 +458,8 @@ export default function ProductNotificationPage() {
         sortNotificationsByDate(
           prev.filter(
             (notification) =>
-              notification.notificationId !== selectedNotification.notificationId,
+              notification.notificationId !==
+              selectedNotification.notificationId,
           ),
         ),
       );

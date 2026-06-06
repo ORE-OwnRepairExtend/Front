@@ -382,8 +382,22 @@ export default function ProductDetailPage() {
   const handleRepairHistoryRegister = async () => {
     if (!productId || !selectedNotification) return;
 
+    const repairState = {
+      productId,
+      notificationId: selectedNotification.notificationId,
+      title: selectedNotification.title,
+      date: completeDate.trim() ? completeDate : "",
+    };
+
     if (!completeDate.trim()) {
-      alert("완료 날짜를 입력해주세요.");
+      setSelectedNotification(null);
+      setIsCompleteModalOpen(false);
+      setCompleteDate("");
+
+      navigate(`/products/${productId}/repairs/new`, {
+        state: repairState,
+      });
+
       return;
     }
 
@@ -419,11 +433,7 @@ export default function ProductDetailPage() {
       setCompleteDate("");
 
       navigate(`/products/${productId}/repairs/new`, {
-        state: {
-          notificationId: selectedNotification.notificationId,
-          title: selectedNotification.title,
-          date: completeDate,
-        },
+        state: repairState,
       });
     } catch (error) {
       console.error("수리 예정 완료 처리 실패:", error);
@@ -512,7 +522,8 @@ export default function ProductDetailPage() {
         sortNotificationsByDate(
           prev.filter(
             (notification) =>
-              notification.notificationId !== selectedNotification.notificationId,
+              notification.notificationId !==
+              selectedNotification.notificationId,
           ),
         ),
       );
