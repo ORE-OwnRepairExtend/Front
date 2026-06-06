@@ -87,18 +87,18 @@ export default function SideNav() {
   return (
     <div className="flex h-full w-[140px] flex-col justify-between pt-[30px] pb-[50px]">
       {/* 로고 + 메뉴 */}
-      <div className="flex w-[140px] flex-col gap-[20px]">
+      <div className="flex w-[140px] flex-col gap-[40px]">
         {/* 로고 */}
         <div className="flex w-full justify-center">
           <img
             src={logoName}
             alt="ORE 로고"
-            className="h-auto w-[95px] object-contain"
+            className="h-auto w-full object-contain"
           />
         </div>
 
         {/* 메뉴 */}
-        <div className="flex w-full flex-col gap-[10px]">
+        <div className="flex w-full flex-col gap-[20px]">
           {menuList.map((menu) => {
             const isActive = getIsActive(menu.path);
 
