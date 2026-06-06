@@ -16,13 +16,8 @@ import type { ApiProductCategory } from "../../types/category";
 
 type ExtractedProductData = {
   sourceId: string;
-  imageUrl: string;
-  ocrText: string;
-  modelNumber: string;
-  sourceType: "RECEIPT" | "SMS" | "STICKER" | "MANUAL";
-  createdAt: string;
+  productName: string;
 };
-
 type EditProductData = {
   productId: string;
   productName: string;
@@ -65,14 +60,12 @@ export default function ProductCreateContent({
 
   const [nickname, setNickname] = useState(editProductData?.nickname ?? "");
   const [productName, setProductName] = useState(
-    editProductData?.productName ?? extractedData?.modelNumber ?? "",
+    editProductData?.productName ?? extractedData?.productName ?? "",
   );
   const [selectedCategory, setSelectedCategory] = useState(
     getCategoryLabel(editProductData?.category),
   );
-  const [manual, setManual] = useState(
-    editProductData?.manualContent ?? extractedData?.ocrText ?? "",
-  );
+  const [manual, setManual] = useState(editProductData?.manualContent ?? "");
 
   const [purchaseDate, setPurchaseDate] = useState(
     editProductData?.purchaseDate ?? "",
@@ -92,7 +85,6 @@ export default function ProductCreateContent({
 
   const [productImage, setProductImage] = useState<File | null>(null);
   const [isImageDeleted, setIsImageDeleted] = useState(false);
-  
 
   const [alertMessage, setAlertMessage] = useState("");
 
@@ -240,7 +232,7 @@ export default function ProductCreateContent({
           {/* 제품 대표 이미지 */}
           <ProductFormRow label="제품 대표 이미지">
             <ProductImageButton
-              imageUrl={editProductData?.imageUrl ?? extractedData?.imageUrl ?? ""}
+              imageUrl={editProductData?.imageUrl ?? ""}
               onFileSelect={(file) => {
                 setProductImage(file);
 

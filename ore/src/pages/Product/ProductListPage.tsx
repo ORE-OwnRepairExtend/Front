@@ -319,7 +319,10 @@ export default function ProductListPage() {
             );
 
             navigate("/products/new", {
-              state: response.data,
+              state: {
+                sourceId: response.data.sourceId,
+                productName: response.data.productName,
+              },
             });
 
             setOcrResult(null);

@@ -5,11 +5,7 @@ import type { ApiProductCategory } from "../../types/category";
 
 type ExtractedProductData = {
   sourceId: string;
-  imageUrl: string;
-  ocrText: string;
-  modelNumber: string;
-  sourceType: "RECEIPT" | "SMS" | "STICKER" | "MANUAL";
-  createdAt: string;
+  productName: string;
 };
 
 type EditProductData = {
@@ -60,7 +56,7 @@ export default function ProductCreatePage() {
 
   const extractedData: ExtractedProductData | null = isEditMode
     ? null
-    : state ?? null;
+    : (state ?? null);
 
   const editProductId = isEditMode ? state.productId : null;
   const editProductData = isEditMode ? state.productData : null;
