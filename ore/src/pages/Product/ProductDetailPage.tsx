@@ -57,30 +57,40 @@ type RepairHistoryResponse = {
 
 type NotificationStatus = "진행중" | "완료";
 
-type ProductNotificationApiResponse = {
-  notificationId: string;
+type ProductRepairReminderResponse = {
+  reminderId: string;
   title: string;
-  date: string;
-  status: string;
+  remindAt: string;
+  isDone: boolean;
+  createdAt: string;
 };
 
 type ProductNotificationResponse = {
   notificationId: string;
+  productId: string;
+  productName: string;
   title: string;
   date: string;
   status: NotificationStatus;
 };
 
-function getNotificationStatus(status: string): NotificationStatus {
-  if (status === "완료") {
-    return "완료";
-  }
-
-  return "진행중";
-}
-
 function toDateInputValue(date: string) {
   return date.replaceAll(".", "-");
+}
+
+function mapProductRepairReminderToNotification(
+  reminder: ProductRepairReminderResponse,
+  productId: string,
+  productName: string,
+): ProductNotificationResponse {
+  return {
+    notificationId: reminder.reminderId,
+    productId,
+    productName,
+    title: reminder.title,
+    date: reminder.remindAt,
+    status: reminder.isDone ? "완료" : "진행중",
+  };
 }
 
 export default function ProductDetailPage() {
@@ -163,24 +173,23 @@ export default function ProductDetailPage() {
           setWarranty(null);
         }
 
-        // 알림 정보
+        // 특정 제품 수리 예정 알림 정보
         try {
-          const notificationResponse = await api.get<
-            ProductNotificationApiResponse[]
-          >(`/products/${productId}/notifications`);
+          const reminderResponse = await api.get<
+            ProductRepairReminderResponse[]
+          >(`/products/${productId}/repair-reminders`);
 
-          const mappedNotifications = notificationResponse.data.map(
-            (notification) => ({
-              notificationId: notification.notificationId,
-              title: notification.title,
-              date: notification.date,
-              status: getNotificationStatus(notification.status),
-            }),
+          const mappedNotifications = reminderResponse.data.map((reminder) =>
+            mapProductRepairReminderToNotification(
+              reminder,
+              productId,
+              productData.productName,
+            ),
           );
 
           setNotifications(mappedNotifications);
-        } catch (notificationError) {
-          console.error("알림 정보 조회 실패:", notificationError);
+        } catch (reminderError) {
+          console.error("특정 제품 수리 예정 목록 조회 실패:", reminderError);
           setNotifications([]);
         }
 
@@ -359,8 +368,8 @@ export default function ProductDetailPage() {
   const handleEditNotification = () => {
     if (!selectedNotification) return;
 
-    setEditAlarmTitle("");
-    setEditAlarmDate("");
+    setEditAlarmTitle(selectedNotification.title);
+    setEditAlarmDate(toDateInputValue(selectedNotification.date));
     setIsEditModalOpen(true);
   };
 
