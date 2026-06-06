@@ -2,6 +2,7 @@ import { GoogleLogin } from "@react-oauth/google";
 import { useNavigate } from "react-router-dom";
 import { api } from "../../api/api";
 import googleLogo from "../../assets/google.svg";
+import logoName from "../../assets/icons/logo_name.svg";
 
 type LoginResponse = {
   accessToken: string;
@@ -44,8 +45,12 @@ export default function LoginPage() {
       {/* 바깥 반투명 박스 */}
       <div className="w-full max-w-[1400px] h-[90vh] rounded-[30px] bg-white/30 p-[25px] relative flex flex-col items-center justify-center gap-10">
         {/* 로고 */}
-        <div className="w-[60%] max-w-[465px] h-[280px] bg-gray-02 rounded-xl flex items-center justify-center text-gray-01 text-body-r-16">
-          로고
+        <div className="flex w-full justify-center">
+          <img
+            src={logoName}
+            alt="ORE 로고"
+            className="h-auto w-[465px] max-w-[60%] object-contain"
+          />
         </div>
 
         {/* 구글 로그인 버튼 */}
