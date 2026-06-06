@@ -32,6 +32,7 @@ type ProductRepairReminderResponse = {
   title: string;
   remindAt: string;
   isDone: boolean;
+  completedAt: string | null;
   createdAt: string;
 };
 
@@ -42,6 +43,13 @@ type ProductRepairReminderUpdateResponse = {
   isDone: boolean;
   completedAt: string | null;
   createdAt: string;
+  updatedAt: string;
+};
+
+type ProductRepairReminderDoneResponse = {
+  reminderId: string;
+  isDone: boolean;
+  completedAt: string | null;
   updatedAt: string;
 };
 
@@ -60,6 +68,12 @@ function toDateInputValue(date: string) {
   return date.replaceAll(".", "-");
 }
 
+function sortNotificationsByDate<T extends { date: string }>(items: T[]) {
+  return [...items].sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+  );
+}
+
 function mapProductRepairReminderToNotification(
   reminder: ProductRepairReminderResponse,
   productId: string,
@@ -69,7 +83,9 @@ function mapProductRepairReminderToNotification(
     productId,
     productName: "",
     title: reminder.title,
-    date: reminder.remindAt,
+    date: reminder.isDone
+      ? reminder.completedAt ?? reminder.remindAt
+      : reminder.remindAt,
     status: reminder.isDone ? "완료" : "진행중",
   };
 }
@@ -99,6 +115,7 @@ export default function ProductNotificationPage() {
 
   const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
   const [completeDate, setCompleteDate] = useState("");
+  const [isCompleteSubmitting, setIsCompleteSubmitting] = useState(false);
 
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
@@ -123,7 +140,7 @@ export default function ProductNotificationPage() {
         mapProductRepairReminderToNotification(reminder, productId),
       );
 
-      setNotifications(mappedNotifications);
+      setNotifications(sortNotificationsByDate(mappedNotifications));
     } catch (error) {
       console.error("특정 제품 수리 예정 목록 조회 실패:", error);
       setErrorMessage("수리 예정 목록을 불러오지 못했습니다.");
@@ -208,7 +225,10 @@ export default function ProductNotificationPage() {
         productId,
       );
 
-      setNotifications((prev) => [newNotification, ...prev]);
+      setNotifications((prev) =>
+        sortNotificationsByDate([newNotification, ...prev]),
+      );
+
       setIsAlarmModalOpen(false);
       setAlarmTitle("");
       setAlarmDate("");
@@ -241,60 +261,104 @@ export default function ProductNotificationPage() {
   };
 
   const handleCloseCompleteModal = () => {
+    if (isCompleteSubmitting) return;
+
     setIsCompleteModalOpen(false);
     setCompleteDate("");
   };
 
-  const handleCompleteOnlyNotification = () => {
-    if (!selectedNotification) return;
+  const handleCompleteOnlyNotification = async () => {
+    if (!productId || !selectedNotification) return;
 
     if (!completeDate.trim()) {
       alert("완료 날짜를 입력해주세요.");
       return;
     }
 
-    const completedNotification: ProductNotification = {
-      ...selectedNotification,
-      status: "완료",
-    };
+    try {
+      setIsCompleteSubmitting(true);
 
-    setNotifications((prev) =>
-      prev.map((notification) =>
-        notification.notificationId === selectedNotification.notificationId
-          ? completedNotification
-          : notification,
-      ),
-    );
+      const response = await api.patch<ProductRepairReminderDoneResponse>(
+        `/products/${productId}/repair-reminders/${selectedNotification.notificationId}/done`,
+        {
+          isDone: true,
+          completedDate: completeDate,
+        },
+      );
 
-    setSelectedNotification(null);
-    handleCloseCompleteModal();
+      const completedNotification: ProductNotification = {
+        ...selectedNotification,
+        date: response.data.completedAt ?? completeDate,
+        status: response.data.isDone ? "완료" : "진행중",
+      };
+
+      setNotifications((prev) =>
+        sortNotificationsByDate(
+          prev.map((notification) =>
+            notification.notificationId === selectedNotification.notificationId
+              ? completedNotification
+              : notification,
+          ),
+        ),
+      );
+
+      setSelectedNotification(null);
+      setIsCompleteModalOpen(false);
+      setCompleteDate("");
+    } catch (error) {
+      console.error("수리 예정 완료 처리 실패:", error);
+      alert("수리 예정 완료 처리에 실패했습니다.");
+    } finally {
+      setIsCompleteSubmitting(false);
+    }
   };
 
-  const handleRepairHistoryRegister = () => {
-    if (!selectedNotification) return;
+  const handleRepairHistoryRegister = async () => {
+    if (!productId || !selectedNotification) return;
 
     if (!completeDate.trim()) {
       alert("완료 날짜를 입력해주세요.");
       return;
     }
 
-    const completedNotification: ProductNotification = {
-      ...selectedNotification,
-      status: "완료",
-    };
+    try {
+      setIsCompleteSubmitting(true);
 
-    setNotifications((prev) =>
-      prev.map((notification) =>
-        notification.notificationId === selectedNotification.notificationId
-          ? completedNotification
-          : notification,
-      ),
-    );
+      const response = await api.patch<ProductRepairReminderDoneResponse>(
+        `/products/${productId}/repair-reminders/${selectedNotification.notificationId}/done`,
+        {
+          isDone: true,
+          completedDate: completeDate,
+        },
+      );
 
-    setSelectedNotification(null);
-    handleCloseCompleteModal();
+      const completedNotification: ProductNotification = {
+        ...selectedNotification,
+        date: response.data.completedAt ?? completeDate,
+        status: response.data.isDone ? "완료" : "진행중",
+      };
 
-    console.log("수리 이력 등록하기");
+      setNotifications((prev) =>
+        sortNotificationsByDate(
+          prev.map((notification) =>
+            notification.notificationId === selectedNotification.notificationId
+              ? completedNotification
+              : notification,
+          ),
+        ),
+      );
+
+      setSelectedNotification(null);
+      setIsCompleteModalOpen(false);
+      setCompleteDate("");
+
+      console.log("수리 이력 등록하기");
+    } catch (error) {
+      console.error("수리 예정 완료 처리 실패:", error);
+      alert("수리 예정 완료 처리에 실패했습니다.");
+    } finally {
+      setIsCompleteSubmitting(false);
+    }
   };
 
   const handleEditNotification = () => {
@@ -336,15 +400,19 @@ export default function ProductNotificationPage() {
         ...selectedNotification,
         notificationId: response.data.reminderId,
         title: response.data.title,
-        date: response.data.remindAt,
+        date: response.data.isDone
+          ? response.data.completedAt ?? response.data.remindAt
+          : response.data.remindAt,
         status: response.data.isDone ? "완료" : "진행중",
       };
 
       setNotifications((prev) =>
-        prev.map((notification) =>
-          notification.notificationId === selectedNotification.notificationId
-            ? editedNotification
-            : notification,
+        sortNotificationsByDate(
+          prev.map((notification) =>
+            notification.notificationId === selectedNotification.notificationId
+              ? editedNotification
+              : notification,
+          ),
         ),
       );
 
@@ -362,21 +430,23 @@ export default function ProductNotificationPage() {
     if (!selectedNotification) return;
 
     setNotifications((prev) =>
-      prev.filter(
-        (notification) =>
-          notification.notificationId !== selectedNotification.notificationId,
+      sortNotificationsByDate(
+        prev.filter(
+          (notification) =>
+            notification.notificationId !== selectedNotification.notificationId,
+        ),
       ),
     );
 
     setSelectedNotification(null);
   };
 
-  const scheduledNotifications = notifications.filter(
-    (notification) => notification.status === "진행중",
+  const scheduledNotifications = sortNotificationsByDate(
+    notifications.filter((notification) => notification.status === "진행중"),
   );
 
-  const completedNotifications = notifications.filter(
-    (notification) => notification.status === "완료",
+  const completedNotifications = sortNotificationsByDate(
+    notifications.filter((notification) => notification.status === "완료"),
   );
 
   if (isLoading) {
