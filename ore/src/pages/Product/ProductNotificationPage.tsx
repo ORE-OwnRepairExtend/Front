@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { useEffect, useRef, useState, type MouseEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react";
 import SecondLayout from "../../layout/SecondLayout";
 import Header from "../../components/header/Header";
 import ProductNotificationCard from "../../components/product/ProductNotificationCard";
@@ -8,87 +8,30 @@ import ProductNotificationEditModal from "../../components/product/ProductNotifi
 import ProductNotificationCompleteModal from "../../components/product/ProductNotificationCompleteModal";
 import RepairAlarmCreateModal from "../../components/repair/RepairAlarmCreateModal";
 import { formatDate } from "../../utils/formatDate";
+import { api } from "../../api/api";
 
 type NotificationStatus = "진행중" | "완료";
 
 type ProductNotification = {
   notificationId: string;
+  productId: string;
+  productName: string;
   title: string;
   date: string;
   status: NotificationStatus;
 };
 
-const mockNotifications: ProductNotification[] = [
-  {
-    notificationId: "1",
-    title: "렌즈 수리",
-    date: "2026.06.04",
-    status: "진행중",
-  },
-  {
-    notificationId: "2",
-    title: "렌즈 수리",
-    date: "2026.06.04",
-    status: "진행중",
-  },
-  {
-    notificationId: "3",
-    title: "렌즈 수리",
-    date: "2026.06.04",
-    status: "진행중",
-  },
-  {
-    notificationId: "4",
-    title: "렌즈 수리",
-    date: "2026.06.04",
-    status: "진행중",
-  },
-  {
-    notificationId: "5",
-    title: "렌즈 수리",
-    date: "2026.06.04",
-    status: "진행중",
-  },
-  {
-    notificationId: "6",
-    title: "렌즈 수리",
-    date: "2026.06.04",
-    status: "진행중",
-  },
-  {
-    notificationId: "7",
-    title: "렌즈 수리",
-    date: "2026.06.04",
-    status: "진행중",
-  },
-  {
-    notificationId: "8",
-    title: "렌즈 수리",
-    date: "2026.06.04",
-    status: "완료",
-  },
-  {
-    notificationId: "9",
-    title: "렌즈 수리",
-    date: "2026.06.04",
-    status: "완료",
-  },
-  {
-    notificationId: "10",
-    title: "렌즈 수리",
-    date: "2026.06.04",
-    status: "완료",
-  },
-  {
-    notificationId: "11",
-    title: "렌즈 수리",
-    date: "2026.06.04",
-    status: "완료",
-  },
-];
+type ProductRepairReminderResponse = {
+  reminderId: string;
+  title: string;
+  remindAt: string;
+  isDone: boolean;
+  createdAt: string;
+};
 
 function formatNotificationDate(date: string) {
-  const parsedDate = new Date(date);
+  const normalizedDate = date.replaceAll(".", "-");
+  const parsedDate = new Date(normalizedDate);
 
   if (Number.isNaN(parsedDate.getTime())) {
     return date;
@@ -101,6 +44,20 @@ function toDateInputValue(date: string) {
   return date.replaceAll(".", "-");
 }
 
+function mapProductRepairReminderToNotification(
+  reminder: ProductRepairReminderResponse,
+  productId: string,
+): ProductNotification {
+  return {
+    notificationId: reminder.reminderId,
+    productId,
+    productName: "",
+    title: reminder.title,
+    date: reminder.remindAt,
+    status: reminder.isDone ? "완료" : "진행중",
+  };
+}
+
 export default function ProductNotificationPage() {
   const { productId } = useParams();
 
@@ -109,11 +66,12 @@ export default function ProductNotificationPage() {
 
   const [notifications, setNotifications] = useState<ProductNotification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   const [isAlarmModalOpen, setIsAlarmModalOpen] = useState(false);
   const [alarmTitle, setAlarmTitle] = useState("");
   const [alarmDate, setAlarmDate] = useState("");
+  const [isAlarmSubmitting, setIsAlarmSubmitting] = useState(false);
 
   const [selectedNotification, setSelectedNotification] =
     useState<ProductNotification | null>(null);
@@ -129,11 +87,38 @@ export default function ProductNotificationPage() {
   const [startX, setStartX] = useState(0);
   const [scrollLeft, setScrollLeft] = useState(0);
 
+  const fetchRepairReminders = useCallback(async () => {
+    if (!productId) {
+      setIsLoading(false);
+      setErrorMessage("제품 정보를 찾을 수 없습니다.");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      setErrorMessage("");
+
+      const response = await api.get<ProductRepairReminderResponse[]>(
+        `/products/${productId}/repair-reminders`,
+      );
+
+      const mappedNotifications = response.data.map((reminder) =>
+        mapProductRepairReminderToNotification(reminder, productId),
+      );
+
+      setNotifications(mappedNotifications);
+    } catch (error) {
+      console.error("특정 제품 수리 예정 목록 조회 실패:", error);
+      setErrorMessage("수리 예정 목록을 불러오지 못했습니다.");
+      setNotifications([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [productId]);
+
   useEffect(() => {
-    setIsLoading(true);
-    setNotifications(mockNotifications);
-    setIsLoading(false);
-  }, []);
+    fetchRepairReminders();
+  }, [fetchRepairReminders]);
 
   const handleMouseDown = (e: MouseEvent<HTMLDivElement>) => {
     if (!scrollRef.current) return;
@@ -172,28 +157,50 @@ export default function ProductNotificationPage() {
   };
 
   const handleCloseAlarmModal = () => {
+    if (isAlarmSubmitting) return;
+
     setIsAlarmModalOpen(false);
     setAlarmTitle("");
     setAlarmDate("");
   };
 
-  const handleSubmitAlarm = () => {
-    if (!productId) return;
+  const handleSubmitAlarm = async () => {
+    if (!productId) {
+      alert("제품 정보를 찾을 수 없습니다.");
+      return;
+    }
 
     if (!alarmTitle.trim() || !alarmDate) {
       alert("알림 이름과 알림 날짜를 입력해주세요.");
       return;
     }
 
-    const newNotification: ProductNotification = {
-      notificationId: String(Date.now()),
-      title: alarmTitle,
-      date: alarmDate,
-      status: "진행중",
-    };
+    try {
+      setIsAlarmSubmitting(true);
 
-    setNotifications((prev) => [newNotification, ...prev]);
-    handleCloseAlarmModal();
+      const response = await api.post<ProductRepairReminderResponse>(
+        `/products/${productId}/repair-reminders`,
+        {
+          title: alarmTitle.trim(),
+          remindAt: alarmDate,
+        },
+      );
+
+      const newNotification = mapProductRepairReminderToNotification(
+        response.data,
+        productId,
+      );
+
+      setNotifications((prev) => [newNotification, ...prev]);
+      setIsAlarmModalOpen(false);
+      setAlarmTitle("");
+      setAlarmDate("");
+    } catch (error) {
+      console.error("수리 예정 등록 실패:", error);
+      alert("수리 예정 등록에 실패했습니다.");
+    } finally {
+      setIsAlarmSubmitting(false);
+    }
   };
 
   const handleCardClick = (notification: ProductNotification) => {
@@ -276,8 +283,8 @@ export default function ProductNotificationPage() {
   const handleEditNotification = () => {
     if (!selectedNotification) return;
 
-    setEditAlarmTitle("");
-    setEditAlarmDate("");
+    setEditAlarmTitle(selectedNotification.title);
+    setEditAlarmDate(toDateInputValue(selectedNotification.date));
     setIsEditModalOpen(true);
   };
 
@@ -339,6 +346,9 @@ export default function ProductNotificationPage() {
       <SecondLayout>
         <div className="flex h-full flex-col">
           <Header title="Product" showNotification={false} showCloseButton />
+          <div className="flex flex-1 items-center justify-center text-body-m-16 text-gray-01">
+            수리 예정 목록을 불러오는 중입니다.
+          </div>
         </div>
       </SecondLayout>
     );
@@ -444,6 +454,7 @@ export default function ProductNotificationPage() {
           open={isAlarmModalOpen}
           alarmTitle={alarmTitle}
           alarmDate={alarmDate}
+          isSubmitting={isAlarmSubmitting}
           onChangeAlarmTitle={setAlarmTitle}
           onChangeAlarmDate={setAlarmDate}
           onClose={handleCloseAlarmModal}
