@@ -13,6 +13,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { api } from "../../api/api";
 import type { ApiProductCategory } from "../../types/category";
+import { parseManualSummary } from "../../utils/parseManualSummary";
 
 type ExtractedProductData = {
   sourceId: string;
@@ -207,7 +208,11 @@ export default function ProductCreateContent({
           },
         );
 
-        setManual(response.data.manualSummary);
+        const parsedManual = parseManualSummary(response.data.manualSummary);
+
+        setManual(
+          `사용방법\n${parsedManual.usage}\n\n관리방법\n${parsedManual.maintenance}\n\n고장/수리 안내\n${parsedManual.repair}`,
+        );
       } catch (error) {
         console.error("공식 매뉴얼 자동 검색 실패:", error);
       } finally {
