@@ -2,6 +2,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import NavButton from "./NavButton";
 import { api } from "../../api/api";
 
+import logoName from "../../assets/icons/logo_name.svg";
+
 import dashboardGrayIcon from "../../assets/icons/nav/dashbord_gray.svg";
 import dashboardWhiteIcon from "../../assets/icons/nav/dashbord_white.svg";
 import productGrayIcon from "../../assets/icons/nav/product_gray.svg";
@@ -88,8 +90,12 @@ export default function SideNav() {
       {/* 로고 + 메뉴 */}
       <div className="flex w-[140px] flex-col gap-[20px]">
         {/* 로고 */}
-        <div className="flex h-[80px] items-center justify-center rounded-[10px] bg-gray-02">
-          로고
+        <div className="flex w-full justify-center">
+          <img
+            src={logoName}
+            alt="ORE 로고"
+            className="h-auto w-[95px] object-contain"
+          />
         </div>
 
         {/* 메뉴 */}
