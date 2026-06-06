@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ProductInputBox from "./ProductInputBox";
 import ProductImageButton from "./ProductImageButton";
 import ProductCreateCategory from "./ProductCreateCategory";
@@ -18,6 +18,14 @@ type ExtractedProductData = {
   sourceId: string;
   productName: string;
 };
+
+type ManualSearchResponse = {
+  manualId: string;
+  manualUrl: string;
+  manualSummary: string;
+  customerCenter: string;
+};
+
 type EditProductData = {
   productId: string;
   productName: string;
@@ -66,6 +74,7 @@ export default function ProductCreateContent({
     getCategoryLabel(editProductData?.category),
   );
   const [manual, setManual] = useState(editProductData?.manualContent ?? "");
+  const [isManualSearching, setIsManualSearching] = useState(false);
 
   const [purchaseDate, setPurchaseDate] = useState(
     editProductData?.purchaseDate ?? "",
@@ -183,6 +192,32 @@ export default function ProductCreateContent({
     }
   };
 
+  useEffect(() => {
+    const searchManual = async () => {
+      if (isEditMode) return;
+      if (!extractedData?.sourceId) return;
+
+      try {
+        setIsManualSearching(true);
+
+        const response = await api.post<ManualSearchResponse>(
+          "/products/manual/search",
+          {
+            sourceId: extractedData.sourceId,
+          },
+        );
+
+        setManual(response.data.manualSummary);
+      } catch (error) {
+        console.error("공식 매뉴얼 자동 검색 실패:", error);
+      } finally {
+        setIsManualSearching(false);
+      }
+    };
+
+    searchManual();
+  }, [extractedData?.sourceId, isEditMode]);
+
   return (
     <section className="w-full">
       <div className="flex flex-col gap-[3px] ">
@@ -252,11 +287,17 @@ export default function ProductCreateContent({
               multiline
               value={manual}
               onChange={(e) => setManual(e.target.value)}
-              placeholder="사용 방법을 입력해주세요"
+              placeholder={
+                isManualSearching
+                  ? "공식 매뉴얼을 검색하는 중입니다..."
+                  : "사용 방법을 입력해주세요"
+              }
               className="w-full"
-              disabled={isEditMode}
+              disabled={isEditMode || isManualSearching}
               inputClassName={
-                isEditMode ? "cursor-not-allowed text-gray-02" : ""
+                isEditMode || isManualSearching
+                  ? "cursor-not-allowed text-gray-02"
+                  : ""
               }
             />
           </ProductFormRow>
