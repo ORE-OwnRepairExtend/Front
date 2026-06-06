@@ -116,6 +116,7 @@ export default function ProductNotificationPage() {
   const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
   const [completeDate, setCompleteDate] = useState("");
   const [isCompleteSubmitting, setIsCompleteSubmitting] = useState(false);
+  const [isDeleteSubmitting, setIsDeleteSubmitting] = useState(false);
 
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
@@ -426,19 +427,32 @@ export default function ProductNotificationPage() {
     }
   };
 
-  const handleDeleteNotification = () => {
-    if (!selectedNotification) return;
+  const handleDeleteNotification = async () => {
+    if (!productId || !selectedNotification) return;
 
-    setNotifications((prev) =>
-      sortNotificationsByDate(
-        prev.filter(
-          (notification) =>
-            notification.notificationId !== selectedNotification.notificationId,
+    try {
+      setIsDeleteSubmitting(true);
+
+      await api.delete(
+        `/products/${productId}/repair-reminders/${selectedNotification.notificationId}`,
+      );
+
+      setNotifications((prev) =>
+        sortNotificationsByDate(
+          prev.filter(
+            (notification) =>
+              notification.notificationId !== selectedNotification.notificationId,
+          ),
         ),
-      ),
-    );
+      );
 
-    setSelectedNotification(null);
+      setSelectedNotification(null);
+    } catch (error) {
+      console.error("수리 예정 삭제 실패:", error);
+      alert("수리 예정 삭제에 실패했습니다.");
+    } finally {
+      setIsDeleteSubmitting(false);
+    }
   };
 
   const scheduledNotifications = sortNotificationsByDate(
@@ -577,7 +591,7 @@ export default function ProductNotificationPage() {
           onClose={handleCloseDetailModal}
           onComplete={handleOpenCompleteModal}
           onEdit={handleEditNotification}
-          onDelete={handleDeleteNotification}
+          onDelete={isDeleteSubmitting ? undefined : handleDeleteNotification}
         />
 
         <ProductNotificationEditModal

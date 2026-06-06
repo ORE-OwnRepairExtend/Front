@@ -62,6 +62,7 @@ type ProductRepairReminderResponse = {
   title: string;
   remindAt: string;
   isDone: boolean;
+  completedAt: string | null;
   createdAt: string;
 };
 
@@ -95,6 +96,12 @@ function toDateInputValue(date: string) {
   return date.replaceAll(".", "-");
 }
 
+function sortNotificationsByDate<T extends { date: string }>(items: T[]) {
+  return [...items].sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
+  );
+}
+
 function mapProductRepairReminderToNotification(
   reminder: ProductRepairReminderResponse,
   productId: string,
@@ -105,7 +112,9 @@ function mapProductRepairReminderToNotification(
     productId,
     productName,
     title: reminder.title,
-    date: reminder.remindAt,
+    date: reminder.isDone
+      ? reminder.completedAt ?? reminder.remindAt
+      : reminder.remindAt,
     status: reminder.isDone ? "완료" : "진행중",
   };
 }
@@ -139,6 +148,7 @@ export default function ProductDetailPage() {
   const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
   const [completeDate, setCompleteDate] = useState("");
   const [isCompleteSubmitting, setIsCompleteSubmitting] = useState(false);
+  const [isDeleteSubmitting, setIsDeleteSubmitting] = useState(false);
 
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
@@ -202,7 +212,7 @@ export default function ProductDetailPage() {
             ),
           );
 
-          setNotifications(mappedNotifications);
+          setNotifications(sortNotificationsByDate(mappedNotifications));
         } catch (reminderError) {
           console.error("특정 제품 수리 예정 목록 조회 실패:", reminderError);
           setNotifications([]);
@@ -344,14 +354,17 @@ export default function ProductDetailPage() {
 
       const completedNotification: ProductNotificationResponse = {
         ...selectedNotification,
+        date: response.data.completedAt ?? completeDate,
         status: response.data.isDone ? "완료" : "진행중",
       };
 
       setNotifications((prev) =>
-        prev.map((notification) =>
-          notification.notificationId === selectedNotification.notificationId
-            ? completedNotification
-            : notification,
+        sortNotificationsByDate(
+          prev.map((notification) =>
+            notification.notificationId === selectedNotification.notificationId
+              ? completedNotification
+              : notification,
+          ),
         ),
       );
 
@@ -381,20 +394,23 @@ export default function ProductDetailPage() {
         `/products/${productId}/repair-reminders/${selectedNotification.notificationId}/done`,
         {
           isDone: true,
-          completedAt: completeDate,
+          completedDate: completeDate,
         },
       );
 
       const completedNotification: ProductNotificationResponse = {
         ...selectedNotification,
+        date: response.data.completedAt ?? completeDate,
         status: response.data.isDone ? "완료" : "진행중",
       };
 
       setNotifications((prev) =>
-        prev.map((notification) =>
-          notification.notificationId === selectedNotification.notificationId
-            ? completedNotification
-            : notification,
+        sortNotificationsByDate(
+          prev.map((notification) =>
+            notification.notificationId === selectedNotification.notificationId
+              ? completedNotification
+              : notification,
+          ),
         ),
       );
 
@@ -456,15 +472,19 @@ export default function ProductDetailPage() {
         ...selectedNotification,
         notificationId: response.data.reminderId,
         title: response.data.title,
-        date: response.data.remindAt,
+        date: response.data.isDone
+          ? response.data.completedAt ?? response.data.remindAt
+          : response.data.remindAt,
         status: response.data.isDone ? "완료" : "진행중",
       };
 
       setNotifications((prev) =>
-        prev.map((notification) =>
-          notification.notificationId === selectedNotification.notificationId
-            ? editedNotification
-            : notification,
+        sortNotificationsByDate(
+          prev.map((notification) =>
+            notification.notificationId === selectedNotification.notificationId
+              ? editedNotification
+              : notification,
+          ),
         ),
       );
 
@@ -478,21 +498,36 @@ export default function ProductDetailPage() {
     }
   };
 
-  const handleDeleteNotification = () => {
-    if (!selectedNotification) return;
+  const handleDeleteNotification = async () => {
+    if (!productId || !selectedNotification) return;
 
-    setNotifications((prev) =>
-      prev.filter(
-        (notification) =>
-          notification.notificationId !== selectedNotification.notificationId,
-      ),
-    );
+    try {
+      setIsDeleteSubmitting(true);
 
-    setSelectedNotification(null);
+      await api.delete(
+        `/products/${productId}/repair-reminders/${selectedNotification.notificationId}`,
+      );
+
+      setNotifications((prev) =>
+        sortNotificationsByDate(
+          prev.filter(
+            (notification) =>
+              notification.notificationId !== selectedNotification.notificationId,
+          ),
+        ),
+      );
+
+      setSelectedNotification(null);
+    } catch (error) {
+      console.error("수리 예정 삭제 실패:", error);
+      alert("수리 예정 삭제에 실패했습니다.");
+    } finally {
+      setIsDeleteSubmitting(false);
+    }
   };
 
-  const scheduledNotifications = notifications.filter(
-    (notification) => notification.status === "진행중",
+  const scheduledNotifications = sortNotificationsByDate(
+    notifications.filter((notification) => notification.status === "진행중"),
   );
 
   if (isLoading) {
@@ -587,7 +622,7 @@ export default function ProductDetailPage() {
           onClose={handleCloseDetailModal}
           onComplete={handleOpenCompleteModal}
           onEdit={handleEditNotification}
-          onDelete={handleDeleteNotification}
+          onDelete={isDeleteSubmitting ? undefined : handleDeleteNotification}
         />
 
         <ProductNotificationEditModal
