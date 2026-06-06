@@ -8,6 +8,8 @@ type NotificationStatus = "진행중" | "완료";
 
 type ProductNotification = {
   notificationId: string;
+  productId: string;
+  productName: string;
   title: string;
   date: string;
   status: NotificationStatus;
