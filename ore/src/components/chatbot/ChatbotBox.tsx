@@ -1,5 +1,8 @@
+import { useEffect, useState } from "react";
 import chatPlusIcon from "../../assets/chat_plus.svg";
 import sendIcon from "../../assets/send.svg";
+import { api } from "../../api/api";
+import type { ApiProductCategory } from "../../types/category";
 
 type ChatMessage = {
   id: number;
@@ -7,46 +10,23 @@ type ChatMessage = {
   text: string;
 };
 
-const chatMessages: ChatMessage[] = [
-  {
-    id: 1,
-    type: "bot",
-    text: "안녕하세요! 오래의 AI 챗봇입니다.\n무엇을 도와드릴까요?",
-  },
-  {
-    id: 2,
-    type: "user",
-    text: "제품의 서비스센터 정보를 알고 싶어요",
-  },
-  {
-    id: 3,
-    type: "user",
-    text: "제품의 서비스센터 정보를 알고 싶어요",
-  },
-  {
-    id: 4,
-    type: "bot",
-    text: "안녕하세요! 오래의 AI 챗봇입니다.\n무엇을 도와드릴까요?",
-  },
-  {
-    id: 5,
-    type: "bot",
-    text: "안녕하세요! 오래의 AI 챗봇입니다.\n무엇을 도와드릴까요?무엇을 도와드릴까요?무엇을 도와드릴까요?무엇을 도와드릴까요?무엇을 도와드릴까요?",
-  },
-  {
-    id: 6,
-    type: "user",
-    text: "제품의 서비스센터 정보를 알고 싶어요제품의 서비스센터 정보를 알고 싶어요제품의 서비스센터 정보를 알고 싶어요제품의 서비스센터 정보를 알고 싶어요제품의 서비스센터 정보를 알고 싶어요제품의 서비스센터 정보를 알고 싶어요제품의 서비스센터 정보를 알고 싶어요제품의 서비스센터 정보를 알고 싶어요제품의 서비스센터 정보를 알고 싶어요",
-  },
-];
+type ProductListResponse = {
+  productId: string;
+  name: string;
+  nickname: string;
+  category: ApiProductCategory;
+  imageUrl: string;
+  isFavorite: boolean;
+  hasRepairHistory: boolean;
+  purchaseDate: string;
+  remainingDays: number | null;
+  createdAt: string;
+};
 
-const quickMenus = [
-  "자주 찾는 질문",
-  "내 제품 조회",
-  "내 제품 조회",
-  "내 제품 조회",
-  "내 제품 조회",
-];
+type ProductOption = {
+  productId: string;
+  label: string;
+};
 
 function renderBotMessage(text: string) {
   const parts = text.split("오래");
@@ -62,6 +42,62 @@ function renderBotMessage(text: string) {
 }
 
 export default function ChatbotBox() {
+  const [products, setProducts] = useState<ProductOption[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      id: 1,
+      type: "bot",
+      text: "안녕하세요! 오래의 AI 챗봇입니다.\n무엇을 도와드릴까요?",
+    },
+  ]);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await api.get<ProductListResponse[]>("/products");
+
+        const mappedProducts: ProductOption[] = response.data.map((product) => ({
+          productId: product.productId,
+          label: product.nickname || product.name,
+        }));
+
+        setProducts(mappedProducts);
+      } catch (error) {
+        console.error("제품 목록 조회 실패:", error);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  const handleProductClick = (product: ProductOption) => {
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: Date.now(),
+        type: "user",
+        text: product.label,
+      },
+    ]);
+
+    // todo: 선택한 제품 기준으로 AI 챗봇 API 호출
+    console.log("선택한 제품:", product);
+  };
+
+  const handleEtcClick = () => {
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: Date.now(),
+        type: "user",
+        text: "기타 질문",
+      },
+    ]);
+
+    // todo: 기타 질문 모드 처리
+    console.log("기타 질문 선택");
+  };
+
   return (
     <section
       className="
@@ -88,7 +124,7 @@ export default function ChatbotBox() {
             <div className="h-0 flex-1 border-t-2 border-dashed border-primary-01" />
           </div>
 
-          {chatMessages.map((message) => (
+          {messages.map((message) => (
             <div
               key={message.id}
               className={`
@@ -113,24 +149,55 @@ export default function ChatbotBox() {
               </div>
             </div>
           ))}
-        </div>
-      </div>
 
-      {/* 빠른 질문 버튼 */}
-      <div className="mt-[15px] flex shrink-0 flex-wrap gap-[10px]">
-        {quickMenus.map((menu, index) => (
-          <button
-            key={`${menu}-${index}`}
-            type="button"
-            className="
-              rounded-full bg-white px-[22px] py-[7px]
-              text-body-r-12 text-primary-01
-              hover:bg-neutral-01 transition
-            "
-          >
-            {menu}
-          </button>
-        ))}
+          {/* 제품 선택 메시지 */}
+          <div className="flex items-start gap-[15px] justify-start">
+            <div className="mt-[3px] h-[28px] w-[28px] shrink-0 rounded-full bg-gray-02" />
+
+            <div
+              className="
+                max-w-[420px] rounded-[20px]
+                bg-white px-[22px] py-[20px]
+                text-black
+              "
+            >
+              <p className="mb-[14px] text-body-m-12">
+                원하는 제품을 선택해주세요.
+              </p>
+
+              <div className="flex flex-wrap gap-[10px]">
+                {products.map((product) => (
+                  <button
+                    key={product.productId}
+                    type="button"
+                    onClick={() => handleProductClick(product)}
+                    className="
+                      rounded-full border border-primary-01
+                      px-[20px] py-[8px]
+                      text-body-r-12 text-primary-01
+                      transition hover:bg-primary-01 hover:text-white
+                    "
+                  >
+                    {product.label}
+                  </button>
+                ))}
+
+                <button
+                  type="button"
+                  onClick={handleEtcClick}
+                  className="
+                    rounded-full border border-primary-01
+                    px-[20px] py-[8px]
+                    text-body-r-12 text-primary-01
+                    transition hover:bg-primary-01 hover:text-white
+                  "
+                >
+                  기타 질문
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* 입력창 */}
