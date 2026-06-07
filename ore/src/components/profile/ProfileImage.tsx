@@ -1,7 +1,22 @@
+import { useEffect, useState } from "react";
+import logoImage from "../../../public/photos/logo.png";
+
 type ProfileImageProps = {
   imageUrl?: string;
   alt?: string;
   size?: number;
+};
+
+const normalizeProfileImageUrl = (url?: string) => {
+  if (!url) return logoImage;
+
+  const googleUrlIndex = url.indexOf("https%3A//lh3.googleusercontent.com");
+
+  if (googleUrlIndex !== -1) {
+    return decodeURIComponent(url.slice(googleUrlIndex));
+  }
+
+  return url;
 };
 
 export default function ProfileImage({
@@ -9,6 +24,12 @@ export default function ProfileImage({
   alt = "profile",
   size = 100,
 }: ProfileImageProps) {
+  const [src, setSrc] = useState(normalizeProfileImageUrl(imageUrl));
+
+  useEffect(() => {
+    setSrc(normalizeProfileImageUrl(imageUrl));
+  }, [imageUrl]);
+
   return (
     <div
       className="flex items-center justify-center overflow-hidden bg-[#D0D0D0]"
@@ -18,12 +39,15 @@ export default function ProfileImage({
         borderRadius: 30,
       }}
     >
-      {imageUrl ? (
-        <img src={imageUrl} alt={alt} className="w-full h-full object-cover" />
-      ) : (
-        // 기본
-        <span className="text-gray-500 text-sm">ORE</span>
-      )}
+      <img
+        src={src}
+        alt={alt}
+        referrerPolicy="no-referrer"
+        onError={() => {
+          setSrc(logoImage);
+        }}
+        className="h-full w-full object-cover"
+      />
     </div>
   );
 }
