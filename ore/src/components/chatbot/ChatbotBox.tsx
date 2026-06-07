@@ -28,6 +28,26 @@ type ProductOption = {
   label: string;
 };
 
+type SelectedTarget =
+  | {
+      type: "product";
+      productId: string;
+      label: string;
+    }
+  | {
+      type: "etc";
+      productId: null;
+      label: string;
+    };
+
+const initialMessages: ChatMessage[] = [
+  {
+    id: 1,
+    type: "bot",
+    text: "안녕하세요! 오래의 AI 챗봇입니다.\n무엇을 도와드릴까요?",
+  },
+];
+
 function renderBotMessage(text: string) {
   const parts = text.split("오래");
 
@@ -43,17 +63,14 @@ function renderBotMessage(text: string) {
 
 export default function ChatbotBox() {
   const [products, setProducts] = useState<ProductOption[]>([]);
-  const [selectedProduct, setSelectedProduct] = useState<ProductOption | null>(
+  const [selectedTarget, setSelectedTarget] = useState<SelectedTarget | null>(
     null,
   );
+  const [inputValue, setInputValue] = useState("");
 
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: 1,
-      type: "bot",
-      text: "안녕하세요! 오래의 AI 챗봇입니다.\n무엇을 도와드릴까요?",
-    },
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
+
+  const isChatDisabled = selectedTarget === null;
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -75,14 +92,25 @@ export default function ChatbotBox() {
   }, []);
 
   const handleProductClick = (product: ProductOption) => {
-    setSelectedProduct(product);
+    setSelectedTarget({
+      type: "product",
+      productId: product.productId,
+      label: product.label,
+    });
 
-    setMessages((prev) => [
-      ...prev,
+    setInputValue("");
+
+    setMessages([
+      ...initialMessages,
       {
         id: Date.now(),
         type: "user",
         text: product.label,
+      },
+      {
+        id: Date.now() + 1,
+        type: "bot",
+        text: `${product.label}에 대해 궁금한 점을 입력해주세요.`,
       },
     ]);
 
@@ -91,35 +119,68 @@ export default function ChatbotBox() {
   };
 
   const handleEtcClick = () => {
-    setSelectedProduct(null);
+    setSelectedTarget({
+      type: "etc",
+      productId: null,
+      label: "기타 질문",
+    });
+
+    setInputValue("");
+
+    setMessages([
+      ...initialMessages,
+      {
+        id: Date.now(),
+        type: "user",
+        text: "기타 질문",
+      },
+      {
+        id: Date.now() + 1,
+        type: "bot",
+        text: "제품 외에 궁금한 점을 입력해주세요.",
+      },
+    ]);
+
+    // todo: 기타 질문 세션 생성 API 호출
+    console.log("기타 질문 선택");
+  };
+
+  const handleNewProductQuestionClick = () => {
+    setSelectedTarget(null);
+    setInputValue("");
+    setMessages(initialMessages);
+
+    // todo: 새 제품 질문하기 클릭 시 기존 세션 종료 또는 새 세션 준비
+    console.log("다른 제품 질문하기 클릭");
+  };
+
+  const handleSendClick = () => {
+    const trimmedValue = inputValue.trim();
+
+    if (!selectedTarget || !trimmedValue) return;
 
     setMessages((prev) => [
       ...prev,
       {
         id: Date.now(),
         type: "user",
-        text: "기타 질문",
+        text: trimmedValue,
       },
     ]);
 
-    // todo: 기타 질문 모드 처리
-    console.log("기타 질문 선택");
+    setInputValue("");
+
+    // todo: selectedTarget 기준으로 AI 챗봇 API 호출
+    console.log("질문 전송:", {
+      target: selectedTarget,
+      message: trimmedValue,
+    });
   };
 
-  const handleNewProductQuestionClick = () => {
-    setSelectedProduct(null);
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== "Enter") return;
 
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        type: "bot",
-        text: "새로 질문할 제품을 선택해주세요.",
-      },
-    ]);
-
-    // todo: 다른 제품 질문하기 클릭 시 새 채팅 세션 생성 또는 제품 재선택 처리
-    console.log("새 제품 질문하기 클릭");
+    handleSendClick();
   };
 
   return (
@@ -175,57 +236,59 @@ export default function ChatbotBox() {
           ))}
 
           {/* 제품 선택 메시지 */}
-          <div className="flex items-start gap-[15px] justify-start">
-            <div className="mt-[3px] h-[28px] w-[28px] shrink-0 rounded-full bg-gray-02" />
+          {!selectedTarget && (
+            <div className="flex items-start gap-[15px] justify-start">
+              <div className="mt-[3px] h-[28px] w-[28px] shrink-0 rounded-full bg-gray-02" />
 
-            <div
-              className="
-                max-w-[420px] rounded-[20px]
-                bg-white px-[22px] py-[20px]
-                text-black
-              "
-            >
-              <p className="mb-[14px] text-body-m-12">
-                원하는 제품을 선택해주세요.
-              </p>
+              <div
+                className="
+                  max-w-[420px] rounded-[20px]
+                  bg-white px-[22px] py-[20px]
+                  text-black
+                "
+              >
+                <p className="mb-[14px] text-body-m-12">
+                  원하는 제품을 선택해주세요.
+                </p>
 
-              <div className="flex flex-wrap gap-[10px]">
-                {products.map((product) => (
+                <div className="flex flex-wrap gap-[10px]">
+                  {products.map((product) => (
+                    <button
+                      key={product.productId}
+                      type="button"
+                      onClick={() => handleProductClick(product)}
+                      className="
+                        rounded-full border-2 border-primary-01
+                        px-[20px] py-[8px]
+                        text-body-r-12 text-primary-01
+                        transition hover:bg-primary-01 hover:text-white
+                      "
+                    >
+                      {product.label}
+                    </button>
+                  ))}
+
                   <button
-                    key={product.productId}
                     type="button"
-                    onClick={() => handleProductClick(product)}
+                    onClick={handleEtcClick}
                     className="
-                      rounded-full border border-primary-01
+                      rounded-full border-2 border-primary-01
                       px-[20px] py-[8px]
                       text-body-r-12 text-primary-01
                       transition hover:bg-primary-01 hover:text-white
                     "
                   >
-                    {product.label}
+                    기타 질문
                   </button>
-                ))}
-
-                <button
-                  type="button"
-                  onClick={handleEtcClick}
-                  className="
-                    rounded-full border border-primary-01
-                    px-[20px] py-[8px]
-                    text-body-r-12 text-primary-01
-                    transition hover:bg-primary-01 hover:text-white
-                  "
-                >
-                  기타 질문
-                </button>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
       {/* 다른 제품 질문하기 버튼 */}
-      {selectedProduct && (
+      {selectedTarget && (
         <div className="mt-[12px] flex shrink-0 justify-end">
           <button
             type="button"
@@ -244,18 +307,20 @@ export default function ChatbotBox() {
 
       {/* 입력창 */}
       <div
-        className="
+        className={`
           mt-[12px] flex h-[48px] shrink-0 items-center gap-[10px]
           rounded-[10px] border-2 border-primary-01
           bg-white px-[10px]
-        "
+          ${isChatDisabled ? "opacity-60" : ""}
+        `}
       >
         <button
           type="button"
+          disabled={isChatDisabled}
           className="
             flex h-[32px] w-[32px] shrink-0 items-center justify-center
             rounded-[8px] bg-secondary-01
-            cursor-pointer
+            cursor-pointer disabled:cursor-not-allowed
           "
         >
           <img
@@ -267,20 +332,32 @@ export default function ChatbotBox() {
 
         <input
           type="text"
+          value={inputValue}
+          disabled={isChatDisabled}
+          onChange={(e) => setInputValue(e.target.value)}
+          onKeyDown={handleInputKeyDown}
+          placeholder={
+            isChatDisabled
+              ? "먼저 제품을 선택해주세요."
+              : "궁금한 내용을 입력해주세요."
+          }
           className="
             flex-1 bg-transparent
             text-body-r-12 text-black
             outline-none
             placeholder:text-gray-01
+            disabled:cursor-not-allowed
           "
         />
 
         <button
           type="button"
+          disabled={isChatDisabled || inputValue.trim().length === 0}
+          onClick={handleSendClick}
           className="
             flex h-[34px] w-[34px] shrink-0 items-center justify-center
             rounded-[9px] bg-primary-01
-            cursor-pointer
+            cursor-pointer disabled:cursor-not-allowed disabled:opacity-50
           "
         >
           <img src={sendIcon} alt="보내기" className="h-[18px] w-[18px]" />
