@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
+import { type KeyboardEvent, useEffect, useState } from "react";
 import chatPlusIcon from "../../assets/chat_plus.svg";
 import sendIcon from "../../assets/send.svg";
 import { api } from "../../api/api";
 import type { ApiProductCategory } from "../../types/category";
 
 type ChatMessage = {
-  id: number;
+  id: string;
   type: "bot" | "user";
   text: string;
 };
@@ -34,6 +34,13 @@ type ChatSessionResponse = {
   createdAt: string;
 };
 
+type ChatMessageResponse = {
+  messageId: string;
+  role: "USER" | "AI";
+  content: string;
+  createdAt: string;
+};
+
 type SelectedTarget =
   | {
       type: "product";
@@ -46,9 +53,14 @@ type SelectedTarget =
       label: string;
     };
 
+type ChatSessionSelectEventDetail = {
+  sessionId: string;
+  productId: string | null;
+};
+
 const initialMessages: ChatMessage[] = [
   {
-    id: 1,
+    id: "initial-1",
     type: "bot",
     text: "안녕하세요! 오래의 AI 챗봇입니다.\n무엇을 도와드릴까요?",
   },
@@ -74,11 +86,13 @@ export default function ChatbotBox() {
   );
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isCreatingSession, setIsCreatingSession] = useState(false);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [inputValue, setInputValue] = useState("");
 
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
 
-  const isChatDisabled = selectedTarget === null || sessionId === null;
+  const isChatDisabled =
+    selectedTarget === null || sessionId === null || isLoadingMessages;
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -99,12 +113,78 @@ export default function ChatbotBox() {
     fetchProducts();
   }, []);
 
+  useEffect(() => {
+    const handleSessionSelect = async (event: Event) => {
+      const customEvent = event as CustomEvent<ChatSessionSelectEventDetail>;
+      const { sessionId: selectedSessionId, productId } = customEvent.detail;
+
+      await fetchChatMessages(selectedSessionId, productId);
+    };
+
+    window.addEventListener("chat-session-select", handleSessionSelect);
+
+    return () => {
+      window.removeEventListener("chat-session-select", handleSessionSelect);
+    };
+  }, []);
+
   const createChatSession = async (productId: string | null) => {
     const response = await api.post<ChatSessionResponse>("/chat/sessions", {
       productId,
     });
 
     return response.data;
+  };
+
+  const fetchChatMessages = async (
+    selectedSessionId: string,
+    productId: string | null,
+  ) => {
+    try {
+      setIsLoadingMessages(true);
+
+      const response = await api.get<ChatMessageResponse[]>(
+        `/chat/sessions/${selectedSessionId}/messages`,
+      );
+
+      const mappedMessages: ChatMessage[] = response.data.map((message) => ({
+        id: message.messageId,
+        type: message.role === "USER" ? "user" : "bot",
+        text: message.content,
+      }));
+
+      setSessionId(selectedSessionId);
+      setInputValue("");
+
+      setSelectedTarget(
+        productId
+          ? {
+              type: "product",
+              productId,
+              label: "제품 질문",
+            }
+          : {
+              type: "etc",
+              productId: null,
+              label: "기타 질문",
+            },
+      );
+
+      setMessages(mappedMessages.length > 0 ? mappedMessages : initialMessages);
+    } catch (error) {
+      console.error("채팅 메시지 조회 실패:", error);
+
+      setMessages([
+        ...initialMessages,
+        {
+          id: `error-${Date.now()}`,
+          type: "bot",
+          text: "채팅 메시지를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.",
+        },
+      ]);
+    } finally {
+      setIsLoadingMessages(false);
+    }
   };
 
   const handleProductClick = async (product: ProductOption) => {
@@ -128,12 +208,12 @@ export default function ChatbotBox() {
       setMessages([
         ...initialMessages,
         {
-          id: Date.now(),
+          id: `user-${Date.now()}`,
           type: "user",
           text: product.label,
         },
         {
-          id: Date.now() + 1,
+          id: `bot-${Date.now() + 1}`,
           type: "bot",
           text: `${product.label}에 대해 궁금한 점을 입력해주세요.`,
         },
@@ -144,7 +224,7 @@ export default function ChatbotBox() {
       setMessages((prev) => [
         ...prev,
         {
-          id: Date.now(),
+          id: `error-${Date.now()}`,
           type: "bot",
           text: "채팅 세션을 생성하지 못했습니다. 잠시 후 다시 시도해주세요.",
         },
@@ -175,12 +255,12 @@ export default function ChatbotBox() {
       setMessages([
         ...initialMessages,
         {
-          id: Date.now(),
+          id: `user-${Date.now()}`,
           type: "user",
           text: "기타 질문",
         },
         {
-          id: Date.now() + 1,
+          id: `bot-${Date.now() + 1}`,
           type: "bot",
           text: "제품 외에 궁금한 점을 입력해주세요.",
         },
@@ -191,7 +271,7 @@ export default function ChatbotBox() {
       setMessages((prev) => [
         ...prev,
         {
-          id: Date.now(),
+          id: `error-${Date.now()}`,
           type: "bot",
           text: "채팅 세션을 생성하지 못했습니다. 잠시 후 다시 시도해주세요.",
         },
@@ -216,7 +296,7 @@ export default function ChatbotBox() {
     setMessages((prev) => [
       ...prev,
       {
-        id: Date.now(),
+        id: `user-${Date.now()}`,
         type: "user",
         text: trimmedValue,
       },
@@ -232,7 +312,7 @@ export default function ChatbotBox() {
     });
   };
 
-  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleInputKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key !== "Enter") return;
 
     handleSendClick();
@@ -264,17 +344,9 @@ export default function ChatbotBox() {
             <div className="h-0 flex-1 border-t-2 border-dashed border-primary-01" />
           </div>
 
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`
-                flex items-start gap-[15px]
-                ${message.type === "user" ? "justify-end" : "justify-start"}
-              `}
-            >
-              {message.type === "bot" && (
-                <div className="mt-[3px] h-[28px] w-[28px] shrink-0 rounded-full bg-gray-02" />
-              )}
+          {isLoadingMessages && (
+            <div className="flex items-start gap-[15px] justify-start">
+              <div className="mt-[3px] h-[28px] w-[28px] shrink-0 rounded-full bg-gray-02" />
 
               <div
                 className="
@@ -283,15 +355,40 @@ export default function ChatbotBox() {
                   text-body-m-10 text-black
                 "
               >
-                {message.type === "bot"
-                  ? renderBotMessage(message.text)
-                  : message.text}
+                메시지를 불러오는 중입니다.
               </div>
             </div>
-          ))}
+          )}
+
+          {!isLoadingMessages &&
+            messages.map((message) => (
+              <div
+                key={message.id}
+                className={`
+                  flex items-start gap-[15px]
+                  ${message.type === "user" ? "justify-end" : "justify-start"}
+                `}
+              >
+                {message.type === "bot" && (
+                  <div className="mt-[3px] h-[28px] w-[28px] shrink-0 rounded-full bg-gray-02" />
+                )}
+
+                <div
+                  className="
+                    max-w-[420px] whitespace-pre-line rounded-[8px]
+                    bg-white px-[18px] py-[12px]
+                    text-body-m-10 text-black
+                  "
+                >
+                  {message.type === "bot"
+                    ? renderBotMessage(message.text)
+                    : message.text}
+                </div>
+              </div>
+            ))}
 
           {/* 제품 선택 메시지 */}
-          {!selectedTarget && (
+          {!selectedTarget && !isLoadingMessages && (
             <div className="flex items-start gap-[15px] justify-start">
               <div className="mt-[3px] h-[28px] w-[28px] shrink-0 rounded-full bg-gray-02" />
 

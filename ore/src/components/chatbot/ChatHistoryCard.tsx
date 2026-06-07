@@ -47,36 +47,47 @@ export default function ChatHistoryCard() {
     fetchChatSessions();
   }, []);
 
+  const handleSessionClick = (chat: ChatSession) => {
+    window.dispatchEvent(
+      new CustomEvent("chat-session-select", {
+        detail: {
+          sessionId: chat.sessionId,
+          productId: chat.productId,
+        },
+      }),
+    );
+  };
+
   return (
     <div className="flex max-h-[430px] w-[230px] flex-col rounded-[24px] bg-neutral-04 px-[20px] py-[24px]">
       <h2 className="mb-[18px] shrink-0 text-[18px] font-semibold text-gray-01">
         지난 채팅
       </h2>
 
-        <div className="min-h-0 flex-1 overflow-y-auto pr-[4px] no-scrollbar">
+      <div className="min-h-0 flex-1 overflow-y-auto pr-[4px] no-scrollbar">
         {isLoading ? (
-            <p className="text-[13px] text-gray-02">불러오는 중...</p>
+          <p className="text-[13px] text-gray-02">불러오는 중...</p>
         ) : (
-            <div className="flex flex-col gap-[12px]">
+          <div className="flex flex-col gap-[12px]">
             {chatSessions.map((chat) => (
-                <button
+              <button
                 key={chat.sessionId}
                 type="button"
                 className="rounded-[14px] bg-white px-[14px] py-[12px] text-left"
-                onClick={() => console.log(chat.sessionId)}
-                >
+                onClick={() => handleSessionClick(chat)}
+              >
                 <p className="line-clamp-2 text-[14px] font-medium text-gray-01">
-                    {chat.lastMessage ?? "아직 메시지가 없습니다."}
+                  {chat.lastMessage ?? "아직 메시지가 없습니다."}
                 </p>
 
                 <p className="mt-[6px] text-[12px] text-gray-02">
-                    {formatChatDate(chat.lastMessageAt ?? chat.createdAt)}
+                  {formatChatDate(chat.lastMessageAt ?? chat.createdAt)}
                 </p>
-                </button>
+              </button>
             ))}
-            </div>
+          </div>
         )}
-        </div>
+      </div>
     </div>
   );
 }
