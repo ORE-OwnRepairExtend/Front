@@ -135,7 +135,7 @@ export default function ProductDetailInfo({
                 className="w-full !cursor-default"
                 onClick={undefined}
               >
-                고객센터 : {customerCenter}
+                {customerCenter}
               </CommonButton>
             )}
           </div>

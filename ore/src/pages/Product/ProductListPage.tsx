@@ -283,6 +283,10 @@ export default function ProductListPage() {
             setIsUploadingSource(false);
           }
         }}
+        onManualClick={() => {
+          navigate("/products/new");
+          setIsModalOpen(false);
+        }}
       />
       <OcrConfirmModal
         open={!!ocrResult}
