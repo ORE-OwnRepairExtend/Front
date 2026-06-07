@@ -28,6 +28,12 @@ type ProductOption = {
   label: string;
 };
 
+type ChatSessionResponse = {
+  sessionId: string;
+  productId: string | null;
+  createdAt: string;
+};
+
 type SelectedTarget =
   | {
       type: "product";
@@ -66,11 +72,13 @@ export default function ChatbotBox() {
   const [selectedTarget, setSelectedTarget] = useState<SelectedTarget | null>(
     null,
   );
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [isCreatingSession, setIsCreatingSession] = useState(false);
   const [inputValue, setInputValue] = useState("");
 
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
 
-  const isChatDisabled = selectedTarget === null;
+  const isChatDisabled = selectedTarget === null || sessionId === null;
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -91,73 +99,119 @@ export default function ChatbotBox() {
     fetchProducts();
   }, []);
 
-  const handleProductClick = (product: ProductOption) => {
-    setSelectedTarget({
-      type: "product",
-      productId: product.productId,
-      label: product.label,
+  const createChatSession = async (productId: string | null) => {
+    const response = await api.post<ChatSessionResponse>("/chat/sessions", {
+      productId,
     });
 
-    setInputValue("");
-
-    setMessages([
-      ...initialMessages,
-      {
-        id: Date.now(),
-        type: "user",
-        text: product.label,
-      },
-      {
-        id: Date.now() + 1,
-        type: "bot",
-        text: `${product.label}에 대해 궁금한 점을 입력해주세요.`,
-      },
-    ]);
-
-    // todo: 선택한 제품 기준으로 채팅 세션 생성 API 호출
-    console.log("선택한 제품:", product);
+    return response.data;
   };
 
-  const handleEtcClick = () => {
-    setSelectedTarget({
-      type: "etc",
-      productId: null,
-      label: "기타 질문",
-    });
+  const handleProductClick = async (product: ProductOption) => {
+    if (isCreatingSession) return;
 
-    setInputValue("");
+    try {
+      setIsCreatingSession(true);
 
-    setMessages([
-      ...initialMessages,
-      {
-        id: Date.now(),
-        type: "user",
-        text: "기타 질문",
-      },
-      {
-        id: Date.now() + 1,
-        type: "bot",
-        text: "제품 외에 궁금한 점을 입력해주세요.",
-      },
-    ]);
+      const session = await createChatSession(product.productId);
 
-    // todo: 기타 질문 세션 생성 API 호출
-    console.log("기타 질문 선택");
+      setSessionId(session.sessionId);
+
+      setSelectedTarget({
+        type: "product",
+        productId: product.productId,
+        label: product.label,
+      });
+
+      setInputValue("");
+
+      setMessages([
+        ...initialMessages,
+        {
+          id: Date.now(),
+          type: "user",
+          text: product.label,
+        },
+        {
+          id: Date.now() + 1,
+          type: "bot",
+          text: `${product.label}에 대해 궁금한 점을 입력해주세요.`,
+        },
+      ]);
+    } catch (error) {
+      console.error("채팅 세션 생성 실패:", error);
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now(),
+          type: "bot",
+          text: "채팅 세션을 생성하지 못했습니다. 잠시 후 다시 시도해주세요.",
+        },
+      ]);
+    } finally {
+      setIsCreatingSession(false);
+    }
+  };
+
+  const handleEtcClick = async () => {
+    if (isCreatingSession) return;
+
+    try {
+      setIsCreatingSession(true);
+
+      const session = await createChatSession(null);
+
+      setSessionId(session.sessionId);
+
+      setSelectedTarget({
+        type: "etc",
+        productId: null,
+        label: "기타 질문",
+      });
+
+      setInputValue("");
+
+      setMessages([
+        ...initialMessages,
+        {
+          id: Date.now(),
+          type: "user",
+          text: "기타 질문",
+        },
+        {
+          id: Date.now() + 1,
+          type: "bot",
+          text: "제품 외에 궁금한 점을 입력해주세요.",
+        },
+      ]);
+    } catch (error) {
+      console.error("채팅 세션 생성 실패:", error);
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now(),
+          type: "bot",
+          text: "채팅 세션을 생성하지 못했습니다. 잠시 후 다시 시도해주세요.",
+        },
+      ]);
+    } finally {
+      setIsCreatingSession(false);
+    }
   };
 
   const handleNewProductQuestionClick = () => {
     setSelectedTarget(null);
+    setSessionId(null);
     setInputValue("");
     setMessages(initialMessages);
-
-    // todo: 새 제품 질문하기 클릭 시 기존 세션 종료 또는 새 세션 준비
-    console.log("다른 제품 질문하기 클릭");
   };
 
   const handleSendClick = () => {
     const trimmedValue = inputValue.trim();
 
-    if (!selectedTarget || !trimmedValue) return;
+    if (!selectedTarget || !sessionId || !trimmedValue) return;
 
     setMessages((prev) => [
       ...prev,
@@ -170,8 +224,9 @@ export default function ChatbotBox() {
 
     setInputValue("");
 
-    // todo: selectedTarget 기준으로 AI 챗봇 API 호출
+    // todo: 메시지 전송 API 연동 시 sessionId 사용
     console.log("질문 전송:", {
+      sessionId,
       target: selectedTarget,
       message: trimmedValue,
     });
@@ -256,12 +311,14 @@ export default function ChatbotBox() {
                     <button
                       key={product.productId}
                       type="button"
+                      disabled={isCreatingSession}
                       onClick={() => handleProductClick(product)}
                       className="
                         rounded-full border-2 border-primary-01
                         px-[20px] py-[8px]
                         text-body-r-12 text-primary-01
                         transition hover:bg-primary-01 hover:text-white
+                        disabled:cursor-not-allowed disabled:opacity-50
                       "
                     >
                       {product.label}
@@ -270,12 +327,14 @@ export default function ChatbotBox() {
 
                   <button
                     type="button"
+                    disabled={isCreatingSession}
                     onClick={handleEtcClick}
                     className="
                       rounded-full border-2 border-primary-01
                       px-[20px] py-[8px]
                       text-body-r-12 text-primary-01
                       transition hover:bg-primary-01 hover:text-white
+                      disabled:cursor-not-allowed disabled:opacity-50
                     "
                   >
                     기타 질문
