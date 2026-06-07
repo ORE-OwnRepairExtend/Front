@@ -29,22 +29,37 @@ export default function ChatHistoryCard() {
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
+  const fetchChatSessions = async () => {
+    try {
+      setIsLoading(true);
+
+      const response = await api.get<ChatSession[]>("/chat/sessions");
+
+      setChatSessions(response.data);
+    } catch (error) {
+      console.error("채팅 세션 목록 조회 실패:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchChatSessions = async () => {
-      try {
-        setIsLoading(true);
+    fetchChatSessions();
+  }, []);
 
-        const response = await api.get<ChatSession[]>("/chat/sessions");
-
-        setChatSessions(response.data);
-      } catch (error) {
-        console.error("채팅 세션 목록 조회 실패:", error);
-      } finally {
-        setIsLoading(false);
-      }
+  useEffect(() => {
+    const handleChatSessionRefresh = () => {
+      fetchChatSessions();
     };
 
-    fetchChatSessions();
+    window.addEventListener("chat-session-refresh", handleChatSessionRefresh);
+
+    return () => {
+      window.removeEventListener(
+        "chat-session-refresh",
+        handleChatSessionRefresh,
+      );
+    };
   }, []);
 
   const handleSessionClick = (chat: ChatSession) => {

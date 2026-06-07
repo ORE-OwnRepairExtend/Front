@@ -153,6 +153,10 @@ export default function ChatbotBox() {
     return response.data;
   };
 
+  const refreshChatSessions = () => {
+    window.dispatchEvent(new Event("chat-session-refresh"));
+  };
+
   const fetchChatMessages = async (
     selectedSessionId: string,
     productId: string | null,
@@ -209,6 +213,7 @@ export default function ChatbotBox() {
       const session = await createChatSession(product.productId);
 
       setSessionId(session.sessionId);
+      refreshChatSessions();
 
       setSelectedTarget({
         type: "product",
@@ -256,6 +261,7 @@ export default function ChatbotBox() {
       const session = await createChatSession(null);
 
       setSessionId(session.sessionId);
+      refreshChatSessions();
 
       setSelectedTarget({
         type: "etc",
@@ -325,6 +331,8 @@ export default function ChatbotBox() {
       ];
 
       setMessages((prev) => [...prev, ...newMessages]);
+
+      refreshChatSessions();
     } catch (error) {
       console.error("메시지 전송 실패:", error);
 
