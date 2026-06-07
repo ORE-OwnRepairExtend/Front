@@ -41,6 +41,11 @@ type ChatMessageResponse = {
   createdAt: string;
 };
 
+type SendMessageResponse = {
+  userMessage: ChatMessageResponse;
+  aiMessage: ChatMessageResponse;
+};
+
 type SelectedTarget =
   | {
       type: "product";
@@ -79,6 +84,14 @@ function renderBotMessage(text: string) {
   ));
 }
 
+function mapChatMessage(message: ChatMessageResponse): ChatMessage {
+  return {
+    id: message.messageId,
+    type: message.role === "USER" ? "user" : "bot",
+    text: message.content,
+  };
+}
+
 export default function ChatbotBox() {
   const [products, setProducts] = useState<ProductOption[]>([]);
   const [selectedTarget, setSelectedTarget] = useState<SelectedTarget | null>(
@@ -87,12 +100,16 @@ export default function ChatbotBox() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isCreatingSession, setIsCreatingSession] = useState(false);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
   const [inputValue, setInputValue] = useState("");
 
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
 
   const isChatDisabled =
-    selectedTarget === null || sessionId === null || isLoadingMessages;
+    selectedTarget === null ||
+    sessionId === null ||
+    isLoadingMessages ||
+    isSendingMessage;
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -147,11 +164,7 @@ export default function ChatbotBox() {
         `/chat/sessions/${selectedSessionId}/messages`,
       );
 
-      const mappedMessages: ChatMessage[] = response.data.map((message) => ({
-        id: message.messageId,
-        type: message.role === "USER" ? "user" : "bot",
-        text: message.content,
-      }));
+      const mappedMessages = response.data.map(mapChatMessage);
 
       setSessionId(selectedSessionId);
       setInputValue("");
@@ -288,28 +301,49 @@ export default function ChatbotBox() {
     setMessages(initialMessages);
   };
 
-  const handleSendClick = () => {
+  const handleSendClick = async () => {
     const trimmedValue = inputValue.trim();
 
-    if (!selectedTarget || !sessionId || !trimmedValue) return;
+    if (!selectedTarget || !sessionId || !trimmedValue || isSendingMessage) {
+      return;
+    }
 
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: `user-${Date.now()}`,
-        type: "user",
-        text: trimmedValue,
-      },
-    ]);
+    try {
+      setIsSendingMessage(true);
+      setInputValue("");
 
-    setInputValue("");
+      const response = await api.post<SendMessageResponse>(
+        `/chat/sessions/${sessionId}/messages`,
+        {
+          message: trimmedValue,
+        },
+      );
 
-    // todo: 메시지 전송 API 연동 시 sessionId 사용
-    console.log("질문 전송:", {
-      sessionId,
-      target: selectedTarget,
-      message: trimmedValue,
-    });
+      const newMessages: ChatMessage[] = [
+        mapChatMessage(response.data.userMessage),
+        mapChatMessage(response.data.aiMessage),
+      ];
+
+      setMessages((prev) => [...prev, ...newMessages]);
+    } catch (error) {
+      console.error("메시지 전송 실패:", error);
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `user-${Date.now()}`,
+          type: "user",
+          text: trimmedValue,
+        },
+        {
+          id: `error-${Date.now() + 1}`,
+          type: "bot",
+          text: "메시지를 전송하지 못했습니다. 잠시 후 다시 시도해주세요.",
+        },
+      ]);
+    } finally {
+      setIsSendingMessage(false);
+    }
   };
 
   const handleInputKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -508,7 +542,9 @@ export default function ChatbotBox() {
 
         <button
           type="button"
-          disabled={isChatDisabled || inputValue.trim().length === 0}
+          disabled={
+            isChatDisabled || inputValue.trim().length === 0 || isSendingMessage
+          }
           onClick={handleSendClick}
           className="
             flex h-[34px] w-[34px] shrink-0 items-center justify-center
