@@ -7,8 +7,12 @@ import type { ProductWithStatus } from "../types/product";
 import type { ApiProductCategory } from "../types/category";
 import { getProductStatus } from "../utils/productStatus";
 
+// 임시 예시
+import ChatHistoryCard from "../components/chatbot/ChatHistoryCard";
+
 type MainLayoutProps = {
   children: ReactNode;
+  rightPanelType?: "favorite" | "chatHistory";
 };
 
 type UserProfileResponse = {
@@ -32,9 +36,11 @@ type ProductListResponse = {
   createdAt: string;
 };
 
-export default function MainLayout({ children }: MainLayoutProps) {
+export default function MainLayout({
+  children,
+  rightPanelType = "favorite",
+}: MainLayoutProps) {
   const [profile, setProfile] = useState<UserProfileResponse | null>(null);
-
   const [favoriteItems, setFavoriteItems] = useState<ProductWithStatus[]>([]);
 
   useEffect(() => {
@@ -46,11 +52,13 @@ export default function MainLayout({ children }: MainLayoutProps) {
         console.error("사용자 정보 조회 실패:", error);
       }
     };
-    // todo: 에러 ui처리
+
     fetchUserProfile();
   }, []);
 
   useEffect(() => {
+    if (rightPanelType !== "favorite") return;
+
     const fetchFavoriteProducts = async () => {
       try {
         const response = await api.get<ProductListResponse[]>("/products", {
@@ -84,7 +92,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
     };
 
     fetchFavoriteProducts();
-  }, []);
+  }, [rightPanelType]);
 
   return (
     <div className="h-screen flex items-center justify-center bg-neutral-03 px-[50px] overflow-hidden">
@@ -107,10 +115,14 @@ export default function MainLayout({ children }: MainLayoutProps) {
                 imageUrl={profile?.profileImage}
               />
 
-              <FavoriteCard
-                items={favoriteItems}
-                onItemClick={(item) => console.log(item)}
-              />
+              {rightPanelType === "chatHistory" ? (
+                <ChatHistoryCard />
+              ) : (
+                <FavoriteCard
+                  items={favoriteItems}
+                  onItemClick={(item) => console.log(item)}
+                />
+              )}
             </div>
           </aside>
         </div>
