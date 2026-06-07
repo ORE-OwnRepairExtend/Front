@@ -43,6 +43,10 @@ function renderBotMessage(text: string) {
 
 export default function ChatbotBox() {
   const [products, setProducts] = useState<ProductOption[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState<ProductOption | null>(
+    null,
+  );
+
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 1,
@@ -71,6 +75,8 @@ export default function ChatbotBox() {
   }, []);
 
   const handleProductClick = (product: ProductOption) => {
+    setSelectedProduct(product);
+
     setMessages((prev) => [
       ...prev,
       {
@@ -80,11 +86,13 @@ export default function ChatbotBox() {
       },
     ]);
 
-    // todo: 선택한 제품 기준으로 AI 챗봇 API 호출
+    // todo: 선택한 제품 기준으로 채팅 세션 생성 API 호출
     console.log("선택한 제품:", product);
   };
 
   const handleEtcClick = () => {
+    setSelectedProduct(null);
+
     setMessages((prev) => [
       ...prev,
       {
@@ -96,6 +104,22 @@ export default function ChatbotBox() {
 
     // todo: 기타 질문 모드 처리
     console.log("기타 질문 선택");
+  };
+
+  const handleNewProductQuestionClick = () => {
+    setSelectedProduct(null);
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: Date.now(),
+        type: "bot",
+        text: "새로 질문할 제품을 선택해주세요.",
+      },
+    ]);
+
+    // todo: 다른 제품 질문하기 클릭 시 새 채팅 세션 생성 또는 제품 재선택 처리
+    console.log("새 제품 질문하기 클릭");
   };
 
   return (
@@ -199,6 +223,24 @@ export default function ChatbotBox() {
           </div>
         </div>
       </div>
+
+      {/* 다른 제품 질문하기 버튼 */}
+      {selectedProduct && (
+        <div className="mt-[12px] flex shrink-0 justify-end">
+          <button
+            type="button"
+            onClick={handleNewProductQuestionClick}
+            className="
+              rounded-full bg-white px-[18px] py-[8px]
+              border-2 border-primary-01
+              text-body-r-12 text-primary-01
+              transition hover:bg-primary-01 hover:text-white
+            "
+          >
+            다른 제품 질문하기
+          </button>
+        </div>
+      )}
 
       {/* 입력창 */}
       <div
