@@ -1,4 +1,4 @@
-import { type KeyboardEvent, useEffect, useState } from "react";
+import { type KeyboardEvent, useEffect, useRef, useState } from "react";
 import chatPlusIcon from "../../assets/chat_plus.svg";
 import sendIcon from "../../assets/send.svg";
 import { api } from "../../api/api";
@@ -124,6 +124,7 @@ export default function ChatbotBox() {
   const [inputValue, setInputValue] = useState("");
 
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
   const isChatDisabled =
     selectedTarget === null ||
@@ -164,6 +165,13 @@ export default function ChatbotBox() {
       window.removeEventListener("chat-session-select", handleSessionSelect);
     };
   }, []);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "end",
+    });
+  }, [messages, isLoadingMessages]);
 
   const createChatSession = async (productId: string | null) => {
     const response = await api.post<ChatSessionResponse>("/chat/sessions", {
@@ -462,6 +470,8 @@ export default function ChatbotBox() {
                 </div>
               </div>
             ))}
+
+          <div ref={messagesEndRef} />
 
           {/* 제품 선택 메시지 */}
           {!selectedTarget && !isLoadingMessages && (
