@@ -8,6 +8,7 @@ type ChatMessage = {
   id: string;
   type: "bot" | "user";
   text: string;
+  createdAt?: string;
 };
 
 type ProductListResponse = {
@@ -89,7 +90,25 @@ function mapChatMessage(message: ChatMessageResponse): ChatMessage {
     id: message.messageId,
     type: message.role === "USER" ? "user" : "bot",
     text: message.content,
+    createdAt: message.createdAt,
   };
+}
+
+function formatChatHeaderDate(date: string | null) {
+  const parsedDate = date ? new Date(date) : new Date();
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return "";
+  }
+
+  const weekday = parsedDate.toLocaleDateString("en-US", {
+    weekday: "short",
+  });
+
+  const month = String(parsedDate.getMonth() + 1).padStart(2, "0");
+  const day = String(parsedDate.getDate()).padStart(2, "0");
+
+  return `${weekday} ${month}/${day}`;
 }
 
 export default function ChatbotBox() {
@@ -98,6 +117,7 @@ export default function ChatbotBox() {
     null,
   );
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [chatDate, setChatDate] = useState<string | null>(null);
   const [isCreatingSession, setIsCreatingSession] = useState(false);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [isSendingMessage, setIsSendingMessage] = useState(false);
@@ -172,6 +192,7 @@ export default function ChatbotBox() {
 
       setSessionId(selectedSessionId);
       setInputValue("");
+      setChatDate(response.data[0]?.createdAt ?? null);
 
       setSelectedTarget(
         productId
@@ -213,6 +234,7 @@ export default function ChatbotBox() {
       const session = await createChatSession(product.productId);
 
       setSessionId(session.sessionId);
+      setChatDate(session.createdAt);
       refreshChatSessions();
 
       setSelectedTarget({
@@ -229,11 +251,13 @@ export default function ChatbotBox() {
           id: `user-${Date.now()}`,
           type: "user",
           text: product.label,
+          createdAt: session.createdAt,
         },
         {
           id: `bot-${Date.now() + 1}`,
           type: "bot",
           text: `${product.label}에 대해 궁금한 점을 입력해주세요.`,
+          createdAt: session.createdAt,
         },
       ]);
     } catch (error) {
@@ -261,6 +285,7 @@ export default function ChatbotBox() {
       const session = await createChatSession(null);
 
       setSessionId(session.sessionId);
+      setChatDate(session.createdAt);
       refreshChatSessions();
 
       setSelectedTarget({
@@ -277,11 +302,13 @@ export default function ChatbotBox() {
           id: `user-${Date.now()}`,
           type: "user",
           text: "기타 질문",
+          createdAt: session.createdAt,
         },
         {
           id: `bot-${Date.now() + 1}`,
           type: "bot",
           text: "제품 외에 궁금한 점을 입력해주세요.",
+          createdAt: session.createdAt,
         },
       ]);
     } catch (error) {
@@ -303,6 +330,7 @@ export default function ChatbotBox() {
   const handleNewProductQuestionClick = () => {
     setSelectedTarget(null);
     setSessionId(null);
+    setChatDate(null);
     setInputValue("");
     setMessages(initialMessages);
   };
@@ -331,6 +359,12 @@ export default function ChatbotBox() {
       ];
 
       setMessages((prev) => [...prev, ...newMessages]);
+
+      setChatDate(
+        response.data.userMessage.createdAt ??
+          response.data.aiMessage.createdAt ??
+          chatDate,
+      );
 
       refreshChatSessions();
     } catch (error) {
@@ -381,7 +415,7 @@ export default function ChatbotBox() {
                 text-body-sb-12 text-white
               "
             >
-              Sat 03/14
+              {formatChatHeaderDate(chatDate)}
             </span>
             <div className="h-0 flex-1 border-t-2 border-dashed border-primary-01" />
           </div>
