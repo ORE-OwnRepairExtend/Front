@@ -78,8 +78,8 @@ export default function NotificationPage() {
           (item) => ({
             id: item.notificationId,
             productId: item.productId,
-            title: item.productName,
-            subtitle: item.productNickname,
+            title: item.productNickname,
+            subtitle: item.productName,
             message: item.message,
             date: formatNotificationDate(item.createdAt),
             isRead: item.isRead,
