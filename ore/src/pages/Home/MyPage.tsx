@@ -5,6 +5,7 @@ import Header from "../../components/header/Header";
 import MenuList from "../../components/my/MenuList";
 import FamilyManagement from "../../components/my/FamilyManagement";
 import FamilyRegisterModal from "../../components/my/FamilyRegisterModal";
+import Modal from "../../components/common/Modal";
 import ProfileBox from "../../components/profile/ProfileBox";
 import SecondLayout from "../../layout/SecondLayout";
 import { api } from "../../api/api";
@@ -28,58 +29,80 @@ export default function MyPage() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const isEditMode = location.pathname === "/mypage/edit";
+  const isEditMode =
+    location.pathname === "/mypage/edit";
 
   // 가족 관리 화면 표시 여부
-  const [isFamilyManagement, setIsFamilyManagement] =
-    useState(false);
+  const [
+    isFamilyManagement,
+    setIsFamilyManagement,
+  ] = useState(false);
 
   // 가족 등록 모달 표시 여부
-  const [isFamilyRegisterOpen, setIsFamilyRegisterOpen] =
-    useState(false);
+  const [
+    isFamilyRegisterOpen,
+    setIsFamilyRegisterOpen,
+  ] = useState(false);
+
+  // 삭제 대상 가족 ID
+  const [
+    deleteTargetId,
+    setDeleteTargetId,
+  ] = useState<string | null>(null);
 
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [imageUrl, setImageUrl] = useState("");
 
   const [editName, setEditName] = useState("");
-  const [editImageUrl, setEditImageUrl] = useState("");
-  const [editImageFile, setEditImageFile] =
-    useState<File | null>(null);
+  const [
+    editImageUrl,
+    setEditImageUrl,
+  ] = useState("");
+  const [
+    editImageFile,
+    setEditImageFile,
+  ] = useState<File | null>(null);
 
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] =
+    useState(true);
 
   /*
    * TODO:
-   * 백엔드 가족 관리 API가 확정되면
+   * 백엔드 가족 조회 API가 확정되면
    * API 조회 결과로 교체
    */
-  const [familyMembers, setFamilyMembers] =
-    useState<FamilyMember[]>([
-      {
-        id: "1",
-        relation: "엄마",
-        name: "ORE User2",
-        email: "oreouser2@gmail.com",
-      },
-      {
-        id: "2",
-        relation: "아빠",
-        name: "ORE User3",
-        email: "oreouser3@gmail.com",
-      },
-      {
-        id: "3",
-        relation: "동생",
-        name: "ORE User4",
-        email: "oreouser4@gmail.com",
-      },
-    ]);
+  const [
+    familyMembers,
+    setFamilyMembers,
+  ] = useState<FamilyMember[]>([
+    {
+      id: "1",
+      relation: "엄마",
+      name: "ORE User2",
+      email: "oreouser2@gmail.com",
+    },
+    {
+      id: "2",
+      relation: "아빠",
+      name: "ORE User3",
+      email: "oreouser3@gmail.com",
+    },
+    {
+      id: "3",
+      relation: "동생",
+      name: "ORE User4",
+      email: "oreouser4@gmail.com",
+    },
+  ]);
 
+  // 사용자 프로필 조회
   const fetchUserProfile = async () => {
     try {
       const response =
-        await api.get<UserProfileResponse>("/users/me");
+        await api.get<UserProfileResponse>(
+          "/users/me",
+        );
 
       const user = response.data;
 
@@ -90,7 +113,10 @@ export default function MyPage() {
       setEditName(user.name);
       setEditImageUrl(user.profileImage);
     } catch (error) {
-      console.error("사용자 정보 조회 실패:", error);
+      console.error(
+        "사용자 정보 조회 실패:",
+        error,
+      );
 
       alert(
         "사용자 정보를 불러오지 못했습니다. 다시 로그인해주세요.",
@@ -133,7 +159,10 @@ export default function MyPage() {
     try {
       const formData = new FormData();
 
-      formData.append("name", editName);
+      formData.append(
+        "name",
+        editName,
+      );
 
       if (editImageFile) {
         formData.append(
@@ -171,7 +200,9 @@ export default function MyPage() {
   };
 
   // 프로필 이미지 변경
-  const handleImageChange = (file: File) => {
+  const handleImageChange = (
+    file: File,
+  ) => {
     const previewUrl =
       URL.createObjectURL(file);
 
@@ -201,72 +232,88 @@ export default function MyPage() {
   };
 
   // 가족 관리 화면 열기
-  const handleOpenFamilyManagement = () => {
-    setIsFamilyManagement(true);
-  };
+  const handleOpenFamilyManagement =
+    () => {
+      setIsFamilyManagement(true);
+    };
 
   // 가족 관리 화면 닫기
-  const handleCloseFamilyManagement = () => {
-    setIsFamilyManagement(false);
+  const handleCloseFamilyManagement =
+    () => {
+      setIsFamilyManagement(false);
+      setIsFamilyRegisterOpen(false);
+      setDeleteTargetId(null);
+    };
 
-    // 혹시 가족 등록 모달이 열려 있다면 같이 닫기
-    setIsFamilyRegisterOpen(false);
-  };
+  // 가족 추가 모달 열기
+  const handleAddFamilyMember =
+    () => {
+      setIsFamilyRegisterOpen(true);
+    };
 
-  // 가족 삭제
+  // 가족 삭제 버튼 클릭
   const handleDeleteFamilyMember = (
     memberId: string,
   ) => {
-    const shouldDelete = window.confirm(
-      "가족 구성원을 삭제하시겠습니까?",
-    );
+    setDeleteTargetId(memberId);
+  };
 
-    if (!shouldDelete) {
+  // 가족 삭제 취소
+  const handleCancelDelete = () => {
+    setDeleteTargetId(null);
+  };
+
+  /*
+   * 가족 삭제 확인
+   *
+   * 현재는 프론트 state에서만 삭제.
+   * 백엔드 삭제 API 확정 후
+   * API 성공 시 목록 갱신하도록 변경.
+   */
+  const handleConfirmDelete = () => {
+    if (!deleteTargetId) {
       return;
     }
 
     setFamilyMembers((prev) =>
       prev.filter(
         (member) =>
-          member.id !== memberId,
+          member.id !== deleteTargetId,
       ),
     );
+
+    setDeleteTargetId(null);
   };
 
-  // 가족 추가 버튼
-  const handleAddFamilyMember = () => {
-    setIsFamilyRegisterOpen(true);
-  };
-
-  // 아이디 존재 여부 확인
+  /*
+   * 아이디 존재 여부 확인
+   *
+   * TODO:
+   * 백엔드 회원 존재 확인 API
+   * 확정 후 실제 API 연결
+   */
   const handleCheckFamilyUser = async (
     userId: string,
   ): Promise<boolean> => {
-    /*
-     * TODO:
-     * 백엔드 회원 존재 확인 API가 확정되면
-     * 여기에서 실제 API 호출
-     */
-
     console.log(
       "회원 존재 여부 확인:",
       userId,
     );
 
-    // 현재는 API 미연결 상태
     return false;
   };
 
-  // 가족 등록 요청
+  /*
+   * 가족 등록 요청
+   *
+   * TODO:
+   * 가족 등록 요청 API
+   * 확정 후 실제 API 연결
+   */
   const handleFamilyRequest = async (
     userId: string,
     nickname: string,
   ) => {
-    /*
-     * TODO:
-     * 가족 등록 요청 API 확정 후 연결
-     */
-
     console.log(
       "가족 등록 요청",
       {
@@ -305,7 +352,7 @@ export default function MyPage() {
               }
             />
 
-            {/* 가족 관리 닫기 버튼 */}
+            {/* 가족 관리 닫기 */}
             {isFamilyManagement && (
               <button
                 type="button"
@@ -371,7 +418,9 @@ export default function MyPage() {
               {/* 가족 관리 화면 */}
               {isFamilyManagement ? (
                 <FamilyManagement
-                  members={familyMembers}
+                  members={
+                    familyMembers
+                  }
                   onAddMember={
                     handleAddFamilyMember
                   }
@@ -380,24 +429,29 @@ export default function MyPage() {
                   }
                 />
               ) : (
-                /* 기본 마이페이지 메뉴 */
                 <MenuList
                   items={[
                     {
-                      label: "계정 정보",
-                      onClick: () => {},
+                      label:
+                        "계정 정보",
+                      onClick:
+                        () => {},
                     },
                     {
-                      label: "가족 관리",
+                      label:
+                        "가족 관리",
                       onClick:
                         handleOpenFamilyManagement,
                     },
                     {
-                      label: "이용 약관",
-                      onClick: () => {},
+                      label:
+                        "이용 약관",
+                      onClick:
+                        () => {},
                     },
                     {
-                      label: "로그아웃",
+                      label:
+                        "로그아웃",
                       onClick:
                         handleLogout,
                     },
@@ -409,17 +463,41 @@ export default function MyPage() {
         </div>
       </SecondLayout>
 
-      {/* 가족 등록 팝업 */}
+      {/* 가족 등록 모달 */}
       <FamilyRegisterModal
-        isOpen={isFamilyRegisterOpen}
+        isOpen={
+          isFamilyRegisterOpen
+        }
         onClose={() =>
-          setIsFamilyRegisterOpen(false)
+          setIsFamilyRegisterOpen(
+            false,
+          )
         }
         onCheckUserId={
           handleCheckFamilyUser
         }
         onRequest={
           handleFamilyRequest
+        }
+      />
+
+      {/* 가족 삭제 확인 모달 */}
+      <Modal
+        open={
+          deleteTargetId !== null
+        }
+        type="confirm"
+        title="해당 구성원을 삭제하시겠습니까?"
+        cancelText="취소"
+        confirmText="삭제"
+        onClose={
+          handleCancelDelete
+        }
+        onCancel={
+          handleCancelDelete
+        }
+        onConfirm={
+          handleConfirmDelete
         }
       />
     </>
