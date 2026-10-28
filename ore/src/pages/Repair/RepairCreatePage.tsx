@@ -7,7 +7,11 @@ import ProductCard from "../../components/common/ProductCard";
 import ProductSelectModal from "../../components/repair/ProductSelectModal";
 import RepairDetailContent from "../../components/repair/RepairDetailContent";
 import Modal from "../../components/common/Modal";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import {
+  useLocation,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
 import { api } from "../../api/api";
 import type { ApiProductCategory } from "../../types/category";
 
@@ -28,6 +32,13 @@ type RepairCreateLocationState = {
   notificationId?: string;
   title?: string;
   date?: string;
+
+  /*
+   * Family 페이지에서 전달
+   */
+  familyMemberId?: string;
+  familyMemberName?: string;
+  allowedProductIds?: string[];
 };
 
 export default function RepairCreatePage() {
@@ -35,199 +46,390 @@ export default function RepairCreatePage() {
   const location = useLocation();
   const { productId } = useParams();
 
-  const repairState = location.state as RepairCreateLocationState | null;
+  const repairState =
+    location.state as RepairCreateLocationState | null;
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [products, setProducts] = useState<ProductSummary[]>([]);
+  const [isSubmitting, setIsSubmitting] =
+    useState(false);
 
-  const [selectedProduct, setSelectedProduct] = useState<ProductSummary | null>(
-    null,
-  );
+  const [products, setProducts] =
+    useState<ProductSummary[]>([]);
 
-  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
-  const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
+  const [
+    selectedProduct,
+    setSelectedProduct,
+  ] =
+    useState<ProductSummary | null>(
+      null,
+    );
 
-  const [alertModal, setAlertModal] = useState({
-    open: false,
-    message: "",
-  });
+  const [
+    isProductModalOpen,
+    setIsProductModalOpen,
+  ] = useState(false);
 
-  const [form, setForm] = useState({
-    title: repairState?.title ?? "",
-    repairDate: repairState?.date ?? "",
-    content: "",
-    price: "",
-    shopName: "",
-    receiptImage: null as File | null,
-  });
+  const [
+    isSubmitModalOpen,
+    setIsSubmitModalOpen,
+  ] = useState(false);
+
+  const [alertModal, setAlertModal] =
+    useState({
+      open: false,
+      message: "",
+    });
+
+  const [form, setForm] =
+    useState({
+      title:
+        repairState?.title ?? "",
+      repairDate:
+        repairState?.date ?? "",
+      content: "",
+      price: "",
+      shopName: "",
+      receiptImage:
+        null as File | null,
+    });
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const response = await api.get<ProductListResponse[]>("/products");
+    const fetchProducts =
+      async () => {
+        try {
+          const response =
+            await api.get<
+              ProductListResponse[]
+            >("/products");
 
-        const mappedProducts: ProductSummary[] = response.data.map(
-          (product) => ({
-            productId: product.productId,
-            productName: product.name,
-            nickname: product.nickname,
-            category: product.category,
-            imageUrl: product.imageUrl,
-            isFavorite: product.isFavorite,
-            hasRepairHistory: product.hasRepairHistory,
-            purchaseDate: product.purchaseDate,
-            createdAt: product.createdAt,
-          }),
-        );
+          const mappedProducts: ProductSummary[] =
+            response.data.map(
+              (product) => ({
+                productId:
+                  product.productId,
+                productName:
+                  product.name,
+                nickname:
+                  product.nickname,
+                category:
+                  product.category,
+                imageUrl:
+                  product.imageUrl,
+                isFavorite:
+                  product.isFavorite,
+                hasRepairHistory:
+                  product.hasRepairHistory,
+                purchaseDate:
+                  product.purchaseDate,
+                createdAt:
+                  product.createdAt,
+              }),
+            );
 
-        setProducts(mappedProducts);
-      } catch (error) {
-        console.error("제품 목록 조회 실패:", error);
+          /*
+           * Family 페이지에서 들어온 경우
+           *
+           * 해당 가족 구성원의 제품만
+           * 제품 선택 모달에 표시
+           */
+          const allowedProductIds =
+            repairState
+              ?.allowedProductIds;
 
-        setAlertModal({
-          open: true,
-          message: "제품 목록을 불러오지 못했습니다.",
-        });
-      }
-    };
+          const filteredProducts =
+            allowedProductIds &&
+            allowedProductIds.length >
+              0
+              ? mappedProducts.filter(
+                  (product) =>
+                    allowedProductIds.includes(
+                      product.productId,
+                    ),
+                )
+              : mappedProducts;
+
+          setProducts(
+            filteredProducts,
+          );
+        } catch (error) {
+          console.error(
+            "제품 목록 조회 실패:",
+            error,
+          );
+
+          setAlertModal({
+            open: true,
+            message:
+              "제품 목록을 불러오지 못했습니다.",
+          });
+        }
+      };
 
     fetchProducts();
   }, []);
 
   const defaultProduct =
-    products.find((p) => p.productId === productId) ?? null;
+    products.find(
+      (p) =>
+        p.productId === productId,
+    ) ?? null;
 
-  const isFixedProduct = Boolean(productId);
-  const currentProduct = selectedProduct ?? defaultProduct;
+  const isFixedProduct =
+    Boolean(productId);
 
-  const handleRegisterClick = () => {
-    if (!currentProduct) {
-      setAlertModal({
-        open: true,
-        message: "제품을 선택해주세요.",
-      });
-      return;
-    }
+  const currentProduct =
+    selectedProduct ??
+    defaultProduct;
 
-    if (
-      !form.title ||
-      !form.repairDate ||
-      !form.content ||
-      !form.shopName ||
-      !form.price
-    ) {
-      setAlertModal({
-        open: true,
-        message: "수리 이력을 입력해주세요.",
-      });
-      return;
-    }
+  const handleRegisterClick =
+    () => {
+      if (!currentProduct) {
+        setAlertModal({
+          open: true,
+          message:
+            "제품을 선택해주세요.",
+        });
 
-    setIsSubmitModalOpen(true);
-  };
+        return;
+      }
 
-  const handleSubmit = async () => {
-    if (!currentProduct || isSubmitting) return;
+      if (
+        !form.title ||
+        !form.repairDate ||
+        !form.content ||
+        !form.shopName ||
+        !form.price
+      ) {
+        setAlertModal({
+          open: true,
+          message:
+            "수리 이력을 입력해주세요.",
+        });
 
-    const formData = new FormData();
+        return;
+      }
 
-    formData.append("date", form.repairDate);
-    formData.append("title", form.title);
-    formData.append("content", form.content);
-    formData.append("serviceCenter", form.shopName);
-    formData.append("cost", form.price.replace(/,/g, ""));
+      setIsSubmitModalOpen(true);
+    };
 
-    if (form.receiptImage) {
-      formData.append("image", form.receiptImage);
-    }
+  const handleSubmit =
+    async () => {
+      if (
+        !currentProduct ||
+        isSubmitting
+      ) {
+        return;
+      }
 
-    try {
-      setIsSubmitting(true);
+      const formData =
+        new FormData();
 
-      const response = await api.post(
-        `/products/${currentProduct.productId}/repairs`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        },
+      formData.append(
+        "date",
+        form.repairDate,
       );
 
-      const repairId = response.data.repairId;
+      formData.append(
+        "title",
+        form.title,
+      );
 
-      setIsSubmitModalOpen(false);
+      formData.append(
+        "content",
+        form.content,
+      );
 
-      navigate(`/products/${currentProduct.productId}/repairs/${repairId}`, {
-        state: {
-          showAlarmConfirmModal: true,
-        },
-      });
-    } catch (error) {
-      console.error("수리 이력 등록 실패:", error);
+      formData.append(
+        "serviceCenter",
+        form.shopName,
+      );
 
-      setIsSubmitModalOpen(false);
+      formData.append(
+        "cost",
+        form.price.replace(
+          /,/g,
+          "",
+        ),
+      );
 
-      setAlertModal({
-        open: true,
-        message: "수리 이력 등록에 실패했습니다.",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+      if (form.receiptImage) {
+        formData.append(
+          "image",
+          form.receiptImage,
+        );
+      }
+
+      try {
+        setIsSubmitting(true);
+
+        const response =
+          await api.post(
+            `/products/${currentProduct.productId}/repairs`,
+            formData,
+            {
+              headers: {
+                "Content-Type":
+                  "multipart/form-data",
+              },
+            },
+          );
+
+        const repairId =
+          response.data.repairId;
+
+        setIsSubmitModalOpen(
+          false,
+        );
+
+        navigate(
+          `/products/${currentProduct.productId}/repairs/${repairId}`,
+          {
+            state: {
+              showAlarmConfirmModal:
+                true,
+            },
+          },
+        );
+      } catch (error) {
+        console.error(
+          "수리 이력 등록 실패:",
+          error,
+        );
+
+        setIsSubmitModalOpen(
+          false,
+        );
+
+        setAlertModal({
+          open: true,
+          message:
+            "수리 이력 등록에 실패했습니다.",
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
+    };
 
   return (
     <SecondLayout>
-      <div className="flex h-full min-h-0 flex-col">
-        <Header title="Repair" />
+      <div
+        className="
+          flex h-full min-h-0
+          flex-col
+        "
+      >
+        {/* Family에서 들어오면 Family: 엄마 */}
+        <Header
+          title={
+            repairState
+              ?.familyMemberName
+              ? `Family: ${repairState.familyMemberName}`
+              : "Repair"
+          }
+        />
 
-        <div className="mt-[14px] flex min-h-0 flex-1 flex-col">
-          <div className="flex flex-1 flex-col gap-[20px] overflow-y-auto no-scrollbar">
+        <div
+          className="
+            mt-[14px]
+            flex min-h-0
+            flex-1 flex-col
+          "
+        >
+          <div
+            className="
+              flex flex-1
+              flex-col
+              gap-[20px]
+              overflow-y-auto
+              no-scrollbar
+            "
+          >
             <div>
               {/* 제품 선택 영역 */}
-              <section className="flex min-h-[120px] items-center justify-center rounded-[20px] bg-primary-04">
-                {currentProduct === null ? (
+              <section
+                className="
+                  flex min-h-[120px]
+                  items-center
+                  justify-center
+                  rounded-[20px]
+                  bg-primary-04
+                "
+              >
+                {currentProduct ===
+                null ? (
                   <div
                     className="
-                      flex h-[140px] w-full items-center justify-center gap-[30px]
-                      rounded-[20px] bg-neutral-01
-                      px-[30px] py-[20px]
+                      flex h-[140px]
+                      w-full
+                      items-center
+                      justify-center
+                      gap-[30px]
+                      rounded-[20px]
+                      bg-neutral-01
+                      px-[30px]
+                      py-[20px]
                     "
                   >
                     <CommonButton
                       variant="secondary"
-                      onClick={() => setIsProductModalOpen(true)}
+                      onClick={() =>
+                        setIsProductModalOpen(
+                          true,
+                        )
+                      }
                     >
                       제품 선택
                     </CommonButton>
                   </div>
                 ) : (
                   <ProductCard
-                    imageSrc={currentProduct.imageUrl}
-                    name={currentProduct.nickname}
-                    description={currentProduct.productName}
+                    imageSrc={
+                      currentProduct.imageUrl
+                    }
+                    name={
+                      currentProduct.nickname
+                    }
+                    description={
+                      currentProduct.productName
+                    }
                     showAction={false}
                     onClick={
                       isFixedProduct
                         ? undefined
-                        : () => setIsProductModalOpen(true)
+                        : () =>
+                            setIsProductModalOpen(
+                              true,
+                            )
                     }
                     className={
-                      isFixedProduct ? "cursor-default pointer-events-none" : ""
+                      isFixedProduct
+                        ? "cursor-default pointer-events-none"
+                        : ""
                     }
                   />
                 )}
               </section>
 
-              {/* 제품 선택 모달 */}
+              {/* 기존 제품 선택 모달 재사용 */}
               <ProductSelectModal
-                open={isProductModalOpen}
+                open={
+                  isProductModalOpen
+                }
                 products={products}
-                onClose={() => setIsProductModalOpen(false)}
-                onSelect={(product) => {
-                  setSelectedProduct(product);
-                  setIsProductModalOpen(false);
+                onClose={() =>
+                  setIsProductModalOpen(
+                    false,
+                  )
+                }
+                onSelect={(
+                  product,
+                ) => {
+                  setSelectedProduct(
+                    product,
+                  );
+
+                  setIsProductModalOpen(
+                    false,
+                  );
                 }}
               />
             </div>
@@ -236,68 +438,173 @@ export default function RepairCreatePage() {
               {/* 수리 이력 입력폼 */}
               <RepairDetailContent
                 isEditMode={true}
-                title={form.title}
-                repairDate={form.repairDate}
-                content={form.content}
-                price={form.price}
-                shopName={form.shopName}
+                title={
+                  form.title
+                }
+                repairDate={
+                  form.repairDate
+                }
+                content={
+                  form.content
+                }
+                price={
+                  form.price
+                }
+                shopName={
+                  form.shopName
+                }
                 receiptImageUrl={
                   form.receiptImage
-                    ? URL.createObjectURL(form.receiptImage)
+                    ? URL.createObjectURL(
+                        form.receiptImage,
+                      )
                     : undefined
                 }
-                onTitleChange={(v) => setForm((p) => ({ ...p, title: v }))}
-                onRepairDateChange={(v) =>
-                  setForm((p) => ({ ...p, repairDate: v }))
+                onTitleChange={(
+                  value,
+                ) =>
+                  setForm(
+                    (prev) => ({
+                      ...prev,
+                      title:
+                        value,
+                    }),
+                  )
                 }
-                onContentChange={(v) => setForm((p) => ({ ...p, content: v }))}
-                onPriceChange={(v) => {
-                  const onlyNumber = v.replace(/[^0-9]/g, "");
-                  const priceWithComma = onlyNumber.replace(
-                    /\B(?=(\d{3})+(?!\d))/g,
-                    ",",
-                  );
+                onRepairDateChange={(
+                  value,
+                ) =>
+                  setForm(
+                    (prev) => ({
+                      ...prev,
+                      repairDate:
+                        value,
+                    }),
+                  )
+                }
+                onContentChange={(
+                  value,
+                ) =>
+                  setForm(
+                    (prev) => ({
+                      ...prev,
+                      content:
+                        value,
+                    }),
+                  )
+                }
+                onPriceChange={(
+                  value,
+                ) => {
+                  const onlyNumber =
+                    value.replace(
+                      /[^0-9]/g,
+                      "",
+                    );
 
-                  setForm((p) => ({
-                    ...p,
-                    price: priceWithComma,
-                  }));
+                  const priceWithComma =
+                    onlyNumber.replace(
+                      /\B(?=(\d{3})+(?!\d))/g,
+                      ",",
+                    );
+
+                  setForm(
+                    (prev) => ({
+                      ...prev,
+                      price:
+                        priceWithComma,
+                    }),
+                  );
                 }}
-                onShopNameChange={(v) =>
-                  setForm((p) => ({ ...p, shopName: v }))
+                onShopNameChange={(
+                  value,
+                ) =>
+                  setForm(
+                    (prev) => ({
+                      ...prev,
+                      shopName:
+                        value,
+                    }),
+                  )
                 }
-                onReceiptImageChange={(file) =>
-                  setForm((p) => ({ ...p, receiptImage: file }))
+                onReceiptImageChange={(
+                  file,
+                ) =>
+                  setForm(
+                    (prev) => ({
+                      ...prev,
+                      receiptImage:
+                        file,
+                    }),
+                  )
                 }
               />
 
-              {/* 하단 버튼 */}
-              <div className="flex justify-end gap-[10px] px-[10px] py-[15px]">
-                <CommonButton onClick={handleRegisterClick}>등록</CommonButton>
+              {/* 등록 버튼 */}
+              <div
+                className="
+                  flex
+                  justify-end
+                  gap-[10px]
+                  px-[10px]
+                  py-[15px]
+                "
+              >
+                <CommonButton
+                  onClick={
+                    handleRegisterClick
+                  }
+                >
+                  등록
+                </CommonButton>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* 등록확인모달 */}
+      {/* 등록 확인 */}
       <Modal
-        open={isSubmitModalOpen}
+        open={
+          isSubmitModalOpen
+        }
         title="수리 이력을 등록하시겠습니까?"
-        onClose={() => setIsSubmitModalOpen(false)}
-        onCancel={() => setIsSubmitModalOpen(false)}
-        onConfirm={handleSubmit}
+        onClose={() =>
+          setIsSubmitModalOpen(
+            false,
+          )
+        }
+        onCancel={() =>
+          setIsSubmitModalOpen(
+            false,
+          )
+        }
+        onConfirm={
+          handleSubmit
+        }
         cancelText="취소"
         confirmText="등록"
       />
 
-      {/* alert 모달 */}
+      {/* alert */}
       <Modal
         open={alertModal.open}
         type="alert"
-        title={alertModal.message}
-        onClose={() => setAlertModal({ open: false, message: "" })}
-        onConfirm={() => setAlertModal({ open: false, message: "" })}
+        title={
+          alertModal.message
+        }
+        onClose={() =>
+          setAlertModal({
+            open: false,
+            message: "",
+          })
+        }
+        onConfirm={() =>
+          setAlertModal({
+            open: false,
+            message: "",
+          })
+        }
       />
     </SecondLayout>
   );
