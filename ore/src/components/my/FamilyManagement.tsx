@@ -20,14 +20,17 @@ export default function FamilyManagement({
 }: FamilyManagementProps) {
   return (
     <div className="flex w-full flex-col gap-[20px]">
-      <h2 className="text-body-b-16 text-primary-01">가족 관리</h2>
+      <h2 className="text-body-b-16 text-primary-01">
+        가족 관리
+      </h2>
 
       <div
         className="
           flex min-h-[250px] w-full
           items-center gap-[10px]
           overflow-x-auto
-          rounded-[20px] bg-white
+          rounded-[20px]
+          bg-white
           px-[22px] py-[20px]
           no-scrollbar
         "
@@ -36,11 +39,15 @@ export default function FamilyManagement({
           <FamilyMemberCard
             key={member.id}
             member={member}
-            onDelete={() => onDeleteMember(member.id)}
+            onDelete={() =>
+              onDeleteMember(member.id)
+            }
           />
         ))}
 
-        <AddFamilyCard onClick={onAddMember} />
+        <AddFamilyCard
+          onClick={onAddMember}
+        />
       </div>
     </div>
   );
@@ -59,37 +66,47 @@ function FamilyMemberCard({
     <div
       className="
         relative
-        flex h-[250px] w-[191px] shrink-0
+        flex h-[250px] w-[191px]
+        shrink-0
         flex-col items-center
         rounded-[22px]
-        border-[3px] border-primary-01
+        border-[2px]
+        border-primary-01
         bg-white
-        px-[12px] py-[18px]
+        px-[12px]
+        py-[18px]
       "
     >
-      {/* 삭제 버튼 */}
       <button
         type="button"
         onClick={onDelete}
         aria-label={`${member.relation} 삭제`}
         className="
-          absolute right-[12px] top-[10px]
+          absolute
+          right-[12px]
+          top-[10px]
           flex h-[24px] w-[24px]
           items-center justify-center
-          text-[30px] font-medium
-          leading-none text-primary-01
+          text-[30px]
+          font-medium
+          leading-none
+          text-primary-01
           cursor-pointer
         "
       >
         ×
       </button>
 
-      {/* 관계 */}
-      <p className="mt-[2px] text-title-b-20 text-primary-01">
+      <p
+        className="
+          mt-[2px]
+          text-body-b-16
+          text-primary-01
+        "
+      >
         {member.relation}
       </p>
 
-      {/* 프로필 이미지 */}
       <div
         className="
           mt-[18px]
@@ -103,17 +120,33 @@ function FamilyMemberCard({
         <img
           src={profileIcon}
           alt={`${member.relation} 프로필`}
-          className="h-[100px] w-[100px] object-contain"
+          className="
+            h-[100px]
+            w-[100px]
+            object-contain
+          "
         />
       </div>
 
-      {/* 이름 / 이메일 */}
-      <div className="mt-[16px] flex w-full flex-col items-center">
+      <div
+        className="
+          mt-[16px]
+          flex w-full
+          flex-col
+          items-center
+        "
+      >
         <p className="text-body-sb-12 text-gray-01">
           {member.name}
         </p>
 
-        <div className="mt-[2px] h-[2px] w-[126px] bg-gray-01" />
+        <div
+          className="
+            mt-[2px]
+            h-[2px] w-full
+            bg-gray-01
+          "
+        />
 
         <p
           className="
@@ -135,17 +168,21 @@ type AddFamilyCardProps = {
   onClick: () => void;
 };
 
-function AddFamilyCard({ onClick }: AddFamilyCardProps) {
+function AddFamilyCard({
+  onClick,
+}: AddFamilyCardProps) {
   return (
     <button
       type="button"
       onClick={onClick}
       aria-label="가족 추가"
       className="
-        flex h-[250px] w-[100px] shrink-0
+        flex h-[250px] w-[75px]
+        shrink-0
         items-center justify-center
         rounded-[18px]
-        border-[3px] border-gray-02
+        border-[2px]
+        border-gray-02
         bg-white
         text-[32px]
         font-light
