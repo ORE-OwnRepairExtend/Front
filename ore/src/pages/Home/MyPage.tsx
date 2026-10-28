@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Header from "../../components/header/Header";
 import MenuList from "../../components/my/MenuList";
 import FamilyManagement from "../../components/my/FamilyManagement";
+import FamilyRegisterModal from "../../components/my/FamilyRegisterModal";
 import ProfileBox from "../../components/profile/ProfileBox";
 import SecondLayout from "../../layout/SecondLayout";
 import { api } from "../../api/api";
@@ -21,7 +22,6 @@ type FamilyMember = {
   relation: string;
   name: string;
   email: string;
-  profileImage?: string;
 };
 
 export default function MyPage() {
@@ -30,13 +30,13 @@ export default function MyPage() {
 
   const isEditMode = location.pathname === "/mypage/edit";
 
-  /*
-   * 가족 관리 화면 표시 여부
-   *
-   * false: 기존 마이페이지 메뉴
-   * true: 가족 관리 UI
-   */
-  const [isFamilyManagement, setIsFamilyManagement] = useState(false);
+  // 가족 관리 화면 표시 여부
+  const [isFamilyManagement, setIsFamilyManagement] =
+    useState(false);
+
+  // 가족 등록 모달 표시 여부
+  const [isFamilyRegisterOpen, setIsFamilyRegisterOpen] =
+    useState(false);
 
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
@@ -44,39 +44,42 @@ export default function MyPage() {
 
   const [editName, setEditName] = useState("");
   const [editImageUrl, setEditImageUrl] = useState("");
-  const [editImageFile, setEditImageFile] = useState<File | null>(null);
+  const [editImageFile, setEditImageFile] =
+    useState<File | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
 
   /*
    * TODO:
    * 백엔드 가족 관리 API가 확정되면
-   * API 조회 결과로 교체할 것.
+   * API 조회 결과로 교체
    */
-  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([
-    {
-      id: "1",
-      relation: "엄마",
-      name: "ORE User2",
-      email: "oreouser2@gmail.com",
-    },
-    {
-      id: "2",
-      relation: "아빠",
-      name: "ORE User3",
-      email: "oreouser3@gmail.com",
-    },
-    {
-      id: "3",
-      relation: "동생",
-      name: "ORE User4",
-      email: "oreouser4@gmail.com",
-    },
-  ]);
+  const [familyMembers, setFamilyMembers] =
+    useState<FamilyMember[]>([
+      {
+        id: "1",
+        relation: "엄마",
+        name: "ORE User2",
+        email: "oreouser2@gmail.com",
+      },
+      {
+        id: "2",
+        relation: "아빠",
+        name: "ORE User3",
+        email: "oreouser3@gmail.com",
+      },
+      {
+        id: "3",
+        relation: "동생",
+        name: "ORE User4",
+        email: "oreouser4@gmail.com",
+      },
+    ]);
 
   const fetchUserProfile = async () => {
     try {
-      const response = await api.get<UserProfileResponse>("/users/me");
+      const response =
+        await api.get<UserProfileResponse>("/users/me");
 
       const user = response.data;
 
@@ -96,7 +99,9 @@ export default function MyPage() {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("user");
 
-      navigate("/login", { replace: true });
+      navigate("/login", {
+        replace: true,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -106,6 +111,7 @@ export default function MyPage() {
     fetchUserProfile();
   }, []);
 
+  // 프로필 수정 시작
   const handleEditStart = () => {
     setEditName(name);
     setEditImageUrl(imageUrl);
@@ -113,6 +119,7 @@ export default function MyPage() {
     navigate("/mypage/edit");
   };
 
+  // 프로필 수정 취소
   const handleEditCancel = () => {
     setEditName(name);
     setEditImageUrl(imageUrl);
@@ -121,6 +128,7 @@ export default function MyPage() {
     navigate("/mypage");
   };
 
+  // 프로필 수정 저장
   const handleEditSave = async () => {
     try {
       const formData = new FormData();
@@ -162,6 +170,7 @@ export default function MyPage() {
     }
   };
 
+  // 프로필 이미지 변경
   const handleImageChange = (file: File) => {
     const previewUrl =
       URL.createObjectURL(file);
@@ -170,6 +179,7 @@ export default function MyPage() {
     setEditImageFile(file);
   };
 
+  // 로그아웃
   const handleLogout = async () => {
     try {
       await api.post("/auth/logout");
@@ -190,27 +200,20 @@ export default function MyPage() {
     }
   };
 
-  /*
-   * 가족 관리 화면 열기
-   */
+  // 가족 관리 화면 열기
   const handleOpenFamilyManagement = () => {
     setIsFamilyManagement(true);
   };
 
-  /*
-   * 가족 관리 화면 닫기
-   */
+  // 가족 관리 화면 닫기
   const handleCloseFamilyManagement = () => {
     setIsFamilyManagement(false);
+
+    // 혹시 가족 등록 모달이 열려 있다면 같이 닫기
+    setIsFamilyRegisterOpen(false);
   };
 
-  /*
-   * 가족 삭제
-   *
-   * 현재는 프론트 state에서만 삭제.
-   * 가족 삭제 API가 확정되면
-   * API 호출 후 목록을 갱신하도록 변경.
-   */
+  // 가족 삭제
   const handleDeleteFamilyMember = (
     memberId: string,
   ) => {
@@ -230,15 +233,46 @@ export default function MyPage() {
     );
   };
 
-  /*
-   * 가족 추가
-   *
-   * 아직 가족 초대 UI/API 명세가 없기 때문에
-   * 임시 동작만 설정.
-   */
+  // 가족 추가 버튼
   const handleAddFamilyMember = () => {
-    alert(
-      "가족 추가 기능은 초대 API 연동 후 구현할 예정입니다.",
+    setIsFamilyRegisterOpen(true);
+  };
+
+  // 아이디 존재 여부 확인
+  const handleCheckFamilyUser = async (
+    userId: string,
+  ): Promise<boolean> => {
+    /*
+     * TODO:
+     * 백엔드 회원 존재 확인 API가 확정되면
+     * 여기에서 실제 API 호출
+     */
+
+    console.log(
+      "회원 존재 여부 확인:",
+      userId,
+    );
+
+    // 현재는 API 미연결 상태
+    return false;
+  };
+
+  // 가족 등록 요청
+  const handleFamilyRequest = async (
+    userId: string,
+    nickname: string,
+  ) => {
+    /*
+     * TODO:
+     * 가족 등록 요청 API 확정 후 연결
+     */
+
+    console.log(
+      "가족 등록 요청",
+      {
+        userId,
+        nickname,
+      },
     );
   };
 
@@ -259,128 +293,135 @@ export default function MyPage() {
   }
 
   return (
-    <SecondLayout>
-      <div className="flex h-full flex-col">
-        {/* 헤더 */}
-        <div className="relative">
-          <Header
-            title="My"
-            showNotification={
-              !isFamilyManagement
-            }
-          />
-
-          {/* 가족 관리 닫기 버튼 */}
-          {isFamilyManagement && (
-            <button
-              type="button"
-              onClick={
-                handleCloseFamilyManagement
-              }
-              aria-label="가족 관리 닫기"
-              className="
-                absolute
-                right-[5px]
-                top-[5px]
-                flex h-[34px] w-[34px]
-                items-center justify-center
-                text-[34px]
-                font-medium
-                leading-none
-                text-primary-02
-                cursor-pointer
-              "
-            >
-              ×
-            </button>
-          )}
-        </div>
-
-        <div
-          className="
-            flex-1
-            min-h-0
-            overflow-y-auto
-            no-scrollbar
-          "
-        >
-          <div className="flex flex-col gap-[20px]">
-
-            {/* 사용자 프로필 */}
-            <ProfileBox
-              name={name}
-              email={email}
-              imageUrl={
-                isEditMode
-                  ? editImageUrl
-                  : imageUrl
-              }
-              isEditMode={isEditMode}
-              editName={editName}
-              onEditNameChange={
-                setEditName
-              }
-              onEditStart={
-                handleEditStart
-              }
-              onEditCancel={
-                handleEditCancel
-              }
-              onEditSave={
-                handleEditSave
-              }
-              onImageChange={
-                handleImageChange
+    <>
+      <SecondLayout>
+        <div className="flex h-full flex-col">
+          {/* 헤더 */}
+          <div className="relative">
+            <Header
+              title="My"
+              showNotification={
+                !isFamilyManagement
               }
             />
 
-            {/* 가족 관리 모드 */}
-            {isFamilyManagement ? (
-              <FamilyManagement
-                members={
-                  familyMembers
+            {/* 가족 관리 닫기 버튼 */}
+            {isFamilyManagement && (
+              <button
+                type="button"
+                onClick={
+                  handleCloseFamilyManagement
                 }
-                onAddMember={
-                  handleAddFamilyMember
-                }
-                onDeleteMember={
-                  handleDeleteFamilyMember
-                }
-              />
-            ) : (
-              /*
-               * 기본 마이페이지 메뉴
-               */
-              <MenuList
-                items={[
-                  {
-                    label:
-                      "계정 정보",
-                    onClick: () => {},
-                  },
-                  {
-                    label:
-                      "가족 관리",
-                    onClick:
-                      handleOpenFamilyManagement,
-                  },
-                  {
-                    label:
-                      "이용 약관",
-                    onClick: () => {},
-                  },
-                  {
-                    label:
-                      "로그아웃",
-                    onClick:
-                      handleLogout,
-                  },
-                ]}
-              />
+                aria-label="가족 관리 닫기"
+                className="
+                  absolute
+                  right-[5px]
+                  top-[5px]
+                  flex h-[34px] w-[34px]
+                  items-center justify-center
+                  text-[34px]
+                  font-medium
+                  leading-none
+                  text-primary-02
+                  cursor-pointer
+                "
+              >
+                ×
+              </button>
             )}
           </div>
+
+          <div
+            className="
+              flex-1
+              min-h-0
+              overflow-y-auto
+              no-scrollbar
+            "
+          >
+            <div className="flex flex-col gap-[20px]">
+              {/* 사용자 프로필 */}
+              <ProfileBox
+                name={name}
+                email={email}
+                imageUrl={
+                  isEditMode
+                    ? editImageUrl
+                    : imageUrl
+                }
+                isEditMode={isEditMode}
+                editName={editName}
+                onEditNameChange={
+                  setEditName
+                }
+                onEditStart={
+                  handleEditStart
+                }
+                onEditCancel={
+                  handleEditCancel
+                }
+                onEditSave={
+                  handleEditSave
+                }
+                onImageChange={
+                  handleImageChange
+                }
+              />
+
+              {/* 가족 관리 화면 */}
+              {isFamilyManagement ? (
+                <FamilyManagement
+                  members={familyMembers}
+                  onAddMember={
+                    handleAddFamilyMember
+                  }
+                  onDeleteMember={
+                    handleDeleteFamilyMember
+                  }
+                />
+              ) : (
+                /* 기본 마이페이지 메뉴 */
+                <MenuList
+                  items={[
+                    {
+                      label: "계정 정보",
+                      onClick: () => {},
+                    },
+                    {
+                      label: "가족 관리",
+                      onClick:
+                        handleOpenFamilyManagement,
+                    },
+                    {
+                      label: "이용 약관",
+                      onClick: () => {},
+                    },
+                    {
+                      label: "로그아웃",
+                      onClick:
+                        handleLogout,
+                    },
+                  ]}
+                />
+              )}
+            </div>
+          </div>
         </div>
-      </div>
-    </SecondLayout>
+      </SecondLayout>
+
+      {/* 가족 등록 팝업 */}
+      <FamilyRegisterModal
+        isOpen={isFamilyRegisterOpen}
+        onClose={() =>
+          setIsFamilyRegisterOpen(false)
+        }
+        onCheckUserId={
+          handleCheckFamilyUser
+        }
+        onRequest={
+          handleFamilyRequest
+        }
+      />
+    </>
   );
 }
