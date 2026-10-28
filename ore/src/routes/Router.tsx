@@ -21,6 +21,9 @@ import RepairHistoryPage from "../pages/Repair/RepairHistoryPage";
 import RepairCreatePage from "../pages/Repair/RepairCreatePage";
 import RepairDetailPage from "../pages/Repair/RepairDetailPage";
 
+// Family
+import FamilyPage from "../pages/Family/FamilyPage";
+
 export default function Router() {
   return (
     <Routes>
@@ -57,6 +60,9 @@ export default function Router() {
       <Route path="/mypage/edit" element={<MyPage />} />
       <Route path="/notifications" element={<NotificationPage />} />
       <Route path="/chatbot" element={<ChatbotPage />} />
+
+      {/* Family */}
+      <Route path="/family" element={<FamilyPage />} />
     </Routes>
   );
 }
