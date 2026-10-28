@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 import SecondLayout from "../../layout/SecondLayout";
 import Header from "../../components/header/Header";
@@ -18,6 +18,10 @@ type FamilyMember = {
   memberId: string;
   nickname: string;
   products: FamilyProduct[];
+};
+
+type FamilyPageLocationState = {
+  selectedMemberId?: string;
 };
 
 const mockFamilyMembers: FamilyMember[] = [
@@ -71,12 +75,18 @@ const mockFamilyMembers: FamilyMember[] = [
 
 export default function FamilyPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const locationState =
+    location.state as FamilyPageLocationState | null;
 
   const [familyMembers] =
     useState<FamilyMember[]>(mockFamilyMembers);
 
   const [selectedMemberId, setSelectedMemberId] =
-    useState<string>("ALL");
+    useState<string>(
+      locationState?.selectedMemberId ?? "ALL",
+    );
 
   const selectedMember =
     familyMembers.find(
@@ -84,22 +94,25 @@ export default function FamilyPage() {
         member.memberId === selectedMemberId,
     ) ?? null;
 
-  /*
-   * ALL:
-   * 모든 가족 구성원의 제품 표시
-   *
-   * 특정 구성원:
-   * 해당 구성원의 제품만 표시
-   *
-   * 등록일 기준 최신 등록 제품부터 정렬
-   */
   const visibleProducts = useMemo(() => {
     const products =
       selectedMemberId === "ALL"
-        ? familyMembers.flatMap(
-            (member) => member.products,
+        ? familyMembers.flatMap((member) =>
+            member.products.map((product) => ({
+              ...product,
+              ownerMemberId: member.memberId,
+              ownerNickname: member.nickname,
+            })),
           )
-        : selectedMember?.products ?? [];
+        : selectedMember
+          ? selectedMember.products.map((product) => ({
+              ...product,
+              ownerMemberId:
+                selectedMember.memberId,
+              ownerNickname:
+                selectedMember.nickname,
+            }))
+          : [];
 
     return [...products].sort(
       (a, b) =>
@@ -112,14 +125,23 @@ export default function FamilyPage() {
     selectedMemberId,
   ]);
 
-  /*
-   * 특정 가족 구성원 상태에서만
-   * 수리 이력 등록 가능
-   */
+  const handleProductClick = (
+    familyMemberId: string,
+    familyMemberName: string,
+    productId: string,
+  ) => {
+    navigate(
+      `/family/${familyMemberId}/products/${productId}`,
+      {
+        state: {
+          familyMemberName,
+        },
+      },
+    );
+  };
+
   const handleRepairRegister = () => {
-    if (!selectedMember) {
-      return;
-    }
+    if (!selectedMember) return;
 
     navigate("/repairs/new", {
       state: {
@@ -127,9 +149,6 @@ export default function FamilyPage() {
           selectedMember.memberId,
         familyMemberName:
           selectedMember.nickname,
-
-        // 해당 가족 구성원의 제품만
-        // RepairCreatePage에서 선택할 수 있도록 전달
         allowedProductIds:
           selectedMember.products.map(
             (product) =>
@@ -141,23 +160,11 @@ export default function FamilyPage() {
 
   return (
     <SecondLayout>
-      <div
-        className="
-          flex h-full min-h-0
-          flex-col
-          gap-[20px]
-        "
-      >
-        {/* 헤더 */}
+      <div className="flex h-full min-h-0 flex-col gap-[20px]">
         <Header title="Family" />
 
         {/* 가족 구성원 필터 */}
-        <div
-          className="
-            flex items-center
-            gap-[10px]
-          "
-        >
+        <div className="flex items-center gap-[10px]">
           <FamilyFilterButton
             label="ALL"
             selected={
@@ -168,23 +175,21 @@ export default function FamilyPage() {
             }
           />
 
-          {familyMembers.map(
-            (member) => (
-              <FamilyFilterButton
-                key={member.memberId}
-                label={member.nickname}
-                selected={
-                  selectedMemberId ===
-                  member.memberId
-                }
-                onClick={() =>
-                  setSelectedMemberId(
-                    member.memberId,
-                  )
-                }
-              />
-            ),
-          )}
+          {familyMembers.map((member) => (
+            <FamilyFilterButton
+              key={member.memberId}
+              label={member.nickname}
+              selected={
+                selectedMemberId ===
+                member.memberId
+              }
+              onClick={() =>
+                setSelectedMemberId(
+                  member.memberId,
+                )
+              }
+            />
+          ))}
         </div>
 
         {/* 제품 리스트 */}
@@ -201,8 +206,7 @@ export default function FamilyPage() {
             <div
               className="
                 flex flex-1
-                items-center
-                justify-center
+                items-center justify-center
                 text-body-m-16
                 text-gray-01
               "
@@ -210,32 +214,26 @@ export default function FamilyPage() {
               등록된 제품이 없습니다.
             </div>
           ) : (
-            visibleProducts.map(
-              (product) => (
-                <ProductCard
-                  key={product.productId}
-                  imageSrc={
-                    product.imageUrl
-                  }
-                  name={
-                    product.nickname
-                  }
-                  description={
-                    product.name
-                  }
-                  imageSize={100}
-                  onClick={() =>
-                    navigate(
-                      `/products/${product.productId}`,
-                    )
-                  }
-                />
-              ),
-            )
+            visibleProducts.map((product) => (
+              <ProductCard
+                key={`${product.ownerMemberId}-${product.productId}`}
+                imageSrc={product.imageUrl}
+                name={product.nickname}
+                description={product.name}
+                imageSize={100}
+                onClick={() =>
+                  handleProductClick(
+                    product.ownerMemberId,
+                    product.ownerNickname,
+                    product.productId,
+                  )
+                }
+              />
+            ))
           )}
         </div>
 
-        {/* 특정 가족 선택 시에만 표시 */}
+        {/* 특정 가족 선택 상태에서만 */}
         {selectedMember && (
           <div className="px-[20px]">
             <AddButton
@@ -276,7 +274,6 @@ function FamilyFilterButton({
         text-body-m-12
         cursor-pointer
         transition-all
-        duration-200
 
         ${
           selected
