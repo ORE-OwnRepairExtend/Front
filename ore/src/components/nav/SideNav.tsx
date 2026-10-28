@@ -15,6 +15,8 @@ import aiWhiteIcon from "../../assets/icons/nav/ai_white.svg";
 import myGrayIcon from "../../assets/icons/nav/my_gray.svg";
 import myWhiteIcon from "../../assets/icons/nav/my_white.svg";
 import logoutIcon from "../../assets/icons/nav/logout.svg";
+import familyGrayIcon from "../../assets/icons/nav/family_gray.svg";
+import familyWhiteIcon from "../../assets/icons/nav/family_white.svg";
 
 export default function SideNav() {
   const location = useLocation();
@@ -57,6 +59,12 @@ export default function SideNav() {
       defaultIcon: aiGrayIcon,
       activeIcon: aiWhiteIcon,
       path: "/chatbot",
+    },
+    {
+      label: "Family",
+      defaultIcon: familyGrayIcon,
+      activeIcon: familyWhiteIcon,
+      path: "/family",
     },
     {
       label: "My",
@@ -117,7 +125,7 @@ export default function SideNav() {
       </div>
 
       {/* 로그아웃 */}
-      <div className="w-full">
+      <div className="w-full mt-[58px]">
         <NavButton
           defaultIcon={logoutIcon}
           label="Log Out"

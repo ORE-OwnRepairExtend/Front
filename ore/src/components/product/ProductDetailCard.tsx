@@ -13,6 +13,8 @@ type ProductDetailCardProps = {
   purchaseDate: string | null;
   status: ProductStatus;
   isFavorite: boolean;
+  showFavorite?: boolean;
+
   onClick?: () => void;
   onFavoriteClick?: () => void;
   className?: string;
@@ -42,29 +44,37 @@ export default function ProductDetailCard({
   purchaseDate,
   status,
   isFavorite,
+  showFavorite = true,
   onClick,
   onFavoriteClick,
   className,
 }: ProductDetailCardProps) {
-  const displayImageSrc = imageSrc || defaultLogoImage;
+  const displayImageSrc =
+    imageSrc || defaultLogoImage;
 
   return (
     <button
       type="button"
       onClick={onClick}
       className={`
-        flex h-[190px] w-full items-center gap-[30px]
-        rounded-[20px] bg-neutral-01
+        flex h-[190px] w-full
+        items-center gap-[30px]
+        rounded-[20px]
+        bg-neutral-01
         px-[30px] py-[20px]
-        text-left cursor-pointer
+        text-left
+        cursor-pointer
         ${className ?? ""}
       `}
     >
-      {/* 제품 이미지 */}
       <div
         className="
-          flex h-[150px] w-[150px] shrink-0 items-center justify-center
-          overflow-hidden rounded-[20px] bg-white
+          flex h-[150px] w-[150px]
+          shrink-0
+          items-center justify-center
+          overflow-hidden
+          rounded-[20px]
+          bg-white
         "
       >
         <img
@@ -74,55 +84,100 @@ export default function ProductDetailCard({
         />
       </div>
 
-      {/* 우측 정보 영역 */}
-      <div className="flex min-w-0 flex-[1_0_0] flex-col items-start gap-[10px]">
-        {/* 구분선 위쪽 - 메인 정보 */}
-        <div className="flex w-full items-start justify-between pr-[10px]">
-          {/* 텍스트 영역 */}
-          <div className="flex min-w-0 flex-col items-start gap-[5px]">
-            <p className="text-title-main text-primary-01">{nickname}</p>
+      <div
+        className="
+          flex min-w-0 flex-[1_0_0]
+          flex-col items-start gap-[10px]
+        "
+      >
+        <div
+          className="
+            flex w-full
+            items-start justify-between
+            pr-[10px]
+          "
+        >
+          <div
+            className="
+              flex min-w-0
+              flex-col items-start
+              gap-[5px]
+            "
+          >
+            <p className="text-title-main text-primary-01">
+              {nickname}
+            </p>
 
-            <div className="flex max-w-full items-start gap-[5px] text-body-m-16 text-gray-01">
-              <p className="truncate">{productName}</p>
+            <div
+              className="
+                flex max-w-full
+                items-start gap-[5px]
+                text-body-m-16
+                text-gray-01
+              "
+            >
+              <p className="truncate">
+                {productName}
+              </p>
+
               <span>·</span>
-              <p className="shrink-0">{category}</p>
+
+              <p className="shrink-0">
+                {category}
+              </p>
             </div>
           </div>
 
-          {/* 즐겨찾기 버튼 */}
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onFavoriteClick?.();
-            }}
-            className="h-[30px] w-[30px] shrink-0 cursor-pointer"
-          >
-            <img
-              src={isFavorite ? starFillIcon : starEmptyIcon}
-              alt="즐겨찾기"
-              className="h-full w-full"
-            />
-          </button>
+          {/* 본인 제품에서만 즐겨찾기 표시 */}
+          {showFavorite && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onFavoriteClick?.();
+              }}
+              className="
+                h-[30px] w-[30px]
+                shrink-0
+                cursor-pointer
+              "
+            >
+              <img
+                src={
+                  isFavorite
+                    ? starFillIcon
+                    : starEmptyIcon
+                }
+                alt="즐겨찾기"
+                className="h-full w-full"
+              />
+            </button>
+          )}
         </div>
 
-        {/* 구분선 */}
         <div className="h-[2px] w-full bg-gray-01" />
 
-        {/* 구분선 아래 영역 */}
         <div className="flex flex-col items-start gap-[10px]">
           <p className="text-body-r-16 text-gray-01">
-            {" "}
-            구매일 : {purchaseDate ?? "정보 없음"}
+            구매일 :{" "}
+            {purchaseDate ?? "정보 없음"}
           </p>
 
-          <div className="flex items-center justify-center gap-[20px]">
+          <div
+            className="
+              flex items-center
+              justify-center
+              gap-[20px]
+            "
+          >
             <span
               className={`
-                h-[15px] w-[15px] rounded-full
+                h-[15px] w-[15px]
+                rounded-full
                 ${statusColor[status]}
               `}
             />
+
             <p className="text-body-r-16 text-gray-01">
               보증상태 - {statusText[status]}
             </p>

@@ -1,4 +1,7 @@
-import { Routes, Route } from "react-router-dom";
+import {
+  Routes,
+  Route,
+} from "react-router-dom";
 
 // Auth
 import LoginPage from "../pages/Auth/LoginPage";
@@ -21,42 +24,148 @@ import RepairHistoryPage from "../pages/Repair/RepairHistoryPage";
 import RepairCreatePage from "../pages/Repair/RepairCreatePage";
 import RepairDetailPage from "../pages/Repair/RepairDetailPage";
 
+// Family
+import FamilyPage from "../pages/Family/FamilyPage";
+import FamilyProductDetailPage from "../pages/Family/FamilyProductDetailPage";
+import FamilyRepairHistoryPage from "../pages/Family/FamilyRepairHistoryPage";
+import FamilyRepairDetailPage from "../pages/Family/FamilyRepairDetailPage";
+
 export default function Router() {
   return (
     <Routes>
       {/* Auth */}
-      <Route path="/" element={<LoginPage />} />
-      <Route path="/login" element={<LoginPage />} />
+      <Route
+        path="/"
+        element={<LoginPage />}
+      />
+
+      <Route
+        path="/login"
+        element={<LoginPage />}
+      />
 
       {/* Main */}
-      <Route path="/main" element={<MainPage />} />
-      
+      <Route
+        path="/main"
+        element={<MainPage />}
+      />
+
       {/* Product */}
-      <Route path="/products" element={<ProductListPage />} />
-      <Route path="/products/new" element={<ProductCreatePage />} />
-      <Route path="/products/:productId" element={<ProductDetailPage />} />
-      <Route path="/products/:productId/notifications" element={<ProductNotificationPage />} />
+      <Route
+        path="/products"
+        element={
+          <ProductListPage />
+        }
+      />
+
+      <Route
+        path="/products/new"
+        element={
+          <ProductCreatePage />
+        }
+      />
+
+      <Route
+        path="/products/:productId"
+        element={
+          <ProductDetailPage />
+        }
+      />
+
+      <Route
+        path="/products/:productId/notifications"
+        element={
+          <ProductNotificationPage />
+        }
+      />
+
       {/* Repair */}
-      <Route path="/repairs" element={<RepairListPage />} />
+      <Route
+        path="/repairs"
+        element={
+          <RepairListPage />
+        }
+      />
+
       <Route
         path="/products/:productId/repairs"
-        element={<RepairHistoryPage />}
+        element={
+          <RepairHistoryPage />
+        }
       />
+
       <Route
         path="/products/:productId/repairs/:repairId"
-        element={<RepairDetailPage />}
+        element={
+          <RepairDetailPage />
+        }
       />
+
       <Route
         path="/products/:productId/repairs/new"
-        element={<RepairCreatePage />}
+        element={
+          <RepairCreatePage />
+        }
       />
-      <Route path="/repairs/new" element={<RepairCreatePage />} />
+
+      <Route
+        path="/repairs/new"
+        element={
+          <RepairCreatePage />
+        }
+      />
+
+      {/* Family */}
+      <Route
+        path="/family"
+        element={<FamilyPage />}
+      />
+
+      <Route
+        path="/family/:familyMemberId/products/:productId"
+        element={
+          <FamilyProductDetailPage />
+        }
+      />
+
+      <Route
+        path="/family/:familyMemberId/products/:productId/repairs"
+        element={
+          <FamilyRepairHistoryPage />
+        }
+      />
+
+      <Route
+        path="/family/:familyMemberId/products/:productId/repairs/:repairId"
+        element={
+          <FamilyRepairDetailPage />
+        }
+      />
 
       {/* Home */}
-      <Route path="/mypage" element={<MyPage />} />
-      <Route path="/mypage/edit" element={<MyPage />} />
-      <Route path="/notifications" element={<NotificationPage />} />
-      <Route path="/chatbot" element={<ChatbotPage />} />
+      <Route
+        path="/mypage"
+        element={<MyPage />}
+      />
+
+      <Route
+        path="/mypage/edit"
+        element={<MyPage />}
+      />
+
+      <Route
+        path="/notifications"
+        element={
+          <NotificationPage />
+        }
+      />
+
+      <Route
+        path="/chatbot"
+        element={
+          <ChatbotPage />
+        }
+      />
     </Routes>
   );
 }

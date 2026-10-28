@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import CommonButton from "../common/CommonButton";
 import ProductManual from "./ProductManual";
 import ProductWarrantyInfo from "./ProductWarrantyInfo";
-// import ProductMaintenanceInfo from "./ProductMaintenanceInfo";
 import type { MaintenanceHistoryItem } from "../../utils/maintenanceDate";
 import ProductRepairInfo from "./ProductRepairInfo";
 import type { ProductStatus } from "../../types/product";
@@ -42,7 +41,18 @@ type ProductDetailInfoProps = {
 
   officialUrl?: string;
   customerCenter?: string;
-  onMaintenanceEditingChange?: (isEditing: boolean) => void;
+
+  onMaintenanceEditingChange?: (
+    isEditing: boolean,
+  ) => void;
+
+  repairListPath?: string;
+
+  getRepairDetailPath?: (
+    repairId: string,
+  ) => string;
+
+  repairNavigationState?: unknown;
 };
 
 export default function ProductDetailInfo({
@@ -54,26 +64,46 @@ export default function ProductDetailInfo({
   warrantyEndDate,
   remainingDays,
   status,
-  // maintenanceCategories,
   notificationInfo,
   repairinfos,
   officialUrl,
   customerCenter,
-  // onMaintenanceEditingChange,
+  repairListPath,
+  getRepairDetailPath,
+  repairNavigationState,
 }: ProductDetailInfoProps) {
   return (
-    <section className="flex w-full flex-col items-center gap-[20px]">
-      {/* 메인 제목 */}
-      <h2 className="w-full text-center text-title-main text-primary-02">
+    <section
+      className="
+        flex w-full
+        flex-col items-center
+        gap-[20px]
+      "
+    >
+      <h2
+        className="
+          w-full text-center
+          text-title-main
+          text-primary-02
+        "
+      >
         제품 상세 설명
       </h2>
 
-      {/* 구분선 */}
       <div className="h-[2px] w-full bg-gray-02" />
 
-      {/* 정보 영역 */}
-      <div className="flex w-full flex-col items-center gap-[20px] px-[10px] pt-[15px]">
-        <ProductManual content={manualContent} />
+      <div
+        className="
+          flex w-full
+          flex-col items-center
+          gap-[20px]
+          px-[10px]
+          pt-[15px]
+        "
+      >
+        <ProductManual
+          content={manualContent}
+        />
 
         <div className="h-[2px] w-full bg-gray-02/50" />
 
@@ -84,10 +114,18 @@ export default function ProductDetailInfo({
           warrantyEndDate !== undefined && (
             <>
               <ProductWarrantyInfo
-                purchaseDate={purchaseDate}
-                warrantyMonths={warrantyMonths}
-                warrantyEndDate={warrantyEndDate}
-                remainingDays={remainingDays}
+                purchaseDate={
+                  purchaseDate
+                }
+                warrantyMonths={
+                  warrantyMonths
+                }
+                warrantyEndDate={
+                  warrantyEndDate
+                }
+                remainingDays={
+                  remainingDays
+                }
                 status={status}
               />
 
@@ -103,28 +141,36 @@ export default function ProductDetailInfo({
           </>
         )}
 
-        {/* <ProductMaintenanceInfo
-          purchaseDate={purchaseDate}
-          categories={maintenanceCategories}
-          onEditingChange={onMaintenanceEditingChange}
-        />
-
-        <div className="h-[2px] w-full bg-gray-02/50" /> */}
-
         <ProductRepairInfo
           productId={productId}
-          repairHistories={repairinfos}
+          repairHistories={
+            repairinfos
+          }
+          repairListPath={
+            repairListPath
+          }
+          getRepairDetailPath={
+            getRepairDetailPath
+          }
+          navigationState={
+            repairNavigationState
+          }
         />
 
         <div className="h-[2px] w-full bg-gray-02/50" />
 
-        {/* 하단 버튼 영역 */}
-        {(officialUrl || customerCenter) && (
+        {(officialUrl ||
+          customerCenter) && (
           <div className="flex w-full flex-col gap-[10px]">
             {officialUrl && (
               <CommonButton
                 className="w-full"
-                onClick={() => window.open(officialUrl, "_blank")}
+                onClick={() =>
+                  window.open(
+                    officialUrl,
+                    "_blank",
+                  )
+                }
               >
                 공식 정보
               </CommonButton>
@@ -141,7 +187,8 @@ export default function ProductDetailInfo({
           </div>
         )}
 
-        {(officialUrl || customerCenter) && (
+        {(officialUrl ||
+          customerCenter) && (
           <div className="h-[2px] w-full bg-gray-02/50" />
         )}
       </div>
