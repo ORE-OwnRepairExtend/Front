@@ -125,7 +125,7 @@ export default function SideNav() {
       </div>
 
       {/* 로그아웃 */}
-      <div className="w-full">
+      <div className="w-full mt-[58px]">
         <NavButton
           defaultIcon={logoutIcon}
           label="Log Out"
