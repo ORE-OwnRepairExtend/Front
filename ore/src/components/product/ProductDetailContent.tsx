@@ -33,16 +33,30 @@ type ProductDetailContentProps = {
   status: ProductStatus;
   isFavorite: boolean;
 
+  readOnly?: boolean;
+
   manualContent?: string | null;
   manualPdfUrl?: string | null;
   warrantyMonths?: number | null;
   warrantyEndDate?: string;
   remainingDays?: number;
+
   maintenanceCategories: MaintenanceCategory[];
+
   notificationInfo?: ReactNode;
+
   repairHistories: RepairInfoItem[];
+
   officialUrl?: string;
   customerCenter?: string;
+
+  repairListPath?: string;
+
+  getRepairDetailPath?: (
+    repairId: string,
+  ) => string;
+
+  repairNavigationState?: unknown;
 
   onEditClick?: () => void;
   onDeleteClick?: () => void;
@@ -58,22 +72,38 @@ export default function ProductDetailContent({
   purchaseDate,
   status,
   isFavorite,
+
+  readOnly = false,
+
   manualContent,
   manualPdfUrl,
   warrantyMonths,
   warrantyEndDate,
   remainingDays,
+
   maintenanceCategories,
   notificationInfo,
   repairHistories,
   officialUrl,
   customerCenter,
+
+  repairListPath,
+  getRepairDetailPath,
+  repairNavigationState,
+
   onEditClick,
   onDeleteClick,
   onFavoriteClick,
 }: ProductDetailContentProps) {
-  const [isMaintenanceEditing, setIsMaintenanceEditing] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [
+    isMaintenanceEditing,
+    setIsMaintenanceEditing,
+  ] = useState(false);
+
+  const [
+    isDeleteModalOpen,
+    setIsDeleteModalOpen,
+  ] = useState(false);
 
   const showWarrantyInfo =
     purchaseDate !== null &&
@@ -83,7 +113,15 @@ export default function ProductDetailContent({
     remainingDays !== undefined;
 
   return (
-    <div className="flex w-full flex-shrink-0 flex-col items-center gap-[20px] px-[10px]">
+    <div
+      className="
+        flex w-full
+        flex-shrink-0
+        flex-col items-center
+        gap-[20px]
+        px-[10px]
+      "
+    >
       <ProductDetailCard
         imageSrc={imageSrc}
         nickname={nickname}
@@ -92,50 +130,123 @@ export default function ProductDetailContent({
         purchaseDate={purchaseDate}
         status={status}
         isFavorite={isFavorite}
-        onFavoriteClick={onFavoriteClick}
+        showFavorite={!readOnly}
+        onFavoriteClick={
+          readOnly
+            ? undefined
+            : onFavoriteClick
+        }
       />
 
       <ProductDetailInfo
         productId={productId}
-        manualContent={manualContent}
-        manualPdfUrl={manualPdfUrl}
-        purchaseDate={purchaseDate}
+        manualContent={
+          manualContent
+        }
+        manualPdfUrl={
+          manualPdfUrl
+        }
+        purchaseDate={
+          purchaseDate
+        }
         status={status}
-        showWarrantyInfo={showWarrantyInfo}
-        warrantyMonths={warrantyMonths}
-        warrantyEndDate={warrantyEndDate}
-        remainingDays={remainingDays}
-        maintenanceCategories={maintenanceCategories}
-        notificationInfo={notificationInfo}
-        repairinfos={repairHistories}
-        officialUrl={officialUrl}
-        customerCenter={customerCenter}
-        onMaintenanceEditingChange={setIsMaintenanceEditing}
+        showWarrantyInfo={
+          showWarrantyInfo
+        }
+        warrantyMonths={
+          warrantyMonths
+        }
+        warrantyEndDate={
+          warrantyEndDate
+        }
+        remainingDays={
+          remainingDays
+        }
+        maintenanceCategories={
+          maintenanceCategories
+        }
+        notificationInfo={
+          notificationInfo
+        }
+        repairinfos={
+          repairHistories
+        }
+        officialUrl={
+          officialUrl
+        }
+        customerCenter={
+          customerCenter
+        }
+        onMaintenanceEditingChange={
+          setIsMaintenanceEditing
+        }
+        repairListPath={
+          repairListPath
+        }
+        getRepairDetailPath={
+          getRepairDetailPath
+        }
+        repairNavigationState={
+          repairNavigationState
+        }
       />
 
-      {!isMaintenanceEditing && (
-        <div className="flex w-full items-center justify-end gap-[10px] px-[10px] pb-[15px]">
-          <CommonButton variant="secondary" onClick={onEditClick}>
-            수정
-          </CommonButton>
-          <CommonButton onClick={() => setIsDeleteModalOpen(true)}>
-            삭제
-          </CommonButton>
-        </div>
+      {/* 본인 제품일 때만 수정 / 삭제 */}
+      {!readOnly &&
+        !isMaintenanceEditing && (
+          <div
+            className="
+              flex w-full
+              items-center
+              justify-end
+              gap-[10px]
+              px-[10px]
+              pb-[15px]
+            "
+          >
+            <CommonButton
+              variant="secondary"
+              onClick={onEditClick}
+            >
+              수정
+            </CommonButton>
+
+            <CommonButton
+              onClick={() =>
+                setIsDeleteModalOpen(
+                  true,
+                )
+              }
+            >
+              삭제
+            </CommonButton>
+          </div>
+        )}
+
+      {!readOnly && (
+        <Modal
+          open={
+            isDeleteModalOpen
+          }
+          title="해당 제품을 삭제하시겠습니까?"
+          onClose={() =>
+            setIsDeleteModalOpen(
+              false,
+            )
+          }
+          onCancel={() =>
+            setIsDeleteModalOpen(
+              false,
+            )
+          }
+          onConfirm={() => {
+            setIsDeleteModalOpen(false);
+            onDeleteClick?.();
+          }}
+          cancelText="취소"
+          confirmText="삭제"
+        />
       )}
-
-      <Modal
-        open={isDeleteModalOpen}
-        title="해당 제품을 삭제하시겠습니까?"
-        onClose={() => setIsDeleteModalOpen(false)}
-        onCancel={() => setIsDeleteModalOpen(false)}
-        onConfirm={() => {
-          setIsDeleteModalOpen(false);
-          onDeleteClick?.();
-        }}
-        cancelText="취소"
-        confirmText="삭제"
-      />
     </div>
   );
 }
