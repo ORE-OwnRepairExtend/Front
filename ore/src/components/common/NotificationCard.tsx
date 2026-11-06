@@ -21,13 +21,13 @@ type NotificationCardProps = {
 // 상태별 UI 설정
 const statusConfig: Record<NotificationStatus, { dotColor: string }> = {
   expired: {
-    dotColor: "bg-gray-400",
+    dotColor: "bg-gray-01",
   },
   danger: {
-    dotColor: "bg-red-500",
+    dotColor: "bg-point-01",
   },
   imminent: {
-    dotColor: "bg-[#D2D53A]",
+    dotColor: "bg-point-02",
   },
   family: {
     dotColor: "bg-primary-01",
