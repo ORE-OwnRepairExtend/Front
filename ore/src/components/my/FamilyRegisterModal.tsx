@@ -1,112 +1,88 @@
-import { useEffect, useState } from "react";
-
-type CheckStatus = "idle" | "checking" | "success" | "error";
+import { useEffect, useRef, useState } from "react";
+import { getFamilyErrorMessage } from "../../api/family";
+import closeIcon from "../../assets/icons/close.svg";
 
 type FamilyRegisterModalProps = {
   isOpen: boolean;
   onClose: () => void;
-
-  // 아이디 존재 여부 확인
-  onCheckUserId: (userId: string) => Promise<boolean>;
-
-  // 가족 요청
-  onRequest: (userId: string, nickname: string) => Promise<void>;
+  onRequest: (
+    recipientEmail: string,
+    nickname: string,
+  ) => Promise<void>;
 };
 
 export default function FamilyRegisterModal({
   isOpen,
   onClose,
-  onCheckUserId,
   onRequest,
 }: FamilyRegisterModalProps) {
-  const [userId, setUserId] = useState("");
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const emailRef = useRef<HTMLInputElement>(null);
+  const requestingRef = useRef(false);
+
+  const [recipientEmail, setRecipientEmail] = useState("");
   const [nickname, setNickname] = useState("");
-
-  const [checkStatus, setCheckStatus] =
-    useState<CheckStatus>("idle");
-
-  const [isRequesting, setIsRequesting] =
-    useState(false);
+  const [isRequesting, setIsRequesting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   // 모달을 다시 열 때 입력값 초기화
   useEffect(() => {
     if (!isOpen) return;
 
-    setUserId("");
+    setRecipientEmail("");
     setNickname("");
-    setCheckStatus("idle");
-    setIsRequesting(false);
+    setErrorMessage("");
+
+    const previousFocusedElement = document.activeElement;
+    const previousOverflow = document.body.style.overflow;
+
+    document.body.style.overflow = "hidden";
+    emailRef.current?.focus();
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+
+      if (previousFocusedElement instanceof HTMLElement) {
+        previousFocusedElement.focus();
+      }
+    };
   }, [isOpen]);
 
-  if (!isOpen) {
-    return null;
-  }
+  if (!isOpen) return null;
 
-  const trimmedUserId = userId.trim();
-  const trimmedNickname = nickname.trim();
-
-  const isCheckDisabled =
-    trimmedUserId.length === 0 ||
-    checkStatus === "checking";
-
-  const isRequestDisabled =
-    checkStatus !== "success" ||
-    trimmedNickname.length === 0 ||
-    isRequesting;
-
-  const handleUserIdChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    setUserId(e.target.value);
-
-    // 확인한 후 아이디를 다시 수정하면
-    // 확인 상태 초기화
-    setCheckStatus("idle");
+  const handleClose = () => {
+    if (requestingRef.current) return;
+    onClose();
   };
 
-  const handleCheckUser = async () => {
-    if (isCheckDisabled) return;
-
-    try {
-      setCheckStatus("checking");
-
-      const exists =
-        await onCheckUserId(trimmedUserId);
-
-      if (exists) {
-        setCheckStatus("success");
-        return;
-      }
-
-      setCheckStatus("error");
-    } catch (error) {
-      console.error(
-        "회원 존재 여부 확인 실패:",
-        error,
-      );
-
-      setCheckStatus("error");
-    }
-  };
-
+  // 가족 요청
   const handleRequest = async () => {
-    if (isRequestDisabled) return;
+    if (requestingRef.current) return;
+
+    const trimmedEmail = recipientEmail.trim();
+    const trimmedNickname = nickname.trim();
+
+    if (!trimmedEmail || !trimmedNickname) {
+      setErrorMessage("이메일과 가족의 닉네임을 입력해주세요.");
+      return;
+    }
 
     try {
+      requestingRef.current = true;
       setIsRequesting(true);
+      setErrorMessage("");
 
-      await onRequest(
-        trimmedUserId,
-        trimmedNickname,
-      );
-
+      await onRequest(trimmedEmail, trimmedNickname);
       onClose();
     } catch (error) {
-      console.error(
-        "가족 등록 요청 실패:",
-        error,
+      setErrorMessage(
+        getFamilyErrorMessage(
+          error,
+          "가족 초대 요청에 실패했습니다. 다시 시도해주세요.",
+        ),
       );
     } finally {
+      requestingRef.current = false;
       setIsRequesting(false);
     }
   };
@@ -116,209 +92,187 @@ export default function FamilyRegisterModal({
       className="
         fixed inset-0 z-50
         flex items-center justify-center
-        bg-black/20
+        bg-black/20 p-[20px]
       "
-      onMouseDown={(e) => {
-        if (e.target === e.currentTarget) {
-          onClose();
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) {
+          handleClose();
+        }
+      }}
+      onKeyDown={(event) => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          handleClose();
+        }
+
+        if (event.key !== "Tab") return;
+
+        const elements = dialogRef.current?.querySelectorAll<HTMLElement>(
+          "button:not([disabled]), input:not([disabled])",
+        );
+
+        if (!elements?.length) return;
+
+        const firstElement = elements[0];
+        const lastElement = elements[elements.length - 1];
+
+        if (event.shiftKey && document.activeElement === firstElement) {
+          event.preventDefault();
+          lastElement.focus();
+        } else if (
+          !event.shiftKey &&
+          document.activeElement === lastElement
+        ) {
+          event.preventDefault();
+          firstElement.focus();
         }
       }}
     >
       <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="family-register-title"
+        aria-busy={isRequesting}
         className="
-          relative
-          flex h-[500px] w-[400px]
-          flex-col
-          rounded-[22px]
-          bg-secondary-01
-          px-[24px]
-          pt-[52px]
-          pb-[30px]
+          relative flex w-[400px] max-w-full
+          max-h-[calc(100dvh-40px)]
+          flex-col overflow-y-auto
+          rounded-[22px] bg-secondary-01
+          px-[24px] pb-[30px] pt-[52px]
         "
       >
         {/* 닫기 */}
         <button
           type="button"
-          onClick={onClose}
+          onClick={handleClose}
+          disabled={isRequesting}
           aria-label="가족 등록 닫기"
           className="
             absolute right-[24px] top-[18px]
-            flex h-[28px] w-[28px]
-            items-center justify-center
-            text-[30px] font-semibold
-            leading-none
-            text-primary-01
             cursor-pointer
+            disabled:cursor-not-allowed disabled:opacity-50
           "
         >
-          ×
+          <img
+            src={closeIcon}
+            alt=""
+            className="h-[24px] w-[24px]"
+          />
         </button>
 
         {/* 제목 */}
         <h2
-          className="
-            text-center
-            text-title-b-32
-            text-primary-01
-          "
+          id="family-register-title"
+          className="text-center text-title-b-32 text-primary-01"
         >
           가족 등록
         </h2>
 
         {/* 폼 */}
-        <div className="mt-[58px] flex flex-col">
-          {/* 아이디 */}
-          <div>
+        <form
+          className="mt-[40px]"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void handleRequest();
+          }}
+        >
+          <fieldset
+            disabled={isRequesting}
+            className="flex min-w-0 flex-col border-0 p-0"
+          >
+            {/* 아이디 */}
             <label
-              htmlFor="family-user-id"
-              className="
-                mb-[8px] block
-                text-body-m-16
-                text-black
-              "
+              htmlFor="family-recipient-email"
+              className="mb-[8px] text-body-m-16 text-black"
             >
               아이디
             </label>
 
-            <div className="flex items-start gap-[10px]">
-              <input
-                id="family-user-id"
-                type="text"
-                value={userId}
-                onChange={handleUserIdChange}
-                placeholder="아이디를 입력해주세요."
-                className="
-                  h-[38px] flex-1
-                  rounded-[9px]
-                  border border-gray-02
-                  bg-white
-                  px-[14px]
-                  text-body-r-16
-                  outline-none
-                  placeholder:text-gray-01
-                  focus:border-primary-01
-                "
-              />
-
-              <button
-                type="button"
-                disabled={isCheckDisabled}
-                onClick={handleCheckUser}
-                className={`
-                  flex h-[38px] w-[46px]
-                  shrink-0
-                  items-center justify-center
-                  rounded-[9px]
-                  border border-gray-02
-                  bg-white
-                  text-body-r-16
-                  transition-opacity
-
-                  ${
-                    isCheckDisabled
-                      ? "cursor-not-allowed opacity-50"
-                      : "cursor-pointer"
-                  }
-                `}
-              >
-                {checkStatus === "checking"
-                  ? "..."
-                  : checkStatus === "success"
-                    ? "완료"
-                    : "확인"}
-              </button>
-            </div>
-
-            {/* 존재하지 않는 회원 */}
-            <div className="h-[28px]">
-              {checkStatus === "error" && (
-                <p
-                  className="
-                    mt-[6px]
-                    px-[6px]
-                    text-body-r-16
-                    text-gray-01
-                  "
-                >
-                  존재하지 않는 회원입니다.
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* 닉네임 */}
-          <div className="mt-[4px]">
-            <label
-              htmlFor="family-nickname"
+            <input
+              ref={emailRef}
+              id="family-recipient-email"
+              type="email"
+              autoComplete="email"
+              required
+              value={recipientEmail}
+              onChange={(event) => {
+                setRecipientEmail(event.target.value);
+                setErrorMessage("");
+              }}
+              placeholder="초대할 사용자의 이메일을 입력해주세요."
               className="
-                mb-[8px] block
-                text-body-m-16
-                text-black
+                h-[38px] w-full
+                rounded-[9px] border border-gray-02
+                bg-white px-[14px]
+                text-body-r-16 text-black
+                outline-none placeholder:text-gray-01
+                focus:border-primary-01
               "
+            />
+
+            {/* 닉네임 */}
+            <label
+              htmlFor="family-register-nickname"
+              className="mb-[8px] mt-[24px] text-body-m-16 text-black"
             >
               닉네임
             </label>
 
             <input
-              id="family-nickname"
+              id="family-register-nickname"
               type="text"
+              required
               value={nickname}
-              onChange={(e) =>
-                setNickname(e.target.value)
-              }
+              onChange={(event) => {
+                setNickname(event.target.value);
+                setErrorMessage("");
+              }}
               placeholder="가족의 닉네임을 설정해주세요."
               className="
                 h-[38px] w-full
-                rounded-[9px]
-                border border-gray-02
-                bg-white
-                px-[14px]
-                text-body-r-16
-                outline-none
-                placeholder:text-gray-01
+                rounded-[9px] border border-gray-02
+                bg-white px-[14px]
+                text-body-r-16 text-black
+                outline-none placeholder:text-gray-01
                 focus:border-primary-01
               "
             />
-          </div>
 
-          {/* 요청 버튼 */}
-          <button
-            type="button"
-            disabled={isRequestDisabled}
-            onClick={handleRequest}
-            className={`
-              mt-[48px]
-              flex h-[48px] w-full
-              items-center justify-center
-              rounded-[14px]
-              bg-primary-01
-              text-button-b-20
-              text-white
-              transition-opacity
+            <div className="min-h-[48px] pt-[8px]">
+              {errorMessage && (
+                <p role="alert" className="text-body-r-12 text-red-500">
+                  {errorMessage}
+                </p>
+              )}
+            </div>
 
-              ${
-                isRequestDisabled
-                  ? "cursor-not-allowed opacity-50"
-                  : "cursor-pointer"
+            {/* 요청 버튼 */}
+            <button
+              type="submit"
+              disabled={
+                isRequesting ||
+                !recipientEmail.trim() ||
+                !nickname.trim()
               }
-            `}
-          >
-            {isRequesting
-              ? "요청 중..."
-              : "요청"}
-          </button>
+              className="
+                mt-[20px]
+                flex h-[48px] w-full
+                items-center justify-center
+                rounded-[14px] bg-primary-01
+                text-button-b-20 text-white
+                cursor-pointer transition-opacity
+                disabled:cursor-not-allowed disabled:opacity-50
+              "
+            >
+              {isRequesting ? "요청 중..." : "요청"}
+            </button>
 
-          <p
-            className="
-              mt-[8px]
-              text-center
-              text-body-m-16
-              text-gray-01
-            "
-          >
-            요청이 수락되면 가족으로 등록됩니다.
-          </p>
-        </div>
+            <p className="mt-[8px] text-center text-body-m-16 text-gray-01">
+              요청이 수락되면 가족으로 등록됩니다.
+            </p>
+          </fieldset>
+        </form>
       </div>
     </div>
   );
