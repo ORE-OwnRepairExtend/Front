@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import Header from "../../components/header/Header";
@@ -9,6 +9,13 @@ import Modal from "../../components/common/Modal";
 import ProfileBox from "../../components/profile/ProfileBox";
 import SecondLayout from "../../layout/SecondLayout";
 import { api } from "../../api/api";
+import {
+  createFamilyInvitation,
+  deleteFamilyMember,
+  getFamilyErrorMessage,
+  getFamilyMembers,
+  type FamilyMember,
+} from "../../api/family";
 
 type UserProfileResponse = {
   userId: string;
@@ -18,135 +25,152 @@ type UserProfileResponse = {
   createdAt: string;
 };
 
-type FamilyMember = {
-  id: string;
-  relation: string;
-  name: string;
-  email: string;
-};
-
 export default function MyPage() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const isEditMode =
-    location.pathname === "/mypage/edit";
+  const isEditMode = location.pathname === "/mypage/edit";
 
   // 가족 관리 화면 표시 여부
-  const [
-    isFamilyManagement,
-    setIsFamilyManagement,
-  ] = useState(false);
+  const [isFamilyManagement, setIsFamilyManagement] = useState(false);
 
   // 가족 등록 모달 표시 여부
-  const [
-    isFamilyRegisterOpen,
-    setIsFamilyRegisterOpen,
-  ] = useState(false);
+  const [isFamilyRegisterOpen, setIsFamilyRegisterOpen] = useState(false);
 
   // 삭제 대상 가족 ID
-  const [
-    deleteTargetId,
-    setDeleteTargetId,
-  ] = useState<string | null>(null);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [imageUrl, setImageUrl] = useState("");
 
   const [editName, setEditName] = useState("");
-  const [
-    editImageUrl,
-    setEditImageUrl,
-  ] = useState("");
-  const [
-    editImageFile,
-    setEditImageFile,
-  ] = useState<File | null>(null);
+  const [editImageUrl, setEditImageUrl] = useState("");
+  const [editImageFile, setEditImageFile] = useState<File | null>(null);
 
-  const [isLoading, setIsLoading] =
-    useState(true);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const savingRef = useRef(false);
+  const previewUrlRef = useRef<string | null>(null);
 
-  /*
-   * TODO:
-   * 백엔드 가족 조회 API가 확정되면
-   * API 조회 결과로 교체
-   */
-  const [
-    familyMembers,
-    setFamilyMembers,
-  ] = useState<FamilyMember[]>([
-    {
-      id: "1",
-      relation: "엄마",
-      name: "ORE User2",
-      email: "oreouser2@gmail.com",
-    },
-    {
-      id: "2",
-      relation: "아빠",
-      name: "ORE User3",
-      email: "oreouser3@gmail.com",
-    },
-    {
-      id: "3",
-      relation: "동생",
-      name: "ORE User4",
-      email: "oreouser4@gmail.com",
-    },
-  ]);
+  const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
+  const [isFamilyLoading, setIsFamilyLoading] = useState(false);
+  const [familyErrorMessage, setFamilyErrorMessage] = useState("");
+  const [familyNotice, setFamilyNotice] = useState("");
+  const [familyReloadKey, setFamilyReloadKey] = useState(0);
+  const deletingRef = useRef(false);
 
-  // 사용자 프로필 조회
-  const fetchUserProfile = async () => {
-    try {
-      const response =
-        await api.get<UserProfileResponse>(
-          "/users/me",
-        );
+  const clearPreviewUrl = () => {
+    if (!previewUrlRef.current) return;
 
-      const user = response.data;
-
-      setEmail(user.email);
-      setName(user.name);
-      setImageUrl(user.profileImage);
-
-      setEditName(user.name);
-      setEditImageUrl(user.profileImage);
-    } catch (error) {
-      console.error(
-        "사용자 정보 조회 실패:",
-        error,
-      );
-
-      alert(
-        "사용자 정보를 불러오지 못했습니다. 다시 로그인해주세요.",
-      );
-
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("user");
-
-      navigate("/login", {
-        replace: true,
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    URL.revokeObjectURL(previewUrlRef.current);
+    previewUrlRef.current = null;
   };
 
+  // 사용자 프로필 조회
   useEffect(() => {
-    fetchUserProfile();
+    const controller = new AbortController();
+
+    const fetchUserProfile = async () => {
+      try {
+        const response = await api.get<UserProfileResponse>("/users/me", {
+          signal: controller.signal,
+        });
+
+        if (controller.signal.aborted) return;
+
+        const user = response.data;
+
+        setEmail(user.email);
+        setName(user.name);
+        setImageUrl(user.profileImage ?? "");
+
+        setEditName(user.name);
+        setEditImageUrl(user.profileImage ?? "");
+      } catch (error) {
+        if (controller.signal.aborted) return;
+
+        console.error("사용자 정보 조회 실패:", error);
+
+        alert(
+          "사용자 정보를 불러오지 못했습니다. 다시 로그인해주세요.",
+        );
+
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("user");
+        navigate("/login", { replace: true });
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    void fetchUserProfile();
+
+    return () => controller.abort();
+  }, [navigate]);
+
+  // 가족 관리 진입 시 목록 조회
+  useEffect(() => {
+    if (!isFamilyManagement) return;
+
+    const controller = new AbortController();
+
+    const fetchMembers = async () => {
+      try {
+        setIsFamilyLoading(true);
+        setFamilyErrorMessage("");
+
+        const members = await getFamilyMembers(controller.signal);
+
+        if (controller.signal.aborted) return;
+
+        setFamilyMembers(members.filter((member) => !member.isMe));
+      } catch (error) {
+        if (controller.signal.aborted) return;
+
+        setFamilyErrorMessage(
+          getFamilyErrorMessage(
+            error,
+            "가족 목록을 불러오지 못했습니다.",
+          ),
+        );
+      } finally {
+        if (!controller.signal.aborted) {
+          setIsFamilyLoading(false);
+        }
+      }
+    };
+
+    void fetchMembers();
+
+    return () => controller.abort();
+  }, [isFamilyManagement, familyReloadKey]);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrlRef.current) {
+        URL.revokeObjectURL(previewUrlRef.current);
+      }
+    };
   }, []);
 
   // 프로필 수정 시작
   const handleEditStart = () => {
+    clearPreviewUrl();
     setEditName(name);
     setEditImageUrl(imageUrl);
+    setEditImageFile(null);
 
     navigate("/mypage/edit");
   };
 
   // 프로필 수정 취소
   const handleEditCancel = () => {
+    if (savingRef.current) return;
+
+    clearPreviewUrl();
     setEditName(name);
     setEditImageUrl(imageUrl);
     setEditImageFile(null);
@@ -156,55 +180,50 @@ export default function MyPage() {
 
   // 프로필 수정 저장
   const handleEditSave = async () => {
-    try {
-      const formData = new FormData();
+    if (savingRef.current) return;
 
-      formData.append(
-        "name",
-        editName,
-      );
+    try {
+      savingRef.current = true;
+      setIsSaving(true);
+
+      const formData = new FormData();
+      formData.append("name", editName);
 
       if (editImageFile) {
-        formData.append(
-          "profileImage",
-          editImageFile,
-        );
+        formData.append("profileImage", editImageFile);
       }
 
-      const response =
-        await api.patch<UserProfileResponse>(
-          "/users/me",
-          formData,
-        );
+      const response = await api.patch<UserProfileResponse>(
+        "/users/me",
+        formData,
+      );
 
       const user = response.data;
 
-      setName(user.name);
-      setImageUrl(user.profileImage);
+      clearPreviewUrl();
 
+      setName(user.name);
+      setImageUrl(user.profileImage ?? "");
       setEditName(user.name);
-      setEditImageUrl(user.profileImage);
+      setEditImageUrl(user.profileImage ?? "");
       setEditImageFile(null);
 
       navigate("/mypage");
     } catch (error) {
-      console.error(
-        "프로필 수정 실패:",
-        error,
-      );
-
-      alert(
-        "프로필 수정에 실패했습니다. 다시 시도해주세요.",
-      );
+      console.error("프로필 수정 실패:", error);
+      alert("프로필 수정에 실패했습니다. 다시 시도해주세요.");
+    } finally {
+      savingRef.current = false;
+      setIsSaving(false);
     }
   };
 
   // 프로필 이미지 변경
-  const handleImageChange = (
-    file: File,
-  ) => {
-    const previewUrl =
-      URL.createObjectURL(file);
+  const handleImageChange = (file: File) => {
+    clearPreviewUrl();
+
+    const previewUrl = URL.createObjectURL(file);
+    previewUrlRef.current = previewUrl;
 
     setEditImageUrl(previewUrl);
     setEditImageFile(file);
@@ -215,111 +234,95 @@ export default function MyPage() {
     try {
       await api.post("/auth/logout");
     } catch (error) {
-      console.error(
-        "로그아웃 API 실패:",
-        error,
-      );
+      console.error("로그아웃 API 실패:", error);
     } finally {
-      localStorage.removeItem(
-        "accessToken",
-      );
+      localStorage.removeItem("accessToken");
       localStorage.removeItem("user");
-
-      navigate("/login", {
-        replace: true,
-      });
+      navigate("/login", { replace: true });
     }
   };
 
   // 가족 관리 화면 열기
-  const handleOpenFamilyManagement =
-    () => {
-      setIsFamilyManagement(true);
-    };
+  const handleOpenFamilyManagement = () => {
+    setFamilyNotice("");
+    setFamilyErrorMessage("");
+    setIsFamilyManagement(true);
+  };
 
   // 가족 관리 화면 닫기
-  const handleCloseFamilyManagement =
-    () => {
-      setIsFamilyManagement(false);
-      setIsFamilyRegisterOpen(false);
-      setDeleteTargetId(null);
-    };
+  const handleCloseFamilyManagement = () => {
+    if (deletingRef.current) return;
+
+    setIsFamilyManagement(false);
+    setIsFamilyRegisterOpen(false);
+    setDeleteTargetId(null);
+    setFamilyErrorMessage("");
+    setFamilyNotice("");
+  };
 
   // 가족 추가 모달 열기
-  const handleAddFamilyMember =
-    () => {
-      setIsFamilyRegisterOpen(true);
-    };
+  const handleAddFamilyMember = () => {
+    setFamilyNotice("");
+    setIsFamilyRegisterOpen(true);
+  };
 
   // 가족 삭제 버튼 클릭
-  const handleDeleteFamilyMember = (
-    memberId: string,
-  ) => {
+  const handleDeleteFamilyMember = (memberId: string) => {
+    if (deletingRef.current) return;
+
+    setFamilyErrorMessage("");
+    setFamilyNotice("");
     setDeleteTargetId(memberId);
   };
 
   // 가족 삭제 취소
   const handleCancelDelete = () => {
+    if (deletingRef.current) return;
     setDeleteTargetId(null);
   };
 
-  /*
-   * 가족 삭제 확인
-   *
-   * 현재는 프론트 state에서만 삭제.
-   * 백엔드 삭제 API 확정 후
-   * API 성공 시 목록 갱신하도록 변경.
-   */
-  const handleConfirmDelete = () => {
-    if (!deleteTargetId) {
-      return;
+  // 가족 삭제 확인
+  const handleConfirmDelete = async () => {
+    if (!deleteTargetId || deletingRef.current) return;
+
+    const targetId = deleteTargetId;
+
+    try {
+      deletingRef.current = true;
+
+      await deleteFamilyMember(targetId);
+
+      setFamilyMembers((prev) =>
+        prev.filter((member) => member.userId !== targetId),
+      );
+
+      setDeleteTargetId(null);
+      setFamilyNotice("가족 연결을 해제했습니다.");
+    } catch (error) {
+      setDeleteTargetId(null);
+      setFamilyErrorMessage(
+        getFamilyErrorMessage(
+          error,
+          "가족 구성원 삭제에 실패했습니다.",
+        ),
+      );
+    } finally {
+      deletingRef.current = false;
     }
-
-    setFamilyMembers((prev) =>
-      prev.filter(
-        (member) =>
-          member.id !== deleteTargetId,
-      ),
-    );
-
-    setDeleteTargetId(null);
   };
 
-  /*
-   * 아이디 존재 여부 확인
-   *
-   * TODO:
-   * 백엔드 회원 존재 확인 API
-   * 확정 후 실제 API 연결
-   */
-  const handleCheckFamilyUser = async (
-    userId: string,
-  ): Promise<boolean> => {
-    console.log(
-      "회원 존재 여부 확인:",
-      userId,
-    );
-
-    return false;
-  };
-
-  /*
-   * 가족 등록 요청
-   *
-   * TODO:
-   * 가족 등록 요청 API
-   * 확정 후 실제 API 연결
-   */
+  // 가족 등록 요청
   const handleFamilyRequest = async (
-    userId: string,
+    recipientEmail: string,
     nickname: string,
   ) => {
-    console.log(
-      "가족 등록 요청",
-      {
-        userId,
-        nickname,
-      },
+    const invitation = await createFamilyInvitation({
+      recipientEmail,
+      nickname,
+    });
+
+    setFamilyNotice(
+      `${invitation.recipientName} 님에게 가족 초대를 보냈습니다.`,
     );
   };
 
@@ -347,30 +350,21 @@ export default function MyPage() {
           <div className="relative">
             <Header
               title="My"
-              showNotification={
-                !isFamilyManagement
-              }
+              showNotification={!isFamilyManagement}
             />
 
             {/* 가족 관리 닫기 */}
             {isFamilyManagement && (
               <button
                 type="button"
-                onClick={
-                  handleCloseFamilyManagement
-                }
+                onClick={handleCloseFamilyManagement}
                 aria-label="가족 관리 닫기"
                 className="
-                  absolute
-                  right-[5px]
-                  top-[5px]
+                  absolute right-[5px] top-[5px]
                   flex h-[34px] w-[34px]
                   items-center justify-center
-                  text-[34px]
-                  font-medium
-                  leading-none
-                  text-primary-02
-                  cursor-pointer
+                  text-[34px] font-medium leading-none
+                  text-primary-02 cursor-pointer
                 "
               >
                 ×
@@ -378,82 +372,96 @@ export default function MyPage() {
             )}
           </div>
 
-          <div
-            className="
-              flex-1
-              min-h-0
-              overflow-y-auto
-              no-scrollbar
-            "
-          >
+          <div className="min-h-0 flex-1 overflow-y-auto no-scrollbar">
             <div className="flex flex-col gap-[20px]">
               {/* 사용자 프로필 */}
-              <ProfileBox
-                name={name}
-                email={email}
-                imageUrl={
-                  isEditMode
-                    ? editImageUrl
-                    : imageUrl
-                }
-                isEditMode={isEditMode}
-                editName={editName}
-                onEditNameChange={
-                  setEditName
-                }
-                onEditStart={
-                  handleEditStart
-                }
-                onEditCancel={
-                  handleEditCancel
-                }
-                onEditSave={
-                  handleEditSave
-                }
-                onImageChange={
-                  handleImageChange
-                }
-              />
+              <fieldset
+                disabled={isSaving}
+                className="min-w-0 border-0 p-0"
+              >
+                <ProfileBox
+                  name={name}
+                  email={email}
+                  imageUrl={isEditMode ? editImageUrl : imageUrl}
+                  isEditMode={isEditMode}
+                  editName={editName}
+                  onEditNameChange={setEditName}
+                  onEditStart={handleEditStart}
+                  onEditCancel={handleEditCancel}
+                  onEditSave={handleEditSave}
+                  onImageChange={handleImageChange}
+                />
+              </fieldset>
 
               {/* 가족 관리 화면 */}
               {isFamilyManagement ? (
-                <FamilyManagement
-                  members={
-                    familyMembers
-                  }
-                  onAddMember={
-                    handleAddFamilyMember
-                  }
-                  onDeleteMember={
-                    handleDeleteFamilyMember
-                  }
-                />
+                <div className="flex flex-col gap-[12px]">
+                  {familyNotice && (
+                    <p
+                      role="status"
+                      className="text-body-r-12 text-primary-01"
+                    >
+                      {familyNotice}
+                    </p>
+                  )}
+
+                  {familyErrorMessage && (
+                    <div className="flex items-center gap-[10px]">
+                      <p
+                        role="alert"
+                        className="text-body-r-12 text-red-500"
+                      >
+                        {familyErrorMessage}
+                      </p>
+
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setFamilyReloadKey((prev) => prev + 1)
+                        }
+                        className="shrink-0 cursor-pointer text-body-r-12 text-primary-01"
+                      >
+                        다시 조회
+                      </button>
+                    </div>
+                  )}
+
+                  {isFamilyLoading ? (
+                    <p className="py-[20px] text-body-m-14 text-gray-01">
+                      가족 목록을 불러오는 중입니다.
+                    </p>
+                  ) : (
+                    <FamilyManagement
+                      members={familyMembers.map((member) => ({
+                        id: member.userId,
+                        relation: member.nickname || member.name,
+                        name: member.name,
+                        email: member.email,
+                        profileImageUrl: member.profileImageUrl,
+                      }))}
+                      onAddMember={handleAddFamilyMember}
+                      onDeleteMember={handleDeleteFamilyMember}
+                    />
+                  )}
+                </div>
               ) : (
                 <MenuList
                   items={[
                     {
-                      label:
-                        "계정 정보",
-                      onClick:
-                        () => {},
+                      label: "계정 정보",
+                      onClick: () => {},
                     },
                     {
-                      label:
-                        "가족 관리",
-                      onClick:
-                        handleOpenFamilyManagement,
+                      label: "가족 관리",
+                      onClick: handleOpenFamilyManagement,
                     },
                     {
-                      label:
-                        "이용 약관",
-                      onClick:
-                        () => {},
+                      label: "이용 약관",
+                      onClick: () => {},
                     },
                     {
-                      label:
-                        "로그아웃",
-                      onClick:
-                        handleLogout,
+                      label: "로그아웃",
+                      onClick: handleLogout,
                     },
                   ]}
                 />
@@ -465,40 +473,21 @@ export default function MyPage() {
 
       {/* 가족 등록 모달 */}
       <FamilyRegisterModal
-        isOpen={
-          isFamilyRegisterOpen
-        }
-        onClose={() =>
-          setIsFamilyRegisterOpen(
-            false,
-          )
-        }
-        onCheckUserId={
-          handleCheckFamilyUser
-        }
-        onRequest={
-          handleFamilyRequest
-        }
+        isOpen={isFamilyRegisterOpen}
+        onClose={() => setIsFamilyRegisterOpen(false)}
+        onRequest={handleFamilyRequest}
       />
 
       {/* 가족 삭제 확인 모달 */}
       <Modal
-        open={
-          deleteTargetId !== null
-        }
+        open={deleteTargetId !== null}
         type="confirm"
         title="해당 구성원을 삭제하시겠습니까?"
         cancelText="취소"
         confirmText="삭제"
-        onClose={
-          handleCancelDelete
-        }
-        onCancel={
-          handleCancelDelete
-        }
-        onConfirm={
-          handleConfirmDelete
-        }
+        onClose={handleCancelDelete}
+        onCancel={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
       />
     </>
   );
