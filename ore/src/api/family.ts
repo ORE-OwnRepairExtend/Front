@@ -72,11 +72,24 @@ export async function createFamilyInvitation(
 export async function respondFamilyInvitation(
   invitationId: string,
   status: FamilyInvitationStatus,
+  nickname?: string,
 ) {
-  // 거절 응답 형식은 첨부 명세에 없어 호출부에서 응답을 가정하지 않음
+  const trimmedNickname = nickname?.trim();
+
+  if (status === "ACCEPTED" && !trimmedNickname) {
+    throw new Error("가족의 닉네임을 입력해주세요.");
+  }
+
+  // status는 첨부 명세에 정의된 요청 필드.
+  // nickname은 요청에 추가 전송하며 서버 저장 지원 여부는 확인 필요.
   await api.patch<unknown>(
     `/family/invitations/${encodeURIComponent(invitationId)}`,
-    { status },
+    {
+      status,
+      ...(status === "ACCEPTED"
+        ? { nickname: trimmedNickname }
+        : {}),
+    },
   );
 }
 
