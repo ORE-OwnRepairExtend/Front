@@ -5,7 +5,7 @@ import MainLayout from "../../layout/MainLayout";
 import Header from "../../components/header/Header";
 import ProductInfoCard from "../../components/common/ProductInfoCard";
 import { getProductStatus } from "../../utils/productStatus";
-import ProductStatistics from "../../components/statistics/ProductStatistics";
+import FamilyDashboard from "../../components/family/FamilyDashboard";
 import ProductRegisterModal from "../../components/common/ProductRegisterModal";
 import type { ProductStatus } from "../../types/product";
 import OcrConfirmModal, {
@@ -76,35 +76,6 @@ type ProductSourceResponse = {
   createdAt: string;
 };
 
-type StatisticsStatus = "expired" | "danger" | "imminent" | "valid" | "none";
-
-type StatisticsProduct = Omit<Product, "warrantyStatus"> & {
-  productStatus: StatisticsStatus;
-  warrantyStatus: StatisticsStatus;
-};
-
-const convertToStatisticsStatus = (status: ProductStatus): StatisticsStatus => {
-  return status === "empty" ? "none" : status;
-};
-
-const getWarrantyStatusText = (status: ProductStatus) => {
-  if (status === "expired") return "보증만료";
-  if (status === "danger") return "보증위험";
-  if (status === "imminent") return "보증임박";
-  if (status === "empty") return "보증없음";
-
-  return "보증유효";
-};
-
-const getWarrantyStatusColor = (status: ProductStatus) => {
-  if (status === "expired") return "bg-gray-01";
-  if (status === "danger") return "bg-point-01";
-  if (status === "imminent") return "bg-point-02";
-  if (status === "empty") return "bg-gray-02";
-
-  return "bg-point-03";
-};
-
 export default function MainPage() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -154,7 +125,7 @@ export default function MainPage() {
       const response = await api.get<ProductListItem[]>("/products");
 
       const productDetails = await Promise.all(
-        response.data.map(async (product) => {
+        response.data.map(async (product): Promise<Product> => {
           const detailResponse = await api.get<ProductDetail>(
             `/products/${product.productId}`,
           );
@@ -214,18 +185,14 @@ export default function MainPage() {
     fetchProducts();
   }, []);
 
-  const statisticsProducts = useMemo<StatisticsProduct[]>(() => {
-    return products.map((product) => {
-      const statisticsStatus = convertToStatisticsStatus(
-        product.warrantyStatus,
+  // 보증 상태가 임박인 제품만 남기고 잔여일이 적은 순서로 정렬
+  const imminentProducts = useMemo(() => {
+    return products
+      .filter((product) => product.warrantyStatus === "imminent")
+      .sort(
+        (a, b) =>
+          (a.remainingDays ?? Infinity) - (b.remainingDays ?? Infinity),
       );
-
-      return {
-        ...product,
-        productStatus: statisticsStatus,
-        warrantyStatus: statisticsStatus,
-      };
-    });
   }, [products]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -273,6 +240,7 @@ export default function MainPage() {
           <div className="bg-neutral-01 rounded-[30px]">
             <div className="flex justify-between items-center px-[20px] pt-[20px] mb-[15px]">
               <h2 className="text-title-main text-primary-01">Product</h2>
+
               <span
                 className="text-gray-02 text-body-r-15 mr-[15px] cursor-pointer"
                 onClick={() => navigate("/products")}
@@ -314,7 +282,9 @@ export default function MainPage() {
                     hover:bg-gray-100 transition
                   "
                 >
-                  <span className="text-[32px] text-gray-02 font-light">+</span>
+                  <span className="text-[32px] text-gray-02 font-light">
+                    +
+                  </span>
                 </div>
 
                 {/* 제품 카드 */}
@@ -349,72 +319,61 @@ export default function MainPage() {
           </div>
 
           {/* 아래 영역 */}
-          <div className="flex items-start gap-[25px] mt-[20px]">
-            {/* Warranty */}
-            <div className="w-[320px] bg-white rounded-[30px] p-[20px] flex flex-col">
-              <h2 className="text-title-main text-primary-01 mb-[10px]">
+          <div className="mt-[20px] flex flex-wrap items-start gap-[20px]">
+            {/* Warranty: 임박 상태인 제품만 표시 */}
+            <div className="min-w-0 flex-[1_1_200px] rounded-[30px] bg-white p-[20px]">
+              <h2 className="mb-[10px] text-title-main text-primary-01">
                 Warranty
               </h2>
 
-              <div className="flex flex-col gap-[10px]">
+              <div className="flex max-h-[200px] flex-col gap-[10px] overflow-y-auto no-scrollbar">
                 {isLoading ? (
-                  <div className="flex h-[120px] items-center justify-center text-gray-02 text-body-r-15">
+                  <p className="py-[20px] text-center text-body-r-12 text-gray-01">
                     보증 정보를 불러오는 중입니다.
-                  </div>
-                ) : products.length === 0 ? (
-                  <div className="flex h-[120px] items-center justify-center text-gray-02 text-body-r-15">
-                    등록된 보증 정보가 없습니다.
-                  </div>
+                  </p>
+                ) : imminentProducts.length === 0 ? (
+                  <p className="py-[20px] text-center text-body-r-12 text-gray-01">
+                    보증이 임박한 제품이 없습니다.
+                  </p>
                 ) : (
-                  products.map((item) => {
-                    const statusColor = getWarrantyStatusColor(
-                      item.warrantyStatus,
-                    );
-
-                    const statusText = getWarrantyStatusText(
-                      item.warrantyStatus,
-                    );
-
-                    return (
-                      <div
-                        key={item.productId}
-                        className="flex justify-between items-center border-b-2 border-gray-02 pb-[5px]"
-                      >
-                        <span>
-                          <span className="text-black text-title-m-16">
-                            {item.nickname}
-                          </span>
-                          <span className="text-gray-01 text-body-r-12">
-                            {" "}
-                            -{" "}
-                          </span>
-                          <span className="text-gray-01 text-body-r-12">
-                            {item.name}
-                          </span>
+                  imminentProducts.map((item) => (
+                    <button
+                      key={item.productId}
+                      type="button"
+                      onClick={() => navigate(`/products/${item.productId}`)}
+                      className="
+                        flex cursor-pointer items-center justify-between
+                        gap-[10px] border-b-2 border-gray-02
+                        pb-[5px] text-left
+                      "
+                    >
+                      <span className="min-w-0 flex-1 truncate">
+                        <span className="text-title-m-16 text-black">
+                          {item.nickname || item.name}
                         </span>
 
-                        <div className="flex items-center gap-[6px]">
-                          <span
-                            className={`w-[12px] h-[12px] rounded-full ${statusColor}`}
-                          />
-                          <span className="text-body-m-10 text-gray-01">
-                            {statusText}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })
+                        <span className="text-body-r-12 text-gray-01">
+                          {" - "}
+                          {item.name}
+                        </span>
+                      </span>
+
+                      <span className="flex shrink-0 items-center gap-[6px]">
+                        <span className="h-[10px] w-[10px] rounded-full bg-point-02" />
+
+                        <span className="text-body-m-10 text-gray-01">
+                          보증임박
+                        </span>
+                      </span>
+                    </button>
+                  ))
                 )}
               </div>
             </div>
 
-            {/* Statistics */}
-            <div className="flex-1 w-full bg-white rounded-[30px] p-[20px] flex flex-col">
-              <h2 className="text-title-main text-primary-01">Statistics</h2>
-
-              <div className="mt-[10px] w-full">
-                <ProductStatistics products={statisticsProducts} />
-              </div>
+            {/* Family */}
+            <div className="min-w-0 flex-[2_1_300px]">
+              <FamilyDashboard />
             </div>
           </div>
         </div>
@@ -501,13 +460,16 @@ export default function MainPage() {
           }
         }}
       />
+
       {isUploadingSource && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-gray-01/80">
           <div className="flex h-[180px] w-[320px] flex-col items-center justify-center gap-[20px] rounded-[20px] bg-secondary-01">
             <div className="h-[40px] w-[40px] animate-spin rounded-full border-4 border-primary-01 border-t-transparent" />
+
             <p className="text-center text-title-sb-20 text-primary-01">
               이미지를 분석하고 있어요
             </p>
+
             <p className="text-center text-body-m-16 text-gray-01">
               제품 정보를 추출하는 중입니다.
             </p>
@@ -519,9 +481,11 @@ export default function MainPage() {
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-gray-01/80">
           <div className="flex h-[180px] w-[320px] flex-col items-center justify-center gap-[20px] rounded-[20px] bg-secondary-01">
             <div className="h-[40px] w-[40px] animate-spin rounded-full border-4 border-primary-01 border-t-transparent" />
+
             <p className="text-center text-title-sb-20 text-primary-01">
               제품 정보를 저장하고 있어요
             </p>
+
             <p className="text-center text-body-m-16 text-gray-01">
               매뉴얼 검색을 준비하는 중입니다.
             </p>
