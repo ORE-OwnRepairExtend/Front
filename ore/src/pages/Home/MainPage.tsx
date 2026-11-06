@@ -185,14 +185,11 @@ export default function MainPage() {
     fetchProducts();
   }, []);
 
-  // 보증 상태가 임박인 제품만 남기고 잔여일이 적은 순서로 정렬
+  // 기존 제품 순서를 유지하고 보증 임박 제품만 표시
   const imminentProducts = useMemo(() => {
-    return products
-      .filter((product) => product.warrantyStatus === "imminent")
-      .sort(
-        (a, b) =>
-          (a.remainingDays ?? Infinity) - (b.remainingDays ?? Infinity),
-      );
+    return products.filter(
+      (product) => product.warrantyStatus === "imminent",
+    );
   }, [products]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -239,7 +236,9 @@ export default function MainPage() {
           {/* Product 영역 */}
           <div className="bg-neutral-01 rounded-[30px]">
             <div className="flex justify-between items-center px-[20px] pt-[20px] mb-[15px]">
-              <h2 className="text-title-main text-primary-01">Product</h2>
+              <h2 className="text-title-main text-primary-01">
+                Product
+              </h2>
 
               <span
                 className="text-gray-02 text-body-r-15 mr-[15px] cursor-pointer"
@@ -320,52 +319,50 @@ export default function MainPage() {
 
           {/* 아래 영역 */}
           <div className="mt-[20px] flex flex-wrap items-start gap-[20px]">
-            {/* Warranty: 임박 상태인 제품만 표시 */}
-            <div className="min-w-0 flex-[1_1_200px] rounded-[30px] bg-white p-[20px]">
-              <h2 className="mb-[10px] text-title-main text-primary-01">
+            {/* Warranty */}
+            <div className="min-w-0 flex-[1_1_200px] bg-white rounded-[30px] p-[20px] flex flex-col">
+              <h2 className="text-title-main text-primary-01 mb-[10px]">
                 Warranty
               </h2>
 
-              <div className="flex max-h-[200px] flex-col gap-[10px] overflow-y-auto no-scrollbar">
+              <div className="flex flex-col gap-[10px]">
                 {isLoading ? (
-                  <p className="py-[20px] text-center text-body-r-12 text-gray-01">
+                  <div className="flex h-[120px] items-center justify-center text-gray-02 text-body-r-15">
                     보증 정보를 불러오는 중입니다.
-                  </p>
+                  </div>
                 ) : imminentProducts.length === 0 ? (
-                  <p className="py-[20px] text-center text-body-r-12 text-gray-01">
+                  <div className="flex h-[120px] items-center justify-center text-gray-02 text-body-r-15">
                     보증이 임박한 제품이 없습니다.
-                  </p>
+                  </div>
                 ) : (
                   imminentProducts.map((item) => (
-                    <button
+                    <div
                       key={item.productId}
-                      type="button"
-                      onClick={() => navigate(`/products/${item.productId}`)}
-                      className="
-                        flex cursor-pointer items-center justify-between
-                        gap-[10px] border-b-2 border-gray-02
-                        pb-[5px] text-left
-                      "
+                      className="flex justify-between items-center border-b-2 border-gray-02 pb-[5px]"
                     >
-                      <span className="min-w-0 flex-1 truncate">
-                        <span className="text-title-m-16 text-black">
-                          {item.nickname || item.name}
+                      <span>
+                        <span className="text-black text-title-m-16">
+                          {item.nickname}
                         </span>
 
-                        <span className="text-body-r-12 text-gray-01">
-                          {" - "}
+                        <span className="text-gray-01 text-body-r-12">
+                          {" "}
+                          -{" "}
+                        </span>
+
+                        <span className="text-gray-01 text-body-r-12">
                           {item.name}
                         </span>
                       </span>
 
-                      <span className="flex shrink-0 items-center gap-[6px]">
-                        <span className="h-[10px] w-[10px] rounded-full bg-point-02" />
+                      <div className="flex items-center gap-[6px]">
+                        <span className="w-[12px] h-[12px] shrink-0 rounded-full bg-[#FF4545]" />
 
                         <span className="text-body-m-10 text-gray-01">
                           보증임박
                         </span>
-                      </span>
-                    </button>
+                      </div>
+                    </div>
                   ))
                 )}
               </div>
