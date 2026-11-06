@@ -5,6 +5,7 @@ type FamilyMember = {
   relation: string;
   name: string;
   email: string;
+  profileImageUrl?: string | null;
 };
 
 type FamilyManagementProps = {
@@ -28,10 +29,8 @@ export default function FamilyManagement({
         className="
           flex min-h-[250px] w-full
           items-center gap-[10px]
-          overflow-x-auto
-          rounded-[20px]
-          bg-white
-          px-[22px] py-[20px]
+          overflow-x-auto rounded-[20px]
+          bg-white px-[22px] py-[20px]
           no-scrollbar
         "
       >
@@ -39,16 +38,18 @@ export default function FamilyManagement({
           <FamilyMemberCard
             key={member.id}
             member={member}
-            onDelete={() =>
-              onDeleteMember(member.id)
-            }
+            onDelete={() => onDeleteMember(member.id)}
           />
         ))}
 
-        <AddFamilyCard
-          onClick={onAddMember}
-        />
+        <AddFamilyCard onClick={onAddMember} />
       </div>
+
+      {members.length === 0 && (
+        <p className="text-body-r-12 text-gray-01">
+          등록된 가족이 없습니다. + 버튼으로 가족을 초대해주세요.
+        </p>
+      )}
     </div>
   );
 }
@@ -65,16 +66,10 @@ function FamilyMemberCard({
   return (
     <div
       className="
-        relative
-        flex h-[250px] w-[191px]
-        shrink-0
-        flex-col items-center
-        rounded-[22px]
-        border-[2px]
-        border-primary-01
-        bg-white
-        px-[12px]
-        py-[18px]
+        relative flex h-[250px] w-[191px]
+        shrink-0 flex-col items-center
+        rounded-[22px] border-[2px] border-primary-01
+        bg-white px-[12px] py-[18px]
       "
     >
       <button
@@ -82,28 +77,17 @@ function FamilyMemberCard({
         onClick={onDelete}
         aria-label={`${member.relation} 삭제`}
         className="
-          absolute
-          right-[12px]
-          top-[10px]
+          absolute right-[12px] top-[10px]
           flex h-[24px] w-[24px]
           items-center justify-center
-          text-[30px]
-          font-medium
-          leading-none
-          text-primary-01
-          cursor-pointer
+          text-[30px] font-medium leading-none
+          text-primary-01 cursor-pointer
         "
       >
         ×
       </button>
 
-      <p
-        className="
-          mt-[2px]
-          text-body-b-16
-          text-primary-01
-        "
-      >
+      <p className="mt-[2px] max-w-full truncate text-body-b-16 text-primary-01">
         {member.relation}
       </p>
 
@@ -112,51 +96,33 @@ function FamilyMemberCard({
           mt-[18px]
           flex h-[100px] w-[100px]
           items-center justify-center
-          overflow-hidden
-          rounded-[30px]
-          bg-gray-02
+          overflow-hidden rounded-[30px] bg-gray-02
         "
       >
         <img
-          src={profileIcon}
+          key={member.profileImageUrl || profileIcon}
+          src={member.profileImageUrl || profileIcon}
           alt={`${member.relation} 프로필`}
-          className="
-            h-[100px]
-            w-[100px]
-            object-contain
-          "
+          onError={(event) => {
+            event.currentTarget.onerror = null;
+            event.currentTarget.src = profileIcon;
+          }}
+          className={
+            member.profileImageUrl
+              ? "h-full w-full object-cover"
+              : "h-full w-full object-contain"
+          }
         />
       </div>
 
-      <div
-        className="
-          mt-[16px]
-          flex w-full
-          flex-col
-          items-center
-        "
-      >
-        <p className="text-body-sb-12 text-gray-01">
+      <div className="mt-[16px] flex w-full flex-col items-center">
+        <p className="max-w-full truncate text-body-sb-12 text-gray-01">
           {member.name}
         </p>
 
-        <div
-          className="
-            mt-[2px]
-            h-[2px] w-full
-            bg-gray-01
-          "
-        />
+        <div className="mt-[2px] h-[2px] w-full bg-gray-01" />
 
-        <p
-          className="
-            mt-[2px]
-            max-w-full
-            truncate
-            text-body-sb-12
-            text-gray-01
-          "
-        >
+        <p className="mt-[2px] max-w-full truncate text-body-sb-12 text-gray-01">
           {member.email}
         </p>
       </div>
@@ -168,9 +134,7 @@ type AddFamilyCardProps = {
   onClick: () => void;
 };
 
-function AddFamilyCard({
-  onClick,
-}: AddFamilyCardProps) {
+function AddFamilyCard({ onClick }: AddFamilyCardProps) {
   return (
     <button
       type="button"
@@ -178,18 +142,10 @@ function AddFamilyCard({
       aria-label="가족 추가"
       className="
         flex h-[250px] w-[75px]
-        shrink-0
-        items-center justify-center
-        rounded-[18px]
-        border-[2px]
-        border-gray-02
-        bg-white
-        text-[32px]
-        font-light
-        text-gray-02
-        transition-colors
-        hover:bg-neutral-04
-        cursor-pointer
+        shrink-0 items-center justify-center
+        rounded-[18px] border-[2px] border-gray-02
+        bg-white text-[32px] font-light text-gray-02
+        transition-colors hover:bg-neutral-04 cursor-pointer
       "
     >
       +
