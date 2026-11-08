@@ -24,6 +24,7 @@ import checkedIcon from "../../assets/checked.svg";
 import uncheckedIcon from "../../assets/unchecked.svg";
 
 type ApiNotificationStatus = "IMMINENT" | "DANGER" | "EXPIRED";
+type ApiInvitationStatus = "PENDING" | FamilyInvitationStatus;
 
 type ApiNotification = {
   notificationId: string;
@@ -35,6 +36,7 @@ type ApiNotification = {
   referenceId: string | null;
   referenceType: string | null;
   status: ApiNotificationStatus | null;
+  invitationStatus: ApiInvitationStatus | null;
   message: string;
   isRead: boolean;
   createdAt: string;
@@ -43,6 +45,7 @@ type ApiNotification = {
 type Invitation = {
   notificationId: string;
   invitationId: string;
+  status: ApiInvitationStatus;
 };
 
 type NotificationStatus = "imminent" | "danger" | "expired";
@@ -52,6 +55,42 @@ const statusMap: Record<ApiNotificationStatus, NotificationStatus> = {
   DANGER: "danger",
   EXPIRED: "expired",
 };
+
+// 서버에는 알림 삭제 API가 없어, 이 브라우저에서만 숨김 상태를 저장합니다.
+// 계정별로 분리하여 다른 계정의 알림에 영향을 주지 않게 합니다.
+function getHiddenNotificationsStorageKey(): string | null {
+  try {
+    const raw = localStorage.getItem("user");
+    if (!raw) return null;
+
+    const parsed: unknown = JSON.parse(raw);
+    if (typeof parsed !== "object" || parsed === null) return null;
+    if (!("userId" in parsed)) return null;
+
+    const userId = parsed.userId;
+    if (typeof userId !== "string" || !userId.trim()) return null;
+
+    return `ore:hidden-notifications:${userId}`;
+  } catch {
+    return null;
+  }
+}
+
+function readHiddenNotificationIds(storageKey: string | null): string[] {
+  if (!storageKey) return [];
+
+  try {
+    const raw = localStorage.getItem(storageKey);
+    if (!raw) return [];
+
+    const parsed: unknown = JSON.parse(raw);
+    return Array.isArray(parsed)
+      ? parsed.filter((value): value is string => typeof value === "string")
+      : [];
+  } catch {
+    return [];
+  }
+}
 
 export default function NotificationPage() {
   const navigate = useNavigate();
@@ -71,10 +110,6 @@ export default function NotificationPage() {
   const [selectedInvitation, setSelectedInvitation] =
     useState<Invitation | null>(null);
 
-  const [processedInvitations, setProcessedInvitations] = useState<
-    Record<string, FamilyInvitationStatus>
-  >({});
-
   const [isSelectMode, setIsSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -88,21 +123,21 @@ export default function NotificationPage() {
 
   const respondingRef = useRef(false);
   const requestSequenceRef = useRef(0);
+  const storageKeyRef = useRef(getHiddenNotificationsStorageKey());
+  const hiddenIdsRef = useRef(
+    new Set(readHiddenNotificationIds(storageKeyRef.current)),
+  );
 
   const visibleNotifications = notifications.filter((item) => {
     const invitation = invitations[item.id];
-
-    return (
-      !invitation ||
-      processedInvitations[invitation.invitationId] !== "REJECTED"
-    );
+    return invitation?.status !== "REJECTED";
   });
 
   const selectedVisibleIds = visibleNotifications
     .filter((item) => selectedIds.includes(item.id))
     .map((item) => item.id);
 
-  // 알림 조회 및 가족 초대 정보 분리
+  // 알림 조회 시 서버의 invitationStatus를 함께 사용합니다.
   const fetchNotifications = useCallback(async () => {
     const requestSequence = ++requestSequenceRef.current;
 
@@ -116,38 +151,41 @@ export default function NotificationPage() {
 
       const nextInvitations: Record<string, Invitation> = {};
 
-      const mappedNotifications = response.data.map((item) => {
-        const isFamilyInvitation =
-          item.notificationType === "FAMILY_INVITATION" &&
-          item.referenceType === "FAMILY_INVITATION";
+      const mappedNotifications = response.data
+        .filter((item) => !hiddenIdsRef.current.has(item.notificationId))
+        .map((item) => {
+          const isFamilyInvitation =
+            item.notificationType === "FAMILY_INVITATION" &&
+            item.referenceType === "FAMILY_INVITATION";
 
-        const invitationId =
-          isFamilyInvitation && typeof item.referenceId === "string"
-            ? item.referenceId.trim()
-            : "";
+          const invitationId =
+            isFamilyInvitation && typeof item.referenceId === "string"
+              ? item.referenceId.trim()
+              : "";
 
-        if (invitationId) {
-          nextInvitations[item.notificationId] = {
-            notificationId: item.notificationId,
-            invitationId,
+          if (invitationId) {
+            nextInvitations[item.notificationId] = {
+              notificationId: item.notificationId,
+              invitationId,
+              status: item.invitationStatus ?? "PENDING",
+            };
+          }
+
+          return {
+            id: item.notificationId,
+            productId: item.productId ?? "",
+            title: isFamilyInvitation
+              ? "Family"
+              : item.productNickname || item.productName || "알림",
+            subtitle: isFamilyInvitation ? "" : item.productName ?? "",
+            message: item.message,
+            date: item.createdAt.split("T")[0],
+            isRead: item.isRead,
+            status: item.status
+              ? statusMap[item.status] ?? "imminent"
+              : "imminent",
           };
-        }
-
-        return {
-          id: item.notificationId,
-          productId: item.productId ?? "",
-          title: isFamilyInvitation
-            ? "Family"
-            : item.productNickname || item.productName || "알림",
-          subtitle: isFamilyInvitation ? "" : item.productName ?? "",
-          message: item.message,
-          date: item.createdAt.split("T")[0],
-          isRead: item.isRead,
-          status: item.status
-            ? statusMap[item.status] ?? "imminent"
-            : "imminent",
-        };
-      });
+        });
 
       setNotifications(mappedNotifications);
       setInvitations(nextInvitations);
@@ -170,7 +208,6 @@ export default function NotificationPage() {
     }
   }, [setNotifications]);
 
-  // 최초 데이터 세팅
   useEffect(() => {
     void fetchNotifications();
 
@@ -179,7 +216,6 @@ export default function NotificationPage() {
     };
   }, [fetchNotifications]);
 
-  // 읽음 처리
   const handleRead = async (id: string) => {
     const notification = notifications.find((item) => item.id === id);
 
@@ -195,7 +231,6 @@ export default function NotificationPage() {
     }
   };
 
-  // 선택 토글
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) =>
       prev.includes(id)
@@ -204,7 +239,6 @@ export default function NotificationPage() {
     );
   };
 
-  // 전체 선택 / 해제
   const handleSelectAll = () => {
     const isAllSelected =
       visibleNotifications.length > 0 &&
@@ -219,15 +253,36 @@ export default function NotificationPage() {
     );
   };
 
-  // 삭제: 기존처럼 화면 목록에서만 제거
+  // 서버 영구 삭제가 아닌, 이 브라우저에서 알림을 숨기는 방식입니다.
   const handleDelete = () => {
+    if (selectedVisibleIds.length === 0) return;
+
+    const storageKey = storageKeyRef.current;
+    if (!storageKey) {
+      setIsModalOpen(false);
+      setErrorMessage("사용자 정보를 확인할 수 없어 알림을 숨기지 못했습니다.");
+      return;
+    }
+
+    const nextHiddenIds = new Set(hiddenIdsRef.current);
+    selectedVisibleIds.forEach((id) => nextHiddenIds.add(id));
+
+    try {
+      localStorage.setItem(storageKey, JSON.stringify([...nextHiddenIds]));
+    } catch {
+      setIsModalOpen(false);
+      setErrorMessage("브라우저에 삭제 내역을 저장하지 못했습니다.");
+      return;
+    }
+
+    hiddenIdsRef.current = nextHiddenIds;
     deleteNotifications(selectedVisibleIds);
     setSelectedIds([]);
     setIsSelectMode(false);
     setIsModalOpen(false);
+    setNotice("선택한 알림을 삭제했습니다.");
   };
 
-  // 전체 읽음
   const handleAllRead = async () => {
     try {
       await readAllNotifications();
@@ -239,7 +294,6 @@ export default function NotificationPage() {
     }
   };
 
-  // 가족 초대 수락 / 거절
   const handleRespondInvitation = async (
     invitation: Invitation,
     status: FamilyInvitationStatus,
@@ -265,12 +319,12 @@ export default function NotificationPage() {
         nickname,
       );
 
-      // 수락·거절 API에서 알림도 자동 읽음 처리
       markAsRead(invitation.notificationId);
 
-      setProcessedInvitations((prev) => ({
+      // 요청 성공 즉시 버튼을 숨기고, 이후 서버 상태로 재동기화합니다.
+      setInvitations((prev) => ({
         ...prev,
-        [invitation.invitationId]: status,
+        [invitation.notificationId]: { ...invitation, status },
       }));
 
       setSelectedIds((prev) =>
@@ -283,8 +337,6 @@ export default function NotificationPage() {
           : "가족 요청을 거절했습니다.",
       );
 
-      // 성공 후 서버 목록으로 갱신
-      // 조회 실패는 수락·거절 실패와 별도로 안내
       await fetchNotifications();
     } finally {
       respondingRef.current = false;
@@ -351,11 +403,7 @@ export default function NotificationPage() {
             ) : (
               visibleNotifications.map((item) => {
                 const invitation = invitations[item.id];
-
-                const processedStatus = invitation
-                  ? processedInvitations[invitation.invitationId]
-                  : undefined;
-
+                const processedStatus = invitation?.status;
                 const isSelected = selectedIds.includes(item.id);
 
                 return (
@@ -407,7 +455,7 @@ export default function NotificationPage() {
                         }}
                       >
                         {invitation &&
-                          !processedStatus &&
+                          processedStatus === "PENDING" &&
                           !isSelectMode && (
                             <fieldset
                               disabled={pendingInvitationId !== null}
