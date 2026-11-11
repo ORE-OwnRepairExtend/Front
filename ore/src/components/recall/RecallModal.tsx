@@ -1,11 +1,14 @@
 import { useEffect } from "react";
 import ProductCard from "../common/ProductCard";
+import CommonButton from "../common/CommonButton";
+import closeIcon from "../../assets/icons/close.svg";
 import type { RecallInfo } from "../../types/recall";
 
 type RecallModalProps = {
   open: boolean;
   recall: RecallInfo | null;
   userName?: string;
+  usersubName?: string;
   onClose: () => void;
   onHide: () => void;
 };
@@ -14,6 +17,7 @@ export default function RecallModal({
   open,
   recall,
   userName,
+  usersubName,
   onClose,
   onHide,
 }: RecallModalProps) {
@@ -60,9 +64,9 @@ export default function RecallModal({
         aria-modal="true"
         aria-labelledby="recall-modal-title"
         className="
-          flex w-full max-w-[560px]
+          flex w-full max-w-[695px]
           max-h-[90dvh] flex-col
-          overflow-hidden rounded-[16px]
+          overflow-hidden rounded-[20px]
           bg-white
           shadow-lg
         "
@@ -77,7 +81,7 @@ export default function RecallModal({
         >
           <h2
             id="recall-modal-title"
-            className="text-title-b-20 text-primary-01"
+            className="text-title-main text-primary-01"
           >
             리콜 안내
           </h2>
@@ -88,92 +92,74 @@ export default function RecallModal({
             aria-label="리콜 안내 닫기"
             className="
               absolute right-[20px]
-              flex h-[32px] w-[32px]
               items-center justify-center
-              text-[24px] text-primary-01
               cursor-pointer
             "
           >
-            ×
+            <img src={closeIcon} alt="닫기" width={24} height={24} />
           </button>
         </div>
 
         {/* 본문 */}
-        <div className="flex-1 overflow-y-auto px-[24px] pt-[20px] pb-[16px]">
+        <div className="flex-1 overflow-y-auto px-[50px] py-[20px]">
           {/* 안내 문구 */}
-          <p className="mb-[20px] text-center text-body-m-16 text-black">
-            <span className="font-semibold text-primary-01">
+          <p className="mb-[20px] text-center text-body-sb-20 text-black">
+            <span className="text-title-b-20 text-primary-01">
               {userName ? `${userName}님` : "고객님"}
+            </span>
+            <span className="text-title-b-20 text-primary-01">
+              ({usersubName ? `${usersubName}님` : "별명"})
             </span>
             의 제품에 대한 새로운 리콜 안내가 있습니다.
           </p>
 
           {/* 대상 제품 */}
-          <section className="mb-[20px]">
-            <h3 className="mb-[8px] text-body-m-12 text-gray-01">대상 제품</h3>
+          <section className="mb-[15px]">
+            <h3 className="mb-[5px] text-body-m-16 text-gray-01">대상 제품</h3>
 
             <ProductCard
               imageSrc={recall.productImageUrl}
               name={recall.productName}
               description={recall.productDescription}
               showAction={false}
-              imageSize={72}
-              className="
-                !gap-[16px]
-                !rounded-[16px]
-                !bg-secondary-01
-                !px-[16px] !py-[12px]
-                cursor-default
-              "
+              imageSize={100}
             />
           </section>
 
           {/* 관련 사진 */}
-          <section className="mb-[20px]">
-            <h3 className="mb-[8px] text-body-m-12 text-gray-01">관련 사진</h3>
+          {recall.images?.some((image) => image.trim() !== "") && (
+            <section className="mb-[15px]">
+              <h3 className="mb-[5px] text-body-m-16 text-gray-01">
+                관련 사진
+              </h3>
 
-            {recall.images.length > 0 ? (
-              <div className="grid grid-cols-2 gap-[8px]">
-                {recall.images.map((image, index) => (
-                  <div
-                    key={`${image}-${index}`}
-                    className="
-                      aspect-square overflow-hidden
-                      rounded-[4px] bg-neutral-01
-                    "
-                  >
-                    <img
-                      src={image}
-                      alt={`리콜 관련 사진 ${index + 1}`}
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-                ))}
+              <div className="grid grid-cols-2 gap-[10px]">
+                {recall.images
+                  .filter((image) => image.trim() !== "")
+                  .map((image, index) => (
+                    <div key={`${image}-${index}`}>
+                      <img
+                        src={image}
+                        alt={`리콜 관련 사진 ${index + 1}`}
+                        className=" w-full object-cover"
+                      />
+                    </div>
+                  ))}
               </div>
-            ) : (
-              <div
-                className="
-                  flex h-[140px] items-center justify-center
-                  rounded-[8px] bg-neutral-01
-                  text-body-r-12 text-gray-01
-                "
-              >
-                등록된 관련 사진이 없습니다.
-              </div>
-            )}
-          </section>
+            </section>
+          )}
 
-          {/* 위험 정보 */}
-          <section className="mb-[16px]">
-            <h3 className="mb-[8px] text-body-m-14 text-black">위험 정보</h3>
+          {/* 위해 정보 */}
+          <section className="mb-[15px]">
+            <h3 className="mb-[5px] text-body-m-16 text-gray-01">위해 정보</h3>
 
-            <ul className="flex flex-col gap-[6px]">
+            <ul className="flex flex-col">
               {recall.riskDescription.map((item, index) => (
                 <li
                   key={index}
                   className="
                     flex gap-[6px]
-                    text-body-r-12 text-gray-01
+                    text-body-r-15 text-black
                     leading-[1.6]
                   "
                 >
@@ -186,15 +172,15 @@ export default function RecallModal({
 
           {/* 행동 요령 */}
           <section>
-            <h3 className="mb-[8px] text-body-m-14 text-black">행동 요령</h3>
+            <h3 className="mb-[5px] text-body-m-16 text-gray-01">행동 요령</h3>
 
-            <ul className="flex flex-col gap-[6px]">
+            <ul className="flex flex-col">
               {recall.actionDescription.map((item, index) => (
                 <li
                   key={index}
                   className="
                     flex gap-[6px]
-                    text-body-r-12 text-gray-01
+                    text-body-r-15 text-black
                     leading-[1.6]
                   "
                 >
@@ -207,41 +193,34 @@ export default function RecallModal({
         </div>
 
         {/* 하단 버튼 */}
+        {/* 하단 버튼 */}
         <div
           className="
-            flex shrink-0 flex-col gap-[8px]
-            bg-white px-[24px] pb-[20px] pt-[12px]
-          "
+    flex shrink-0 flex-col gap-[8px]
+    bg-white px-[24px] pb-[20px] pt-[12px]
+  "
         >
-          <button
-            type="button"
+          {/* 리콜 상세 정보 확인 */}
+          <CommonButton
+            variant="primary"
             onClick={handleDetailClick}
-            className="
-              flex h-[44px] w-full
-              items-center justify-center
-              rounded-[10px]
-              bg-primary-01
-              text-body-m-14 text-white
-              cursor-pointer
-              hover:opacity-90
-            "
+            className="!h-[48px] w-full"
           >
             리콜 상세 정보 확인하기
-          </button>
+          </CommonButton>
 
-          <button
-            type="button"
+          {/* 다시 보지 않기 */}
+          <CommonButton
+            variant="secondary"
             onClick={onHide}
             className="
-              flex h-[36px] w-full
-              items-center justify-center
-              text-body-r-14 text-gray-01
-              cursor-pointer
-              hover:text-primary-01
-            "
+      !h-[44px] w-full
+      !bg-transparent !text-gray-01
+      hover:!text-primary-01
+    "
           >
             다시 보지 않기
-          </button>
+          </CommonButton>
         </div>
       </div>
     </div>

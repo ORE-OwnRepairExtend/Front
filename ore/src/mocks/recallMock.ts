@@ -11,7 +11,7 @@ export const mockRecalls: RecallInfo[] = [
 
     title: "제품 리콜 안내",
 
-    images: [],
+    images: ["/photos/recall-test-01.png", "/photos/recall-test-02.png"],
 
     riskDescription: ["제품 일부에서 부품 결함으로 인한 안전사고 발생 가능성"],
 
