@@ -24,8 +24,8 @@ export const createMockRecallNotifications = (
       subtitle: "",
 
       message: isFamily
-        ? `${recall.productName} 제품에 대한 새로운 리콜 안내가 있습니다.`
-        : `${recall.productName} 제품에 대한 새로운 리콜 안내가 있습니다.`,
+        ? `${recall.userName} 님의 제품에 대한 새로운 리콜 안내가 있습니다.`
+        : `${recall.productName}(${recall.productDescription}) 제품에 대한 새로운 리콜 안내가 있습니다.`,
 
       date:
         recall.createdAt?.split("T")[0] ??

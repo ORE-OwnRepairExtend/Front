@@ -37,6 +37,7 @@ export const mockRecalls: RecallInfo[] = [
     actionDescription: ["테스트용 조치 안내입니다."],
     detailUrl: "https://www.safetykorea.kr",
     isFamilyRecall: true,
+    userName: "ORE User2",
     createdAt: "2026-11-12T11:00:00",
   },
 ];

@@ -536,6 +536,22 @@ export default function NotificationPage() {
                         message={item.message}
                         date={item.date}
                         isRead={item.isRead}
+                        emphasizedText={
+                          item.notificationType === "RECALL"
+                            ? (() => {
+                                const recall = recallList.find(
+                                  (recall) =>
+                                    recall.recallId === item.referenceId,
+                                );
+
+                                if (!recall) return undefined;
+
+                                return recall.isFamilyRecall
+                                  ? recall.userName
+                                  : `${recall.productName}(${recall.productDescription})`;
+                              })()
+                            : undefined
+                        }
                         status={
                           invitation || item.isFamilyRecall
                             ? "family"
