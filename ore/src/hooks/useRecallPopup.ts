@@ -1,31 +1,16 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+
 import { getRecalls } from "../api/recall";
 import type { RecallInfo } from "../types/recall";
+
+import { getHiddenRecallIds, hideRecallById } from "../utils/recallStorage";
 
 export function useRecallPopup(userId: string) {
   const [recalls, setRecalls] = useState<RecallInfo[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
 
-  const storageKey = `hiddenRecalls:${userId}`;
-
-  // 다시 보지 않기로 저장한 리콜 ID 조회
-  const getHiddenRecallIds = useCallback((): string[] => {
-    try {
-      const saved = localStorage.getItem(storageKey);
-      if (!saved) return [];
-
-      const parsed: unknown = JSON.parse(saved);
-
-      return Array.isArray(parsed)
-        ? parsed.filter((id): id is string => typeof id === "string")
-        : [];
-    } catch {
-      return [];
-    }
-  }, [storageKey]);
-
-  // 리콜 목록 불러오기
+  // 리콜 목록 조회
   useEffect(() => {
     let cancelled = false;
 
@@ -39,7 +24,7 @@ export function useRecallPopup(userId: string) {
 
         if (cancelled) return;
 
-        const hiddenIds = getHiddenRecallIds();
+        const hiddenIds = getHiddenRecallIds(userId);
 
         const visibleRecalls = data.filter(
           (recall) => !hiddenIds.includes(recall.recallId),
@@ -55,12 +40,12 @@ export function useRecallPopup(userId: string) {
       }
     };
 
-    fetchRecalls();
+    void fetchRecalls();
 
     return () => {
       cancelled = true;
     };
-  }, [getHiddenRecallIds]);
+  }, [userId]);
 
   const currentRecall = isOpen ? (recalls[currentIndex] ?? null) : null;
 
@@ -73,25 +58,18 @@ export function useRecallPopup(userId: string) {
     }
   };
 
-  // X 버튼: 저장하지 않고 닫기
+  // X 버튼: 다시 보지 않기 저장 없이 닫기
   const closeRecall = () => {
     showNextRecall();
   };
 
-  // 다시 보지 않기: 해당 리콜 ID 저장
+  // 다시 보지 않기
   const hideRecall = () => {
     if (!currentRecall) return;
 
-    const hiddenIds = getHiddenRecallIds();
+    const saved = hideRecallById(userId, currentRecall.recallId);
 
-    const updatedIds = [...new Set([...hiddenIds, currentRecall.recallId])];
-
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(updatedIds));
-    } catch (error) {
-      console.error("리콜 숨김 상태 저장 실패:", error);
-      return;
-    }
+    if (!saved) return;
 
     showNextRecall();
   };

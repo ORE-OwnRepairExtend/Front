@@ -15,4 +15,13 @@ export type RecallInfo = {
 
   // 상세 정보
   detailUrl: string;
+
+  // 가족 제품 리콜 여부
+  isFamilyRecall?: boolean;
+
+  // 가족 제품 소유자 이름
+  userName?: string;
+
+  // 알림 생성 날짜
+  createdAt?: string;
 };
