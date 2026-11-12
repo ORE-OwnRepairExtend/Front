@@ -21,5 +21,22 @@ export const mockRecalls: RecallInfo[] = [
     ],
 
     detailUrl: "https://www.safetykorea.kr",
+
+    isFamilyRecall: false,
+    createdAt: "2026-11-12T10:00:00",
+  },
+  {
+    recallId: "recall-002",
+    productId: "mock-family-product-001",
+    productName: "전기포트",
+    productDescription: "테스트용 가족 제품",
+    productImageUrl: null,
+    title: "가족 제품 리콜 안내",
+    images: [],
+    riskDescription: ["테스트용 리콜 위험 정보입니다."],
+    actionDescription: ["테스트용 조치 안내입니다."],
+    detailUrl: "https://www.safetykorea.kr",
+    isFamilyRecall: true,
+    createdAt: "2026-11-12T11:00:00",
   },
 ];

@@ -3,7 +3,7 @@ import type { ProductStatus } from "../types/product";
 
 type NotificationStatus = Exclude<ProductStatus, "valid" | "empty">;
 
-type Notification = {
+export type Notification = {
   id: string;
   productId: string;
   title: string;
@@ -12,6 +12,17 @@ type Notification = {
   date: string;
   isRead: boolean;
   status: NotificationStatus;
+
+  // 신규: 알림 유형 식별
+  notificationType?: string;
+  referenceId?: string | null;
+  referenceType?: string | null;
+
+  // 신규: Mock 리콜 알림 구분
+  isMockRecall?: boolean;
+
+  // 신규: 가족 제품 리콜 구분
+  isFamilyRecall?: boolean;
 };
 
 type NotificationStore = {

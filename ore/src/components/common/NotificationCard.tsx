@@ -4,7 +4,8 @@ import type { ProductStatus } from "../../types/product";
 // 알림에서는 valid 상태를 사용하지 않기 때문에 제외
 type NotificationStatus =
   | Exclude<ProductStatus, "valid" | "empty">
-  | "family";
+  | "family"
+  | "recall";
 
 type NotificationCardProps = {
   title: string;
@@ -32,12 +33,16 @@ const statusConfig: Record<NotificationStatus, { dotColor: string }> = {
   family: {
     dotColor: "bg-primary-01",
   },
+  recall: {
+    dotColor: "bg-primary-02",
+  },
 };
 
 // 메시지 내 특정 키워드 강조 함수
 function highlightStatus(text: string, emphasizedText?: string) {
-  const keywords = ["만료", "위험", "임박", emphasizedText]
-    .filter((keyword): keyword is string => Boolean(keyword));
+  const keywords = ["만료", "위험", "임박", emphasizedText].filter(
+    (keyword): keyword is string => Boolean(keyword),
+  );
 
   const escapedKeywords = [...new Set(keywords)].map((keyword) =>
     keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
@@ -93,9 +98,7 @@ export default function NotificationCard({
       <div className="flex min-w-0 flex-1 flex-col gap-[6px]">
         <div className="flex flex-wrap items-start justify-between gap-[8px]">
           <div className="flex min-w-0 flex-wrap items-center gap-[8px]">
-            <span className="text-title-b-20 text-primary-01">
-              {title}
-            </span>
+            <span className="text-title-b-20 text-primary-01">{title}</span>
 
             {subtitle && (
               <span className="text-body-r-12 text-gray-500 text-sm">
