@@ -10,15 +10,23 @@ import FamilyAcceptModal from "../../components/my/FamilyAcceptModal";
 
 import { useNotificationStore } from "../../store/notificationStore";
 import { api } from "../../api/api";
-import {
-  readNotification,
-  readAllNotifications,
-} from "../../api/notification";
+import { readNotification, readAllNotifications } from "../../api/notification";
 import {
   getFamilyErrorMessage,
   respondFamilyInvitation,
   type FamilyInvitationStatus,
 } from "../../api/family";
+
+import RecallModal from "../../components/recall/RecallModal";
+import type { RecallInfo } from "../../types/recall";
+import { getRecalls } from "../../api/recall";
+
+import {
+  createMockRecallNotifications,
+  isMockRecallNotification,
+} from "../../utils/recallNotification";
+
+import { hideRecallById } from "../../utils/recallStorage";
 
 import checkedIcon from "../../assets/checked.svg";
 import uncheckedIcon from "../../assets/unchecked.svg";
@@ -103,9 +111,17 @@ export default function NotificationPage() {
     markAllAsRead,
   } = useNotificationStore();
 
-  const [invitations, setInvitations] = useState<
-    Record<string, Invitation>
-  >({});
+  const [invitations, setInvitations] = useState<Record<string, Invitation>>(
+    {},
+  );
+
+  // TODO: 로그인 사용자 ID로 교체
+  // MainPage의 recallUserId와 동일해야 함
+  const recallUserId = "mock-user";
+
+  // 리콜 데이터 및 선택된 리콜
+  const [recallList, setRecallList] = useState<RecallInfo[]>([]);
+  const [selectedRecall, setSelectedRecall] = useState<RecallInfo | null>(null);
 
   const [selectedInvitation, setSelectedInvitation] =
     useState<Invitation | null>(null);
@@ -115,8 +131,9 @@ export default function NotificationPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  const [pendingInvitationId, setPendingInvitationId] =
-    useState<string | null>(null);
+  const [pendingInvitationId, setPendingInvitationId] = useState<string | null>(
+    null,
+  );
 
   const [errorMessage, setErrorMessage] = useState("");
   const [notice, setNotice] = useState("");
@@ -177,22 +194,46 @@ export default function NotificationPage() {
             title: isFamilyInvitation
               ? "Family"
               : item.productNickname || item.productName || "알림",
-            subtitle: isFamilyInvitation ? "" : item.productName ?? "",
+            subtitle: isFamilyInvitation ? "" : (item.productName ?? ""),
             message: item.message,
             date: item.createdAt.split("T")[0],
             isRead: item.isRead,
             status: item.status
-              ? statusMap[item.status] ?? "imminent"
+              ? (statusMap[item.status] ?? "imminent")
               : "imminent",
           };
         });
 
-      setNotifications(mappedNotifications);
+      // Mock 리콜 정보 조회
+      const recalls = await getRecalls();
+
+      if (requestSequence !== requestSequenceRef.current) return;
+
+      // Mock 리콜 알림 생성
+      const mockRecallNotifications = createMockRecallNotifications(
+        recalls,
+        recallUserId,
+      );
+
+      // 기존 알림과 Mock 리콜 알림 병합
+      const combinedNotifications = [
+        ...mappedNotifications,
+        ...mockRecallNotifications,
+      ].filter((item) => !hiddenIdsRef.current.has(item.id));
+
+      // 날짜 기준 최신순 정렬
+      combinedNotifications.sort((a, b) => b.date.localeCompare(a.date));
+
+      // 리콜 데이터 저장
+      setRecallList(recalls);
+
+      // 전체 알림 목록 저장
+      setNotifications(combinedNotifications);
       setInvitations(nextInvitations);
 
       setSelectedIds((prev) =>
         prev.filter((id) =>
-          mappedNotifications.some((item) => item.id === id),
+          combinedNotifications.some((item) => item.id === id),
         ),
       );
     } catch (error) {
@@ -206,7 +247,7 @@ export default function NotificationPage() {
         setIsLoading(false);
       }
     }
-  }, [setNotifications]);
+  }, [setNotifications, recallUserId]);
 
   useEffect(() => {
     void fetchNotifications();
@@ -231,25 +272,71 @@ export default function NotificationPage() {
     }
   };
 
+  const handleRecallClick = async (
+    notificationId: string,
+    recallId: string,
+  ) => {
+    const recall = recallList.find((item) => item.recallId === recallId);
+
+    if (!recall) {
+      setErrorMessage("리콜 정보를 찾을 수 없습니다.");
+      return;
+    }
+
+    const notification = notifications.find(
+      (item) => item.id === notificationId,
+    );
+
+    // 이미 읽은 알림이라도 팝업은 다시 열 수 있음
+    if (!notification?.isRead) {
+      // 실제 서버 알림인 경우 기존 API 사용
+      if (!isMockRecallNotification(notificationId)) {
+        try {
+          await readNotification(notificationId);
+        } catch (error) {
+          setErrorMessage(
+            getFamilyErrorMessage(error, "리콜 알림 읽음 처리에 실패했습니다."),
+          );
+          return;
+        }
+      }
+
+      // 메인 팝업 다시 보지 않기 처리
+      const saved = hideRecallById(recallUserId, recallId);
+
+      if (!saved) {
+        setErrorMessage("리콜 확인 상태를 저장하지 못했습니다.");
+        return;
+      }
+
+      markAsRead(notificationId);
+    } else {
+      // 기존 읽음 알림도 메인 팝업에서 제외
+      const saved = hideRecallById(recallUserId, recallId);
+
+      if (!saved) {
+        setErrorMessage("리콜 확인 상태를 저장하지 못했습니다.");
+        return;
+      }
+    }
+
+    // 알림 페이지 위에 기존 리콜 팝업 표시
+    setSelectedRecall(recall);
+  };
+
   const toggleSelect = (id: string) => {
     setSelectedIds((prev) =>
-      prev.includes(id)
-        ? prev.filter((value) => value !== id)
-        : [...prev, id],
+      prev.includes(id) ? prev.filter((value) => value !== id) : [...prev, id],
     );
   };
 
   const handleSelectAll = () => {
     const isAllSelected =
       visibleNotifications.length > 0 &&
-      visibleNotifications.every((item) =>
-        selectedIds.includes(item.id),
-      );
+      visibleNotifications.every((item) => selectedIds.includes(item.id));
 
     setSelectedIds(
-      isAllSelected
-        ? []
-        : visibleNotifications.map((item) => item.id),
+      isAllSelected ? [] : visibleNotifications.map((item) => item.id),
     );
   };
 
@@ -285,8 +372,31 @@ export default function NotificationPage() {
 
   const handleAllRead = async () => {
     try {
+      setErrorMessage("");
+
+      // 1. 기존 서버 알림 전체 읽음 처리
       await readAllNotifications();
+
+      // 2. 리콜 알림을 메인 팝업에서 제외
+      const recallIds = notifications
+        .filter(
+          (item) => item.notificationType === "RECALL" && item.referenceId,
+        )
+        .map((item) => item.referenceId as string);
+
+      for (const recallId of new Set(recallIds)) {
+        const saved = hideRecallById(recallUserId, recallId);
+
+        if (!saved) {
+          setErrorMessage("일부 리콜 확인 상태를 저장하지 못했습니다.");
+          return;
+        }
+      }
+
+      // 3. Zustand 읽음 상태 변경
       markAllAsRead();
+
+      setNotice("모든 알림을 읽음 처리했습니다.");
     } catch (error) {
       setErrorMessage(
         getFamilyErrorMessage(error, "알림 전체 읽음 처리에 실패했습니다."),
@@ -313,11 +423,7 @@ export default function NotificationPage() {
       setErrorMessage("");
       setNotice("");
 
-      await respondFamilyInvitation(
-        invitation.invitationId,
-        status,
-        nickname,
-      );
+      await respondFamilyInvitation(invitation.invitationId, status, nickname);
 
       markAsRead(invitation.notificationId);
 
@@ -360,10 +466,7 @@ export default function NotificationPage() {
         <Header title="Alarm" showNotification={false} />
 
         {notice && (
-          <p
-            role="status"
-            className="px-[20px] text-body-r-12 text-primary-01"
-          >
+          <p role="status" className="px-[20px] text-body-r-12 text-primary-01">
             {notice}
           </p>
         )}
@@ -407,18 +510,13 @@ export default function NotificationPage() {
                 const isSelected = selectedIds.includes(item.id);
 
                 return (
-                  <div
-                    key={item.id}
-                    className="flex items-center gap-[10px]"
-                  >
+                  <div key={item.id} className="flex items-center gap-[10px]">
                     {/* 체크박스 */}
                     {isSelectMode && (
                       <button
                         type="button"
                         onClick={() => toggleSelect(item.id)}
-                        aria-label={
-                          isSelected ? "알림 선택 해제" : "알림 선택"
-                        }
+                        aria-label={isSelected ? "알림 선택 해제" : "알림 선택"}
                         aria-pressed={isSelected}
                         className="shrink-0 cursor-pointer"
                       >
@@ -438,13 +536,29 @@ export default function NotificationPage() {
                         message={item.message}
                         date={item.date}
                         isRead={item.isRead}
-                        status={invitation ? "family" : item.status}
+                        status={
+                          invitation || item.isFamilyRecall
+                            ? "family"
+                            : item.notificationType === "RECALL"
+                              ? "recall"
+                              : item.status
+                        }
                         onClick={async () => {
                           if (isSelectMode) {
                             toggleSelect(item.id);
                             return;
                           }
 
+                          // 리콜 알림 클릭
+                          if (
+                            item.notificationType === "RECALL" &&
+                            item.referenceId
+                          ) {
+                            await handleRecallClick(item.id, item.referenceId);
+                            return;
+                          }
+
+                          // 기존 일반 알림 동작 유지
                           await handleRead(item.id);
 
                           if (invitation) return;
@@ -508,10 +622,7 @@ export default function NotificationPage() {
         <div className="flex flex-wrap justify-end gap-[10px] px-[20px] pb-[20px]">
           {!isSelectMode ? (
             <>
-              <CommonButton
-                onClick={handleAllRead}
-                variant="secondary"
-              >
+              <CommonButton onClick={handleAllRead} variant="secondary">
                 전체읽음
               </CommonButton>
 
@@ -531,10 +642,7 @@ export default function NotificationPage() {
                 취소
               </CommonButton>
 
-              <CommonButton
-                variant="secondary"
-                onClick={handleSelectAll}
-              >
+              <CommonButton variant="secondary" onClick={handleSelectAll}>
                 {visibleNotifications.length > 0 &&
                 visibleNotifications.every((item) =>
                   selectedIds.includes(item.id),
@@ -575,20 +683,21 @@ export default function NotificationPage() {
             key={selectedInvitation.invitationId}
             onClose={() => setSelectedInvitation(null)}
             onAccept={(nickname) =>
-              handleRespondInvitation(
-                selectedInvitation,
-                "ACCEPTED",
-                nickname,
-              )
+              handleRespondInvitation(selectedInvitation, "ACCEPTED", nickname)
             }
             onReject={() =>
-              handleRespondInvitation(
-                selectedInvitation,
-                "REJECTED",
-              )
+              handleRespondInvitation(selectedInvitation, "REJECTED")
             }
           />
         )}
+
+        {/* 리콜 안내 팝업 */}
+        <RecallModal
+          open={selectedRecall !== null}
+          recall={selectedRecall}
+          onClose={() => setSelectedRecall(null)}
+          onHide={() => setSelectedRecall(null)}
+        />
       </div>
     </MainLayout>
   );
