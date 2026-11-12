@@ -1,14 +1,14 @@
 export type SaleCardData = {
   productName: string;
   modelName: string;
+  category: string;
   score: number;
 
   purchaseDate: string;
-  usagePeriod: string;
+  warrantyPeriod: string;
   repairCount: number;
-  repairCost: number;
-  componentReplacement: string;
   recallStatus: string;
+  transferStatus: string;
   aiSummary: string;
 
   ownerName: string;

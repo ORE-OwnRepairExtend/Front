@@ -1,6 +1,9 @@
 import { useRef, useState } from "react";
 import { toPng } from "html-to-image";
 
+import closeIcon from "../../assets/icons/close.svg";
+import saveIcon from "../../assets/icons/save.svg";
+
 import type { SaleCardData } from "../../types/sale";
 import SaleSummaryCard from "./SaleSummaryCard";
 import CommonButton from "../common/CommonButton";
@@ -62,11 +65,11 @@ export default function SaleCardModal({
     >
       <div
         className="
-          relative flex w-[320px]
+          relative flex w-[517px]
           flex-col items-center
           rounded-[16px]
           bg-secondary-01
-          px-[20px] pb-[20px] pt-[35px]
+          px-[50px] py-[50px]
         "
         onClick={(e) => e.stopPropagation()}
       >
@@ -75,16 +78,15 @@ export default function SaleCardModal({
           type="button"
           onClick={handleClose}
           className="
-            absolute right-[15px] top-[12px]
+            absolute right-[15px] top-[15px]
             cursor-pointer
-            text-[20px] text-primary-01
           "
           aria-label="닫기"
         >
-          ×
+          <img src={closeIcon} alt="닫기" width={24} height={24} />
         </button>
 
-        <h2 className="mb-[15px] text-title-main text-primary-01">
+        <h2 className="mb-[20px] text-title-b-32 text-primary-01">
           판매 요약 카드
         </h2>
 
@@ -96,7 +98,7 @@ export default function SaleCardModal({
         >
           <div
             className="
-              relative h-[350px] w-[260px]
+              relative h-[520px] w-[410px]
               transition-transform duration-700
             "
             style={{
@@ -128,9 +130,10 @@ export default function SaleCardModal({
         </div>
 
         {/* 이미지 저장 */}
-        <div className="mt-[15px]">
-          <CommonButton onClick={handleSave}>
-            {isSaving ? "저장 중..." : "이미지 저장하기"}
+        <div className="mt-[15px] w-full ">
+          <CommonButton className="w-full h-[48px]" onClick={handleSave}>
+            <img src={saveIcon} alt="저장" width={24} height={24} />
+            이미지 저장하기
           </CommonButton>
         </div>
 
