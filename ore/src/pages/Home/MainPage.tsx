@@ -7,6 +7,8 @@ import ProductInfoCard from "../../components/common/ProductInfoCard";
 import { getProductStatus } from "../../utils/productStatus";
 import FamilyDashboard from "../../components/family/FamilyDashboard";
 import ProductRegisterModal from "../../components/common/ProductRegisterModal";
+import RecallModal from "../../components/recall/RecallModal";
+import { useRecallPopup } from "../../hooks/useRecallPopup";
 import type { ProductStatus } from "../../types/product";
 import OcrConfirmModal, {
   type OcrConfirmForm,
@@ -79,6 +81,16 @@ type ProductSourceResponse = {
 export default function MainPage() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+
+  // TODO: 실제 로그인 사용자 ID 연결
+  const recallUserId = "mock-user";
+
+  const {
+    currentRecall,
+    isOpen: isRecallOpen,
+    closeRecall,
+    hideRecall,
+  } = useRecallPopup(recallUserId);
 
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -187,9 +199,7 @@ export default function MainPage() {
 
   // 기존 제품 순서를 유지하고 보증 임박 제품만 표시
   const imminentProducts = useMemo(() => {
-    return products.filter(
-      (product) => product.warrantyStatus === "imminent",
-    );
+    return products.filter((product) => product.warrantyStatus === "imminent");
   }, [products]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -236,9 +246,7 @@ export default function MainPage() {
           {/* Product 영역 */}
           <div className="bg-neutral-01 rounded-[30px]">
             <div className="flex justify-between items-center px-[20px] pt-[20px] mb-[15px]">
-              <h2 className="text-title-main text-primary-01">
-                Product
-              </h2>
+              <h2 className="text-title-main text-primary-01">Product</h2>
 
               <span
                 className="text-gray-02 text-body-r-15 mr-[15px] cursor-pointer"
@@ -281,9 +289,7 @@ export default function MainPage() {
                     hover:bg-gray-100 transition
                   "
                 >
-                  <span className="text-[32px] text-gray-02 font-light">
-                    +
-                  </span>
+                  <span className="text-[32px] text-gray-02 font-light">+</span>
                 </div>
 
                 {/* 제품 카드 */}
@@ -345,10 +351,7 @@ export default function MainPage() {
                           {item.nickname}
                         </span>
 
-                        <span className="text-gray-01 text-body-r-12">
-                          {" "}
-                          -{" "}
-                        </span>
+                        <span className="text-gray-01 text-body-r-12"> - </span>
 
                         <span className="text-gray-01 text-body-r-12">
                           {item.name}
@@ -489,6 +492,13 @@ export default function MainPage() {
           </div>
         </div>
       )}
+      {/* 리콜 안내 팝업 */}
+      <RecallModal
+        open={isRecallOpen}
+        recall={currentRecall}
+        onClose={closeRecall}
+        onHide={hideRecall}
+      />
     </MainLayout>
   );
 }
