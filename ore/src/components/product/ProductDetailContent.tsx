@@ -6,6 +6,8 @@ import CommonButton from "../common/CommonButton";
 import ProductDetailCard from "./ProductDetailCard";
 import ProductDetailInfo from "./ProductDetailInfo";
 import type { MaintenanceHistoryItem } from "../../utils/maintenanceDate";
+import SaleCardModal from "./SaleCardModal";
+import { createMockSaleCardData } from "../../mocks/saleCardMock";
 import Modal from "../common/Modal";
 
 type MaintenanceCategory = {
@@ -93,6 +95,8 @@ export default function ProductDetailContent({
   onDeleteClick,
   onFavoriteClick,
 }: ProductDetailContentProps) {
+  const [isSaleCardOpen, setIsSaleCardOpen] = useState(false);
+
   const [isMaintenanceEditing, setIsMaintenanceEditing] = useState(false);
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -103,6 +107,11 @@ export default function ProductDetailContent({
     warrantyMonths !== undefined &&
     warrantyEndDate !== undefined &&
     remainingDays !== undefined;
+
+  const mockSaleCardData = createMockSaleCardData({
+    productName,
+    purchaseDate,
+  });
 
   return (
     <div
@@ -125,6 +134,7 @@ export default function ProductDetailContent({
         showFavorite={!readOnly}
         showSaleActions={!readOnly}
         onFavoriteClick={readOnly ? undefined : onFavoriteClick}
+        onSaleCardClick={() => setIsSaleCardOpen(true)}
       />
 
       <ProductDetailInfo
@@ -182,6 +192,14 @@ export default function ProductDetailContent({
           }}
           cancelText="취소"
           confirmText="삭제"
+        />
+      )}
+
+      {!readOnly && (
+        <SaleCardModal
+          open={isSaleCardOpen}
+          onClose={() => setIsSaleCardOpen(false)}
+          data={mockSaleCardData}
         />
       )}
     </div>
