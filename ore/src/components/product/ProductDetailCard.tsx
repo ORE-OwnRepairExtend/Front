@@ -1,5 +1,7 @@
 import type { ProductStatus } from "../../types/product";
 
+import CommonButton from "../common/CommonButton";
+
 import starFillIcon from "../../assets/icons/star_fill.svg";
 import starEmptyIcon from "../../assets/icons/star_empty.svg";
 
@@ -14,6 +16,11 @@ type ProductDetailCardProps = {
   status: ProductStatus;
   isFavorite: boolean;
   showFavorite?: boolean;
+
+  // 판매 관련 버튼
+  showSaleActions?: boolean;
+  onSaleCardClick?: () => void;
+  onTransferClick?: () => void;
 
   onClick?: () => void;
   onFavoriteClick?: () => void;
@@ -45,27 +52,30 @@ export default function ProductDetailCard({
   status,
   isFavorite,
   showFavorite = true,
+
+  showSaleActions = false,
+  onSaleCardClick,
+  onTransferClick,
+
   onClick,
   onFavoriteClick,
   className,
 }: ProductDetailCardProps) {
-  const displayImageSrc =
-    imageSrc || defaultLogoImage;
+  const displayImageSrc = imageSrc || defaultLogoImage;
 
   return (
-    <button
-      type="button"
+    <div
       onClick={onClick}
       className={`
-        flex h-[190px] w-full
-        items-center gap-[30px]
-        rounded-[20px]
-        bg-neutral-01
-        px-[30px] py-[20px]
-        text-left
-        cursor-pointer
-        ${className ?? ""}
-      `}
+      flex h-[190px] w-full
+      items-center gap-[30px]
+      rounded-[20px]
+      bg-neutral-01
+      px-[30px] py-[20px]
+      text-left
+      ${onClick ? "cursor-pointer" : ""}
+      ${className ?? ""}
+    `}
     >
       <div
         className="
@@ -104,9 +114,7 @@ export default function ProductDetailCard({
               gap-[5px]
             "
           >
-            <p className="text-title-main text-primary-01">
-              {nickname}
-            </p>
+            <p className="text-title-main text-primary-01">{nickname}</p>
 
             <div
               className="
@@ -116,15 +124,11 @@ export default function ProductDetailCard({
                 text-gray-01
               "
             >
-              <p className="truncate">
-                {productName}
-              </p>
+              <p className="truncate">{productName}</p>
 
               <span>·</span>
 
-              <p className="shrink-0">
-                {category}
-              </p>
+              <p className="shrink-0">{category}</p>
             </div>
           </div>
 
@@ -143,11 +147,7 @@ export default function ProductDetailCard({
               "
             >
               <img
-                src={
-                  isFavorite
-                    ? starFillIcon
-                    : starEmptyIcon
-                }
+                src={isFavorite ? starFillIcon : starEmptyIcon}
                 alt="즐겨찾기"
                 className="h-full w-full"
               />
@@ -157,33 +157,45 @@ export default function ProductDetailCard({
 
         <div className="h-[2px] w-full bg-gray-01" />
 
-        <div className="flex flex-col items-start gap-[10px]">
-          <p className="text-body-r-16 text-gray-01">
-            구매일 :{" "}
-            {purchaseDate ?? "정보 없음"}
-          </p>
-
-          <div
-            className="
-              flex items-center
-              justify-center
-              gap-[20px]
-            "
-          >
-            <span
-              className={`
-                h-[15px] w-[15px]
-                rounded-full
-                ${statusColor[status]}
-              `}
-            />
-
+        <div className="flex w-full items-end justify-between gap-[10px]">
+          {/* 구매일 및 보증상태 */}
+          <div className="flex flex-col items-start gap-[10px]">
             <p className="text-body-r-16 text-gray-01">
-              보증상태 - {statusText[status]}
+              구매일 : {purchaseDate ?? "정보 없음"}
             </p>
+
+            <div className="flex items-center gap-[20px]">
+              <span
+                className={`
+          h-[15px] w-[15px]
+          rounded-full
+          ${statusColor[status]}
+        `}
+              />
+
+              <p className="text-body-r-16 text-gray-01">
+                보증상태 - {statusText[status]}
+              </p>
+            </div>
           </div>
+
+          {/* 내 제품에서만 판매 관련 버튼 표시 */}
+          {showSaleActions && (
+            <div
+              className="flex shrink-0 items-center gap-[15px]"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <CommonButton variant="secondary" onClick={onSaleCardClick}>
+                판매 카드
+              </CommonButton>
+
+              <CommonButton variant="primary" onClick={onTransferClick}>
+                소유권 이전
+              </CommonButton>
+            </div>
+          )}
         </div>
       </div>
-    </button>
+    </div>
   );
 }
