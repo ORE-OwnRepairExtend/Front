@@ -1,6 +1,7 @@
 import { GoogleLogin } from "@react-oauth/google";
 import { useNavigate } from "react-router-dom";
 import { api } from "../../api/api";
+import { rememberTransferDemoUser } from "../../api/ownershipTransferDemo";
 import googleLogo from "../../assets/google.svg";
 import logoName from "../../assets/icons/logo_name.svg";
 
@@ -32,6 +33,7 @@ export default function LoginPage() {
 
       localStorage.setItem("accessToken", accessToken);
       localStorage.setItem("user", JSON.stringify(user));
+      rememberTransferDemoUser(user);
 
       navigate("/main");
     } catch (error) {
