@@ -3,6 +3,10 @@ import { useNavigate } from "react-router-dom";
 import SearchBar from "./SearchBar";
 import NotificationButton from "./NotificationButton";
 import { api } from "../../api/api";
+import {
+  getTransferDemoUser,
+  useOwnershipTransfers,
+} from "../../api/ownershipTransferDemo";
 
 import closeIcon from "../../assets/icons/close.svg";
 
@@ -61,7 +65,12 @@ export default function Header({
   }, [showNotification]);
 
   // 안 읽은 알림 여부 계산
-  const hasUnread = unreadCount > 0;
+  const transfers = useOwnershipTransfers();
+  const currentUserId = getTransferDemoUser()?.userId;
+  const transferUnreadCount = transfers.filter(
+    (item) => item.recipientId === currentUserId && !item.isRead,
+  ).length;
+  const totalUnreadCount = unreadCount + transferUnreadCount;
 
   return (
     <header
@@ -104,8 +113,8 @@ export default function Header({
           ) : (
             showNotification && (
               <NotificationButton
-                hasUnread={hasUnread}
-                unreadCount={unreadCount}
+                hasUnread={totalUnreadCount > 0}
+                unreadCount={totalUnreadCount}
                 onClick={() => navigate("/notifications")}
               />
             )

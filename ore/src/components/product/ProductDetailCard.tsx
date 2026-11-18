@@ -21,6 +21,7 @@ type ProductDetailCardProps = {
   showSaleActions?: boolean;
   onSaleCardClick?: () => void;
   onTransferClick?: () => void;
+  transferStatus?: "PENDING" | "ACCEPTED";
 
   onClick?: () => void;
   onFavoriteClick?: () => void;
@@ -56,6 +57,7 @@ export default function ProductDetailCard({
   showSaleActions = false,
   onSaleCardClick,
   onTransferClick,
+  transferStatus,
 
   onClick,
   onFavoriteClick,
@@ -189,9 +191,19 @@ export default function ProductDetailCard({
                 판매 카드
               </CommonButton>
 
-              <CommonButton variant="primary" onClick={onTransferClick}>
-                소유권 이전
-              </CommonButton>
+              {onTransferClick && (
+                <CommonButton
+                  onClick={onTransferClick}
+                  disabled={transferStatus !== undefined}
+                  className={transferStatus ? "!bg-gray-02 !text-gray-01" : ""}
+                >
+                  {transferStatus === "PENDING"
+                    ? "이전 진행중"
+                    : transferStatus === "ACCEPTED"
+                      ? "수락 완료"
+                      : "소유권 이전"}
+                </CommonButton>
+              )}
             </div>
           )}
         </div>

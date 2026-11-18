@@ -7,8 +7,22 @@ import Header from "../../components/header/Header";
 import CommonButton from "../../components/common/CommonButton";
 import Modal from "../../components/common/Modal";
 import FamilyAcceptModal from "../../components/my/FamilyAcceptModal";
+import OwnershipTransferModal from "../../components/transfer/OwnershipTransferModal";
 
-import { useNotificationStore } from "../../store/notificationStore";
+import {
+  getTransferDemoUser,
+  isOwnershipTransferNotification,
+  ownershipTransferDemoEnabled,
+  markOwnershipTransfersRead,
+  respondToOwnershipTransfer,
+  useOwnershipTransfers,
+  type OwnershipTransferDecision,
+} from "../../api/ownershipTransferDemo";
+
+import {
+  useNotificationStore,
+  type Notification,
+} from "../../store/notificationStore";
 import { api } from "../../api/api";
 import { readNotification, readAllNotifications } from "../../api/notification";
 import {
@@ -145,10 +159,36 @@ export default function NotificationPage() {
     new Set(readHiddenNotificationIds(storageKeyRef.current)),
   );
 
-  const visibleNotifications = notifications.filter((item) => {
-    const invitation = invitations[item.id];
-    return invitation?.status !== "REJECTED";
-  });
+  const [transferDialog, setTransferDialog] = useState<{
+    id: string;
+    mode: "review" | "reject";
+    returnToReview?: boolean;
+  } | null>(null);
+
+  const transfers = useOwnershipTransfers();
+  const currentUserId = getTransferDemoUser()?.userId;
+  const receivedTransfers = transfers.filter(
+    (transfer) => transfer.recipientId === currentUserId,
+  );
+  const transfersById = new Map(receivedTransfers.map((item) => [item.id, item]));
+  const selectedTransfer = transferDialog ? transfersById.get(transferDialog.id) : undefined;
+  const transferNotifications: Notification[] = receivedTransfers.map((transfer) => ({
+    id: transfer.id,
+    productId: transfer.productId,
+    title: transfer.nickname || transfer.productName,
+    subtitle: transfer.nickname ? transfer.productName : undefined,
+    message: `${transfer.sender.name} 님이 소유권 이전을 요청하였습니다.`,
+    date: transfer.createdAt.split("T")[0],
+    isRead: transfer.isRead,
+    status: "imminent",
+  }));
+
+  const visibleNotifications = [...notifications, ...transferNotifications]
+    .filter((item) => {
+      const invitation = invitations[item.id];
+      return invitation?.status !== "REJECTED" && !hiddenIdsRef.current.has(item.id);
+    })
+    .sort((a, b) => b.date.localeCompare(a.date));
 
   const selectedVisibleIds = visibleNotifications
     .filter((item) => selectedIds.includes(item.id))
@@ -232,8 +272,10 @@ export default function NotificationPage() {
       setInvitations(nextInvitations);
 
       setSelectedIds((prev) =>
-        prev.filter((id) =>
-          combinedNotifications.some((item) => item.id === id),
+        prev.filter(
+          (id) =>
+            isOwnershipTransferNotification(id) ||
+            combinedNotifications.some((item) => item.id === id),
         ),
       );
     } catch (error) {
@@ -396,6 +438,10 @@ export default function NotificationPage() {
       // 3. Zustand 읽음 상태 변경
       markAllAsRead();
 
+      if (transferNotifications.length > 0) {
+        markOwnershipTransfersRead(transferNotifications.map((item) => item.id));
+      }
+
       setNotice("모든 알림을 읽음 처리했습니다.");
     } catch (error) {
       setErrorMessage(
@@ -450,6 +496,35 @@ export default function NotificationPage() {
     }
   };
 
+  const openTransfer = (id: string, mode: "review" | "reject") => {
+    setErrorMessage("");
+    setNotice("");
+
+    try {
+      markOwnershipTransfersRead([id]);
+      setTransferDialog({ id, mode });
+    } catch {
+      setErrorMessage("소유권 이전 알림을 열지 못했습니다.");
+    }
+  };
+
+  const handleTransferDecision = (id: string, status: OwnershipTransferDecision) => {
+    try {
+      respondToOwnershipTransfer(id, status);
+      setNotice(
+        status === "ACCEPTED"
+          ? "소유권 이전 요청을 수락했습니다."
+          : "소유권 이전 요청을 거절했습니다.",
+      );
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "소유권 이전 요청을 처리하지 못했습니다.",
+      );
+    } finally {
+      setTransferDialog(null);
+    }
+  };
+
   const handleReject = async (invitation: Invitation) => {
     try {
       await handleRespondInvitation(invitation, "REJECTED");
@@ -463,7 +538,7 @@ export default function NotificationPage() {
   return (
     <MainLayout>
       <div className="flex h-full flex-col gap-[20px]">
-        <Header title="Alarm" showNotification={false} />
+        <Header title="Alarm" showNotification={ownershipTransferDemoEnabled} />
 
         {notice && (
           <p role="status" className="px-[20px] text-body-r-12 text-primary-01">
@@ -506,6 +581,7 @@ export default function NotificationPage() {
             ) : (
               visibleNotifications.map((item) => {
                 const invitation = invitations[item.id];
+                const transfer = transfersById.get(item.id);
                 const processedStatus = invitation?.status;
                 const isSelected = selectedIds.includes(item.id);
 
@@ -550,10 +626,10 @@ export default function NotificationPage() {
                                   ? recall.userName
                                   : `${recall.productName}(${recall.productDescription})`;
                               })()
-                            : undefined
+                            : transfer?.sender.name
                         }
                         status={
-                          invitation || item.isFamilyRecall
+                          invitation || transfer || item.isFamilyRecall
                             ? "family"
                             : item.notificationType === "RECALL"
                               ? "recall"
@@ -562,6 +638,13 @@ export default function NotificationPage() {
                         onClick={async () => {
                           if (isSelectMode) {
                             toggleSelect(item.id);
+                            return;
+                          }
+
+                          if (transfer) {
+                            if (transfer.status === "PENDING") {
+                              openTransfer(transfer.id, "review");
+                            }
                             return;
                           }
 
@@ -619,6 +702,30 @@ export default function NotificationPage() {
                               </CommonButton>
                             </fieldset>
                           )}
+
+                        {transfer?.status === "PENDING" && !isSelectMode && (
+                          <>
+                            <CommonButton
+                              onClick={() => openTransfer(transfer.id, "review")}
+                              className="!h-[26px] !text-[12px]"
+                            >
+                              수락
+                            </CommonButton>
+                            <CommonButton
+                              variant="secondary"
+                              onClick={() => openTransfer(transfer.id, "reject")}
+                              className="!h-[26px] !bg-gray-02 !text-[12px] !text-gray-01"
+                            >
+                              거절
+                            </CommonButton>
+                          </>
+                        )}
+
+                        {transfer && transfer.status !== "PENDING" && (
+                          <span className="text-body-sb-12 text-primary-01">
+                            {transfer.status === "ACCEPTED" ? "수락 완료" : "거절 완료"}
+                          </span>
+                        )}
 
                         {processedStatus === "ACCEPTED" && (
                           <span className="text-body-sb-12 text-primary-01">
@@ -704,6 +811,33 @@ export default function NotificationPage() {
             onReject={() =>
               handleRespondInvitation(selectedInvitation, "REJECTED")
             }
+          />
+        )}
+
+        {transferDialog && selectedTransfer?.status === "PENDING" && (
+          <OwnershipTransferModal
+            key={selectedTransfer.id}
+            mode={transferDialog.mode}
+            transfer={selectedTransfer}
+            onClose={() =>
+              setTransferDialog(
+                transferDialog.returnToReview
+                  ? { id: selectedTransfer.id, mode: "review" }
+                  : null,
+              )
+            }
+            onAccept={() => handleTransferDecision(selectedTransfer.id, "ACCEPTED")}
+            onReject={() => {
+              if (transferDialog.mode === "review") {
+                setTransferDialog({
+                  id: selectedTransfer.id,
+                  mode: "reject",
+                  returnToReview: true,
+                });
+              } else {
+                handleTransferDecision(selectedTransfer.id, "REJECTED");
+              }
+            }}
           />
         )}
 

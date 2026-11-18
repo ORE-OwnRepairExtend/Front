@@ -9,6 +9,13 @@ import type { MaintenanceHistoryItem } from "../../utils/maintenanceDate";
 import SaleCardModal from "./SaleCardModal";
 import { createMockSaleCardData } from "../../mocks/saleCardMock";
 import Modal from "../common/Modal";
+import OwnershipTransferModal from "../transfer/OwnershipTransferModal";
+import {
+  getTransferDemoUser,
+  ownershipTransferDemoEnabled,
+  requestOwnershipTransfer,
+  useOwnershipTransfers,
+} from "../../api/ownershipTransferDemo";
 
 type MaintenanceCategory = {
   id: string;
@@ -96,6 +103,15 @@ export default function ProductDetailContent({
   onFavoriteClick,
 }: ProductDetailContentProps) {
   const [isSaleCardOpen, setIsSaleCardOpen] = useState(false);
+  const [transferProductId, setTransferProductId] = useState<string | null>(null);
+  const transfers = useOwnershipTransfers();
+  const currentUser = getTransferDemoUser();
+  const outgoingTransfer = transfers.find(
+    (transfer) =>
+      transfer.productId === productId &&
+      transfer.sender.userId === currentUser?.userId &&
+      transfer.status !== "REJECTED",
+  );
 
   const [isMaintenanceEditing, setIsMaintenanceEditing] = useState(false);
 
@@ -135,6 +151,14 @@ export default function ProductDetailContent({
         showSaleActions={!readOnly}
         onFavoriteClick={readOnly ? undefined : onFavoriteClick}
         onSaleCardClick={() => setIsSaleCardOpen(true)}
+        onTransferClick={
+          !readOnly && ownershipTransferDemoEnabled
+            ? () => setTransferProductId(productId)
+            : undefined
+        }
+        transferStatus={
+          outgoingTransfer?.status === "REJECTED" ? undefined : outgoingTransfer?.status
+        }
       />
 
       <ProductDetailInfo
@@ -192,6 +216,17 @@ export default function ProductDetailContent({
           }}
           cancelText="취소"
           confirmText="삭제"
+        />
+      )}
+
+      {!readOnly && transferProductId === productId && (
+        <OwnershipTransferModal
+          mode="request"
+          onClose={() => setTransferProductId(null)}
+          onRequest={(email) => {
+            requestOwnershipTransfer({ productId, productName, nickname }, email);
+            setTransferProductId(null);
+          }}
         />
       )}
 
